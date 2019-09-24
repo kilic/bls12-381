@@ -1,0 +1,7 @@
+github.com/kilic/fp v0.0.0-20190828182957-faafc831aa05 h1:RqBN9Jh3zKtyL2hs6C7hUb4KvbfCd2aAF0XFD491U7c=
+github.com/kilic/fp256 v0.0.0-20190626215920-7120361eb62e h1:vI30/WxH7+o08fE9YDlC98lRxD3YgL0WxAUAWM+M5QQ=
+github.com/kilic/fp256 v0.0.0-20190626215920-7120361eb62e/go.mod h1:bsUH/9SmPO+954R1Ep9pZGmscHsE+0GRe6PeKWX0RIs=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v2 v2.2.2 h1:ZCJp+EgiOT7lHqUV2J862kp8Qj64Jo6az82+3Td9dZw=
+gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
