@@ -14,7 +14,7 @@ _wip_. _Do not use in production_.
 
 #### Benchmarks
 
-on _2.7 GHz i7_
+on _2.7 GHz i5_
 
 ```
 BenchmarkPairing  2963222 ns/op
