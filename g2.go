@@ -361,6 +361,10 @@ func (g *G2) MulScalar(c, p *PointG2, e *big.Int) *PointG2 {
 	return g.Copy(c, q)
 }
 
+func (g *G2) MulByCofactor(c, p *PointG2) {
+	g.MulScalar(c, p, cofactorG2)
+}
+
 // func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG2, error) {
 // 	if len(points) != len(powers) {
 // 		return nil, fmt.Errorf("point and scalar vectors should be in same length")

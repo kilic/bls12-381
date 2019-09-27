@@ -69,9 +69,13 @@ var b2 = &Fe2{
 var q = new(big.Int).SetBytes(
 	bytes_(-1, "0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001"))
 
-// cofactor
-var cofactor = new(big.Int).SetBytes(
+// cofactor g1
+var cofactorG1 = new(big.Int).SetBytes(
 	bytes_(-1, "0x396c8c005555e1568c00aaab0000aaab"))
+
+// cofactor g2
+var cofactorG2 = new(big.Int).SetBytes(
+	bytes_(-1, "5d543a95414e7f1091d50792876a202cd91de4547085abaa68a205b2e5a7ddfa628f1cb4d9e82ef21537e293a6691ae1616ec6e786f0c70cf1c38e31c7238e5"))
 
 // point at infinity in G1
 var infinity = &PointG1{
@@ -95,13 +99,13 @@ var infinity2 = &PointG2{
 	},
 }
 
-var generator1 = PointG1{
+var G1Generator = PointG1{
 	Fe{0x5cb38790fd530c16, 0x7817fc679976fff5, 0x154f95c7143ba1c1, 0xf0ae6acdf3d0e747, 0xedce6ecc21dbf440, 0x120177419e0bfb75},
 	Fe{0xbaac93d50ce72271, 0x8c22631a7918fd8e, 0xdd595f13570725ce, 0x51ac582950405194, 0x0e1c8c3fad0059c0, 0x0bbc3efc5008a26a},
 	Fe{0x760900000002fffd, 0xebf4000bc40c0002, 0x5f48985753c758ba, 0x77ce585370525745, 0x5c071a97a256ec6d, 0x15f65ec3fa80e493},
 }
 
-var generator2 = PointG2{
+var G2Generator = PointG2{
 	Fe2{
 		Fe{0xf5f28fa202940a10, 0xb3f5fb2687b4961a, 0xa1a893b53e2ae580, 0x9894999d1a3caee9, 0x6f67b7631863366b, 0x058191924350bcd7},
 		Fe{0xa5a9c0759e23f606, 0xaaa0c59dbccd60c3, 0x3bb17e18e2867806, 0x1b1ab6cc8541b367, 0xc2b6ed0ef2158547, 0x11922a097360edf3},

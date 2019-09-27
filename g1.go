@@ -351,7 +351,7 @@ func (g *G1) MulScalar(c, p *PointG1, e *big.Int) *PointG1 {
 }
 
 func (g *G1) MulByCofactor(c, p *PointG1) {
-	g.MulScalar(c, p, cofactor)
+	g.MulScalar(c, p, cofactorG1)
 }
 
 // func (g *G1) MultiExp(r *PointG1, points []*PointG1, powers []*big.Int) (*PointG1, error) {
