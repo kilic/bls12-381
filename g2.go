@@ -365,6 +365,38 @@ func (g *G2) MulByCofactor(c, p *PointG2) {
 	g.MulScalar(c, p, cofactorG2)
 }
 
+func (g *G2) MapToPoint(in []byte) *PointG2 {
+	x, y := &Fe2{}, &Fe2{}
+	fp2 := g.f
+	fp := fp2.f
+	err := fp2.NewElementFromBytes(x, in)
+	if err != nil {
+		panic(err)
+	}
+	for {
+		fp2.Square(y, x)
+		fp2.Mul(y, y, x)
+		fp2.Add(y, y, b2)
+		if ok := fp2.Sqrt(y, y); ok {
+			// favour negative y
+			negYn, negY, yn := &Fe2{}, &Fe2{}, &Fe2{}
+			fp.Demont(&yn[0], &y[0])
+			fp.Demont(&yn[1], &y[1])
+			fp2.Neg(negY, y)
+			fp2.Neg(negYn, yn)
+			if yn[1].Cmp(&negYn[1]) > 0 || (yn[1].IsZero() && yn[0].Cmp(&negYn[0]) > 0) {
+				fp2.Copy(y, y)
+			} else {
+				fp2.Copy(y, negY)
+			}
+			p := &PointG2{*x, *y, Fp2One}
+			g.MulByCofactor(p, p)
+			return p
+		}
+		fp2.Add(x, x, &Fp2One)
+	}
+}
+
 // func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG2, error) {
 // 	if len(points) != len(powers) {
 // 		return nil, fmt.Errorf("point and scalar vectors should be in same length")
