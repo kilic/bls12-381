@@ -1,11 +1,11 @@
 package bls
 
 type BLSPairingEngine struct {
-	g1   *G1
-	g2   *G2
-	fp12 *Fp12
-	fp2  *Fp2
-	fp   *Fp
+	G1   *G1
+	G2   *G2
+	Fp12 *Fp12
+	Fp2  *Fp2
+	Fp   *Fp
 	t2   [10]*Fe2
 	t12  [9]Fe12
 }
@@ -23,18 +23,18 @@ func NewBLSPairingEngine() *BLSPairingEngine {
 	}
 	t12 := [9]Fe12{}
 	return &BLSPairingEngine{
-		fp:   fp,
-		fp2:  fp2,
-		fp12: fp12,
+		Fp:   fp,
+		Fp2:  fp2,
+		Fp12: fp12,
 		t2:   t2,
 		t12:  t12,
-		g1:   g1,
-		g2:   g2,
+		G1:   g1,
+		G2:   g2,
 	}
 }
 
 func (e *BLSPairingEngine) doublingStep(coeff *[3]Fe2, r *PointG2) {
-	fp2 := e.fp2
+	fp2 := e.Fp2
 	t := e.t2
 	fp2.Mul(t[0], &r[0], &r[1])
 	fp2.MulByFq(t[0], t[0], twoInv)
@@ -69,7 +69,7 @@ func (e *BLSPairingEngine) doublingStep(coeff *[3]Fe2, r *PointG2) {
 }
 
 func (e *BLSPairingEngine) additionStep(coeff *[3]Fe2, r, q *PointG2) {
-	fp2 := e.fp2
+	fp2 := e.Fp2
 	t := e.t2
 	fp2.Mul(t[0], &q[1], &r[2])
 	fp2.Neg(t[0], t[0])
@@ -99,11 +99,11 @@ func (e *BLSPairingEngine) additionStep(coeff *[3]Fe2, r, q *PointG2) {
 }
 
 func (e *BLSPairingEngine) prepare(ellCoeffs *[70][3]Fe2, twistPoint *PointG2) {
-	if e.g2.IsZero(twistPoint) {
+	if e.G2.IsZero(twistPoint) {
 		return
 	}
 	r := &PointG2{}
-	e.g2.Copy(r, twistPoint)
+	e.G2.Copy(r, twistPoint)
 	j := 0
 	for i := int(x.BitLen() - 2); i >= 0; i-- {
 		e.doublingStep(&ellCoeffs[j], r)
@@ -119,17 +119,17 @@ func (e *BLSPairingEngine) prepare(ellCoeffs *[70][3]Fe2, twistPoint *PointG2) {
 // notice that this function expects: len(points) == len(twistPoints)
 func (e *BLSPairingEngine) millerLoop(f *Fe12, points []PointG1, twistPoints []PointG2) {
 	for i := 0; i <= len(points)-1; i++ {
-		e.g1.Affine(&points[i])
-		e.g2.Affine(&twistPoints[i])
+		e.G1.Affine(&points[i])
+		e.G2.Affine(&twistPoints[i])
 	}
 	ellCoeffs := make([][70][3]Fe2, len(points))
 	for i := 0; i < len(points); i++ {
-		if !e.g1.IsZero(&points[i]) && !e.g2.IsZero(&twistPoints[i]) {
+		if !e.G1.IsZero(&points[i]) && !e.G2.IsZero(&twistPoints[i]) {
 			e.prepare(&ellCoeffs[i], &twistPoints[i])
 		}
 	}
-	fp12 := e.fp12
-	fp2 := e.fp2
+	fp12 := e.Fp12
+	fp2 := e.Fp2
 	t := e.t2
 	j := 0
 	// ell := func(f *Fe12, coeffs *[3]Fe2, p *PointG1) {
@@ -170,14 +170,14 @@ func (e *BLSPairingEngine) millerLoop(f *Fe12, points []PointG1, twistPoints []P
 }
 
 func (e *BLSPairingEngine) exp(c, a *Fe12) {
-	fp12 := e.fp12
+	fp12 := e.Fp12
 	fp12.Exp(c, a, x)
 	fp12.Conjugate(c, c)
 }
 
 // assigned operation
 func (e *BLSPairingEngine) finalExp(f *Fe12) {
-	fp12 := e.fp12
+	fp12 := e.Fp12
 	t := e.t12
 	fp12.FrobeniusMap(&t[0], f, 6)
 	fp12.Inverse(&t[1], f)
@@ -211,6 +211,11 @@ func (e *BLSPairingEngine) finalExp(f *Fe12) {
 }
 
 func (e *BLSPairingEngine) Pair(f *Fe12, points []PointG1, twistPoints []PointG2) {
+	e.millerLoop(f, points, twistPoints)
+	e.finalExp(f)
+}
+
+func (e *BLSPairingEngine) Equal(f *Fe12, points []PointG1, twistPoints []PointG2) {
 	e.millerLoop(f, points, twistPoints)
 	e.finalExp(f)
 }

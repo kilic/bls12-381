@@ -11,14 +11,14 @@ func TestBLSPairing(t *testing.T) {
 	t.Run("Single Expected", func(t *testing.T) {
 		G := &PointG1{}
 		H := &PointG2{}
-		e.g1.Copy(G, &G1One)
-		e.g2.Copy(H, &G2One)
+		e.G1.Copy(G, &G1One)
+		e.G2.Copy(H, &G2One)
 		points := []PointG1{*G}
 		twistPoints := []PointG2{*H}
 		f1 := &Fe12{}
 		e.Pair(f1, points, twistPoints)
 		f2 := &Fe12{}
-		if err := e.fp12.NewElementFromBytes(
+		if err := e.Fp12.NewElementFromBytes(
 			f2,
 			bytes_(48,
 				"0x0f41e58663bf08cf068672cbd01a7ec73baca4d72ca93544deff686bfd6df543d48eaa24afe47e1efde449383b676631",
@@ -36,7 +36,7 @@ func TestBLSPairing(t *testing.T) {
 			)); err != nil {
 			t.Fatal(err)
 		}
-		if !e.fp12.Equal(f1, f2) {
+		if !e.Fp12.Equal(f1, f2) {
 			t.Fatal("bad pairing")
 		}
 	})
@@ -46,15 +46,15 @@ func TestBLSPairing2(t *testing.T) {
 	e := NewBLSPairingEngine()
 	G := &PointG1{}
 	H := &PointG2{}
-	e.g1.Copy(G, &G1One)
-	e.g2.Copy(H, &G2One)
+	e.G1.Copy(G, &G1One)
+	e.G2.Copy(H, &G2One)
 	g1RandPoint := func() (*PointG1, *big.Int) {
 		s, err := rand.Int(rand.Reader, q)
 		if err != nil {
 			panic(err)
 		}
-		p := e.g1.MulScalar(&PointG1{}, G, s)
-		e.g1.Affine(p)
+		p := e.G1.MulScalar(&PointG1{}, G, s)
+		e.G1.Affine(p)
 		return p, s
 	}
 	g2RandPoint := func() (*PointG2, *big.Int) {
@@ -62,8 +62,8 @@ func TestBLSPairing2(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
-		p := e.g2.MulScalar(&PointG2{}, H, s)
-		e.g2.Affine(p)
+		p := e.G2.MulScalar(&PointG2{}, H, s)
+		e.G2.Affine(p)
 		return p, s
 	}
 	pairSize := 50
@@ -74,14 +74,14 @@ func TestBLSPairing2(t *testing.T) {
 	for i := 0; i < pairSize; i++ {
 		aG, a := g1RandPoint()
 		bH, b := g2RandPoint()
-		e.g1.Copy(&points[i], aG)
-		e.g2.Copy(&twistPoints[i], bH)
+		e.G1.Copy(&points[i], aG)
+		e.G2.Copy(&twistPoints[i], bH)
 		acc.Add(acc, new(big.Int).Mul(a, b))
 	}
 	e.Pair(&f0, points, twistPoints)
 	e.Pair(&f1, []PointG1{*G}, []PointG2{*H})
-	e.fp12.Exp(&f1, &f1, acc)
-	if !e.fp12.Equal(&f0, &f1) {
+	e.Fp12.Exp(&f1, &f1, acc)
+	if !e.Fp12.Equal(&f0, &f1) {
 		t.Fatalf("bad pairing")
 	}
 }
@@ -89,8 +89,8 @@ func BenchmarkPairing(t *testing.B) {
 	e := NewBLSPairingEngine()
 	G := &PointG1{}
 	H := &PointG2{}
-	e.g1.Copy(G, &G1One)
-	e.g2.Copy(H, &G2One)
+	e.G1.Copy(G, &G1One)
+	e.G2.Copy(H, &G2One)
 	points := []PointG1{*G}
 	twistPoints := []PointG2{*H}
 	f1 := &Fe12{}
@@ -103,7 +103,7 @@ func BenchmarkPairing(t *testing.B) {
 func BenchmarkFinalExp(t *testing.B) {
 	e := NewBLSPairingEngine()
 	a := Fe12{}
-	e.fp12.RandElement(&a, rand.Reader)
+	e.Fp12.RandElement(&a, rand.Reader)
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
 		e.finalExp(&a)
