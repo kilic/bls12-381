@@ -24,8 +24,8 @@ func NewFp12(f *Fp6) *Fp12 {
 	return &Fp12{f, t}
 }
 
-var fp12One = Fe12{fp6One, fp6Zero}
-var fp12Zero = Fe12{fp6Zero, fp6Zero}
+var Fp12One = Fe12{Fp6One, Fp6Zero}
+var Fp12Zero = Fe12{Fp6Zero, Fp6Zero}
 
 func (fp *Fp12) NewElement() *Fe12 {
 	return &Fe12{}

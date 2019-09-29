@@ -11,8 +11,8 @@ func TestBLSPairing(t *testing.T) {
 	t.Run("Single Expected", func(t *testing.T) {
 		G := &PointG1{}
 		H := &PointG2{}
-		e.g1.Copy(G, &G1Generator)
-		e.g2.Copy(H, &G2Generator)
+		e.g1.Copy(G, &G1One)
+		e.g2.Copy(H, &G2One)
 		points := []PointG1{*G}
 		twistPoints := []PointG2{*H}
 		f1 := &Fe12{}
@@ -46,8 +46,8 @@ func TestBLSPairing2(t *testing.T) {
 	e := NewBLSPairingEngine()
 	G := &PointG1{}
 	H := &PointG2{}
-	e.g1.Copy(G, &G1Generator)
-	e.g2.Copy(H, &G2Generator)
+	e.g1.Copy(G, &G1One)
+	e.g2.Copy(H, &G2One)
 	g1RandPoint := func() (*PointG1, *big.Int) {
 		s, err := rand.Int(rand.Reader, q)
 		if err != nil {
@@ -85,13 +85,12 @@ func TestBLSPairing2(t *testing.T) {
 		t.Fatalf("bad pairing")
 	}
 }
-
 func BenchmarkPairing(t *testing.B) {
 	e := NewBLSPairingEngine()
 	G := &PointG1{}
 	H := &PointG2{}
-	e.g1.Copy(G, &G1Generator)
-	e.g2.Copy(H, &G2Generator)
+	e.g1.Copy(G, &G1One)
+	e.g2.Copy(H, &G2One)
 	points := []PointG1{*G}
 	twistPoints := []PointG2{*H}
 	f1 := &Fe12{}

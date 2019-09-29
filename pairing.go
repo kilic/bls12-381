@@ -144,7 +144,7 @@ func (e *BLSPairingEngine) millerLoop(f *Fe12, points []PointG1, twistPoints []P
 	// 		ell(f, &ellCoeffs[i][j], &points[i])
 	// 	}
 	// }
-	fp12.Copy(f, &fp12One)
+	fp12.Copy(f, &Fp12One)
 	for i := int(x.BitLen() - 2); i >= 0; i-- {
 		fp12.Square(f, f)
 		//solveLine(f)

@@ -10,8 +10,8 @@ import (
 type Fp struct {
 }
 
-var fpOne = *r1
-var fpZero = Fe{0, 0, 0, 0, 0, 0}
+var FpOne = *r1
+var FpZero = Fe{0, 0, 0, 0, 0, 0}
 
 func NewFp() *Fp {
 	return &Fp{}

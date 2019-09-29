@@ -24,8 +24,8 @@ type Fp6 struct {
 	t [6]*Fe2
 }
 
-var fp6One = Fe6{fp2One, fp2Zero, fp2Zero}
-var fp6Zero = Fe6{fp2Zero, fp2Zero, fp2Zero}
+var Fp6One = Fe6{Fp2One, Fp2Zero, Fp2Zero}
+var Fp6Zero = Fe6{Fp2Zero, Fp2Zero, Fp2Zero}
 
 func (fp *Fp6) NewElement() *Fe6 {
 	return &Fe6{}

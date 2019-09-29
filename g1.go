@@ -58,7 +58,7 @@ func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 	p := &PointG1{}
 	g.f.Copy(&p[0], x)
 	g.f.Copy(&p[1], y)
-	g.f.Copy(&p[2], &fpOne)
+	g.f.Copy(&p[2], &FpOne)
 	if !g.IsOnCurve(p) {
 		return nil, fmt.Errorf("point is not on curve")
 	}
@@ -122,7 +122,7 @@ func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 	p := &PointG1{}
 	g.f.Copy(&p[0], x)
 	g.f.Copy(&p[1], y)
-	g.f.Copy(&p[2], &fpOne)
+	g.f.Copy(&p[2], &FpOne)
 	if !g.isTorsionFree(p) {
 		return nil, fmt.Errorf("point is not on correct subgroup")
 	}
@@ -156,7 +156,7 @@ func (g *G1) fromRawUnchecked(in []byte) *PointG1 {
 	if err := g.f.NewElementFromBytes(&p[1], in[48:]); err != nil {
 		panic(err)
 	}
-	g.f.Copy(&p[2], &fpOne)
+	g.f.Copy(&p[2], &FpOne)
 	return p
 }
 
@@ -218,7 +218,7 @@ func (g *G1) IsOnCurve(p *PointG1) bool {
 }
 
 func (g *G1) IsAffine(p *PointG1) bool {
-	return g.f.Equal(&p[2], &fpOne)
+	return g.f.Equal(&p[2], &FpOne)
 }
 
 func (g *G1) Affine(p *PointG1) {

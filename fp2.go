@@ -13,8 +13,8 @@ type Fp2 struct {
 	t [4]*Fe
 }
 
-var fp2One = Fe2{fpOne, fpZero}
-var fp2Zero = Fe2{fpZero, fpZero}
+var Fp2One = Fe2{FpOne, FpZero}
+var Fp2Zero = Fe2{FpZero, FpZero}
 
 func NewFp2(f *Fp) *Fp2 {
 	t := [4]*Fe{}
@@ -187,7 +187,7 @@ func (fp *Fp2) Sqrt(c, a *Fe2) bool {
 		fp.f.Copy(&c[1], &x0[0])
 		return true
 	}
-	fp.Add(alpha, alpha, &fp2One)
+	fp.Add(alpha, alpha, &Fp2One)
 	fp.Exp(alpha, alpha, pMinus1Over2)
 	fp.Mul(c, alpha, x0)
 	fp.Square(alpha, c)
