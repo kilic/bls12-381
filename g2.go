@@ -17,6 +17,24 @@ func (p *PointG2) Set(p2 *PointG2) *PointG2 {
 	return p
 }
 
+// VerifyMsgWithDomain verifies that a message with a specified domain
+// against a g1 point.
+func (g *PointG2) VerifyMsgWithDomain(msg [32]byte, p *PointG1, domain [8]byte) bool {
+	e := NewBLSPairingEngine()
+	target := &Fe12{}
+	e.Pair(target,
+		[]PointG1{
+			G1NegativeOne,
+			*p,
+		},
+		[]PointG2{
+			*g,
+			*HashToG2WithDomain(msg, domain),
+		},
+	)
+	return e.Fp12.Equal(&Fp12One, target)
+}
+
 type G2 struct {
 	f *Fp2
 	t [9]*Fe2

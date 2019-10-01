@@ -2,6 +2,7 @@ package bls
 
 import (
 	"crypto/rand"
+	"encoding/binary"
 	"math/big"
 	"testing"
 )
@@ -107,6 +108,30 @@ func TestG2(t *testing.T) {
 	})
 }
 
+func TestVerifyG2(t *testing.T) {
+	randNum := func() *big.Int {
+		k, err := rand.Int(rand.Reader, q)
+		if err != nil {
+			panic(err)
+		}
+		return k
+	}
+	g2 := NewG2(nil)
+	for i := 0; i < 100; i++ {
+		msg := [32]byte{'t', 'e', 's', 't', 'i', 'n', 'g'}
+		var byteDomain [8]byte
+		binary.LittleEndian.PutUint64(byteDomain[:], uint64(i))
+		g2point := HashToG2WithDomain(msg, byteDomain)
+		randomBigNumber := randNum()
+		g2.MulScalar(g2point, g2point, randomBigNumber)
+
+		p := &PointG1{}
+		NewG1(nil).MulScalar(p, &G1One, randomBigNumber)
+		if !g2point.VerifyMsgWithDomain(msg, p, byteDomain) {
+			t.Errorf("g2 point did not verify for msg %s with domain %#x and number(in hex) %#x", msg, byteDomain, randomBigNumber.Bytes())
+		}
+	}
+}
 func BenchmarkG2Add(t *testing.B) {
 	g2 := NewG2(NewFp2(NewFp()))
 	one := g2.fromRawUnchecked(bytes_(48,
