@@ -12,11 +12,11 @@ func neg(c, a *Fe)
 
 func double(c, a *Fe)
 
-func mul(c *[12]uint64, a, b *Fe)
+// func mul(c *[12]uint64, a, b *Fe)
 
-func square(c *[12]uint64, a *Fe)
+// func square(c *[12]uint64, a *Fe)
 
-func mont(c *Fe, w *[12]uint64)
+// func mont(c *Fe, w *[12]uint64)
 
 func montmul(c, a, b *Fe)
 
