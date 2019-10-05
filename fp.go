@@ -138,7 +138,7 @@ func (f *Fp) Neg(c, a *Fe) {
 }
 
 func (f *Fp) Square(c, a *Fe) {
-	montsquare(c, a)
+	montmul(c, a, a)
 }
 
 func (f *Fp) Mul(c, a, b *Fe) {
@@ -148,7 +148,7 @@ func (f *Fp) Mul(c, a, b *Fe) {
 func (f *Fp) Exp(c, a *Fe, e *big.Int) {
 	z := new(Fe).Set(r1)
 	for i := e.BitLen(); i >= 0; i-- {
-		montsquare(z, z)
+		montmul(z, z, z)
 		if e.Bit(i) == 1 {
 			montmul(z, z, a)
 		}
