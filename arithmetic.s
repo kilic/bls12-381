@@ -1,6 +1,6 @@
 #include "textflag.h"
 
-// func add(c *Fe384, a *Fe384, b *Fe384)
+// func add(c *Fe, a *Fe, b *Fe)
 TEXT ·add(SB), NOSPLIT, $0-24
 	// |
 	MOVQ a+8(FP), DI
@@ -51,7 +51,7 @@ TEXT ·add(SB), NOSPLIT, $0-24
 	MOVQ    R13, 40(DI)
 	RET
 
-// func addn(a *Fe384, b *Fe384) uint64
+// func addn(a *Fe, b *Fe) uint64
 TEXT ·addn(SB), NOSPLIT, $0-24
 	// |
 	MOVQ a+0(FP), DI
@@ -83,7 +83,7 @@ TEXT ·addn(SB), NOSPLIT, $0-24
 	MOVQ AX, ret+16(FP)
 	RET
 
-// func sub(c *Fe384, a *Fe384, b *Fe384)
+// func sub(c *Fe, a *Fe, b *Fe)
 TEXT ·sub(SB), NOSPLIT, $0-24
 	// |
 	MOVQ a+8(FP), DI
@@ -132,7 +132,7 @@ TEXT ·sub(SB), NOSPLIT, $0-24
 	MOVQ R13, 40(DI)
 	RET
 
-// func subn(a *Fe384, b *Fe384) uint64
+// func subn(a *Fe, b *Fe) uint64
 TEXT ·subn(SB), NOSPLIT, $0-24
 	// |
 	MOVQ a+0(FP), DI
@@ -164,7 +164,7 @@ TEXT ·subn(SB), NOSPLIT, $0-24
 	MOVQ AX, ret+16(FP)
 	RET
 
-// func double(c *Fe384, a *Fe384)
+// func double(c *Fe, a *Fe)
 TEXT ·double(SB), NOSPLIT, $8-16
 	// |
 	MOVQ a+8(FP), DI
@@ -212,7 +212,7 @@ TEXT ·double(SB), NOSPLIT, $8-16
 	MOVQ    R13, 40(DI)
 	RET
 
-// func neg(c *Fe384, a *Fe384)
+// func neg(c *Fe, a *Fe)
 TEXT ·neg(SB), NOSPLIT, $0-16
 	// |
 	MOVQ a+8(FP), DI
@@ -242,7 +242,7 @@ TEXT ·neg(SB), NOSPLIT, $0-16
 	RET
 
 
-// func montmul(c *Fe384, a *Fe384, b *Fe384)
+// func montmul(c *Fe, a *Fe, b *Fe)
 TEXT ·montmul(SB), NOSPLIT, $56-24
 	// |
 	// | Multiplication
@@ -1027,7 +1027,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 
 
 
-// func montsquare(c *Fe384, a *Fe384)
+// func montsquare(c *Fe, a *Fe)
 TEXT ·montsquare(SB), NOSPLIT, $40-16
 	MOVQ a+8(FP), DI
 	XORQ R11, R11
