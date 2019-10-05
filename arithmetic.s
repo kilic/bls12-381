@@ -71,7 +71,7 @@ TEXT ·addn(SB), NOSPLIT, $0-24
 	ADCQ 32(SI), R12
 	MOVQ 40(DI), R13
 	ADCQ 40(SI), R13
-	ADCQ $0x00, AX
+	ADCQ $0, AX
 
 	// |
 	MOVQ R8, (DI)
@@ -152,7 +152,7 @@ TEXT ·subn(SB), NOSPLIT, $0-24
 	SBBQ 32(SI), R12
 	MOVQ 40(DI), R13
 	SBBQ 40(SI), R13
-	ADCQ $0x00, AX
+	ADCQ $0, AX
 
 	// |
 	MOVQ R8, (DI)
@@ -254,10 +254,10 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	XORQ R13, R13
 	XORQ R14, R14
 	XORQ R15, R15
-	MOVQ $0x00000000, (SP)
-	MOVQ $0x00000000, 8(SP)
-	MOVQ $0x00000000, 16(SP)
-	MOVQ $0x00000000, 24(SP)
+	MOVQ $0, (SP)
+	MOVQ $0, 8(SP)
+	MOVQ $0, 16(SP)
+	MOVQ $0, 24(SP)
 
 	// |
 	// | b0
@@ -315,8 +315,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R10
-	ADCQ $0x00, R11
-	ADCQ $0x00, R12
+	ADCQ $0, R11
+	ADCQ $0, R12
 
 	// | a1 * b1
 	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
@@ -324,8 +324,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R11
-	ADCQ $0x00, R12
-	ADCQ $0x00, R13
+	ADCQ $0, R12
+	ADCQ $0, R13
 
 	// | a2 * b1
 	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
@@ -333,8 +333,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R12
-	ADCQ $0x00, R13
-	ADCQ $0x00, R14
+	ADCQ $0, R13
+	ADCQ $0, R14
 
 	// | a3 * b1
 	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
@@ -342,8 +342,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R13
-	ADCQ $0x00, R14
-	ADCQ $0x00, R15
+	ADCQ $0, R14
+	ADCQ $0, R15
 
 	// | a4 * b1
 	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
@@ -351,8 +351,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
-	ADCQ $0x00, (SP)
+	ADCQ $0, R15
+	ADCQ $0, (SP)
 
 	// | a5 * b1
 	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
@@ -360,8 +360,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, (SP)
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, (SP)
+	ADCQ $0, 8(SP)
 
 	// |
 	// | b2
@@ -373,8 +373,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R11
-	ADCQ $0x00, R12
-	ADCQ $0x00, R13
+	ADCQ $0, R12
+	ADCQ $0, R13
 
 	// | a1 * b2
 	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
@@ -382,8 +382,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R12
-	ADCQ $0x00, R13
-	ADCQ $0x00, R14
+	ADCQ $0, R13
+	ADCQ $0, R14
 
 	// | a2 * b2
 	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
@@ -391,8 +391,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R13
-	ADCQ $0x00, R14
-	ADCQ $0x00, R15
+	ADCQ $0, R14
+	ADCQ $0, R15
 
 	// | a3 * b2
 	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
@@ -400,8 +400,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
-	ADCQ $0x00, (SP)
+	ADCQ $0, R15
+	ADCQ $0, (SP)
 
 	// | a4 * b2
 	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
@@ -409,8 +409,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, (SP)
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, (SP)
+	ADCQ $0, 8(SP)
 
 	// | a5 * b2
 	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
@@ -418,8 +418,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R15
 	ADCQ DX, (SP)
-	ADCQ $0x00, 8(SP)
-	ADCQ $0x00, 16(SP)
+	ADCQ $0, 8(SP)
+	ADCQ $0, 16(SP)
 
 	// |
 	// | b3
@@ -431,8 +431,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R12
-	ADCQ $0x00, R13
-	ADCQ $0x00, R14
+	ADCQ $0, R13
+	ADCQ $0, R14
 
 	// | a1 * b3
 	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
@@ -440,8 +440,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R13
-	ADCQ $0x00, R14
-	ADCQ $0x00, R15
+	ADCQ $0, R14
+	ADCQ $0, R15
 
 	// | a2 * b3
 	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
@@ -449,8 +449,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
-	ADCQ $0x00, (SP)
+	ADCQ $0, R15
+	ADCQ $0, (SP)
 
 	// | a3 * b3
 	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
@@ -458,8 +458,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, (SP)
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, (SP)
+	ADCQ $0, 8(SP)
 
 	// | a4 * b3
 	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
@@ -467,8 +467,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R15
 	ADCQ DX, (SP)
-	ADCQ $0x00, 8(SP)
-	ADCQ $0x00, 16(SP)
+	ADCQ $0, 8(SP)
+	ADCQ $0, 16(SP)
 
 	// | a5 * b3
 	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
@@ -476,8 +476,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, (SP)
 	ADCQ DX, 8(SP)
-	ADCQ $0x00, 16(SP)
-	ADCQ $0x00, 24(SP)
+	ADCQ $0, 16(SP)
+	ADCQ $0, 24(SP)
 
 	// |
 	// | b4
@@ -489,8 +489,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R13
-	ADCQ $0x00, R14
-	ADCQ $0x00, R15
+	ADCQ $0, R14
+	ADCQ $0, R15
 
 	// | a1 * b4
 	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
@@ -498,8 +498,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
-	ADCQ $0x00, (SP)
+	ADCQ $0, R15
+	ADCQ $0, (SP)
 
 	// | a2 * b4
 	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
@@ -507,8 +507,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, (SP)
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, (SP)
+	ADCQ $0, 8(SP)
 
 	// | a3 * b4
 	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
@@ -516,8 +516,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R15
 	ADCQ DX, (SP)
-	ADCQ $0x00, 8(SP)
-	ADCQ $0x00, 16(SP)
+	ADCQ $0, 8(SP)
+	ADCQ $0, 16(SP)
 
 	// | a4 * b4
 	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
@@ -525,8 +525,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, (SP)
 	ADCQ DX, 8(SP)
-	ADCQ $0x00, 16(SP)
-	ADCQ $0x00, 24(SP)
+	ADCQ $0, 16(SP)
+	ADCQ $0, 24(SP)
 
 	// | a5 * b4
 	// | (w9, w10, w11) @ (8(SP), 16(SP), 24(SP))
@@ -534,7 +534,7 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, 8(SP)
 	ADCQ DX, 16(SP)
-	ADCQ $0x00, 24(SP)
+	ADCQ $0, 24(SP)
 
 	// |
 	// | b5
@@ -546,8 +546,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
-	ADCQ $0x00, (SP)
+	ADCQ $0, R15
+	ADCQ $0, (SP)
 
 	// | a1 * b5
 	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
@@ -555,8 +555,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, (SP)
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, (SP)
+	ADCQ $0, 8(SP)
 
 	// | a2 * b5
 	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
@@ -564,8 +564,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, R15
 	ADCQ DX, (SP)
-	ADCQ $0x00, 8(SP)
-	ADCQ $0x00, 16(SP)
+	ADCQ $0, 8(SP)
+	ADCQ $0, 16(SP)
 
 	// | a3 * b5
 	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
@@ -573,8 +573,8 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, (SP)
 	ADCQ DX, 8(SP)
-	ADCQ $0x00, 16(SP)
-	ADCQ $0x00, 24(SP)
+	ADCQ $0, 16(SP)
+	ADCQ $0, 24(SP)
 
 	// | a4 * b5
 	// | (w9, w10, w11) @ (8(SP), 16(SP), 24(SP))
@@ -582,7 +582,7 @@ TEXT ·mul(SB), NOSPLIT, $32-24
 	MULQ CX
 	ADDQ AX, 8(SP)
 	ADCQ DX, 16(SP)
-	ADCQ $0x00, 24(SP)
+	ADCQ $0, 24(SP)
 
 	// | a5 * b5
 	// | (w10, w11) @ (16(SP), 24(SP))
@@ -643,7 +643,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R9
 	ADCQ DX, R13
 	ADDQ R14, R9
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w2 @ R10
 	XORQ R14, R14
@@ -652,7 +652,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R10
 	ADCQ DX, R14
 	ADDQ R13, R10
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w3 @ R11
 	XORQ R13, R13
@@ -661,7 +661,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R11
 	ADCQ DX, R13
 	ADDQ R14, R11
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w4 @ R12
 	XORQ R14, R14
@@ -670,7 +670,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R12
 	ADCQ DX, R14
 	ADDQ R13, R12
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w5 @ SI
 	XORQ R13, R13
@@ -679,12 +679,12 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, SI
 	ADCQ DX, R13
 	ADDQ R14, SI
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w6 @ (SP)
 	ADDQ R13, (SP)
-	MOVQ $0x0000000000000000, R15
-	ADCQ $0x00, R15
+	MOVQ $0, R15
+	ADCQ $0, R15
 
 	// |
 	MOVQ 56(DI), R8
@@ -708,7 +708,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R10
 	ADCQ DX, R13
 	ADDQ R14, R10
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w3 @ R11
 	XORQ R14, R14
@@ -717,7 +717,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R11
 	ADCQ DX, R14
 	ADDQ R13, R11
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w4 @ R12
 	XORQ R13, R13
@@ -726,7 +726,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R12
 	ADCQ DX, R13
 	ADDQ R14, R12
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w5 @ SI
 	XORQ R14, R14
@@ -735,7 +735,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, SI
 	ADCQ DX, R14
 	ADDQ R13, SI
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w6 @ (SP)
 	XORQ R13, R13
@@ -744,13 +744,13 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, (SP)
 	ADCQ DX, R13
 	ADDQ R14, (SP)
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w7 @ R8
 	ADDQ R13, R15
 	ADCQ R15, R8
-	MOVQ $0x0000000000000000, R15
-	ADCQ $0x00, R15
+	MOVQ $0, R15
+	ADCQ $0, R15
 
 	// |
 	MOVQ 64(DI), R9
@@ -774,7 +774,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R11
 	ADCQ DX, R13
 	ADDQ R14, R11
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w4 @ R12
 	XORQ R14, R14
@@ -783,7 +783,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R12
 	ADCQ DX, R14
 	ADDQ R13, R12
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w5 @ SI
 	XORQ R13, R13
@@ -792,7 +792,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, SI
 	ADCQ DX, R13
 	ADDQ R14, SI
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w6 @ (SP)
 	XORQ R14, R14
@@ -801,7 +801,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, (SP)
 	ADCQ DX, R14
 	ADDQ R13, (SP)
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w7 @ R8
 	XORQ R13, R13
@@ -810,13 +810,13 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R8
 	ADCQ DX, R13
 	ADDQ R14, R8
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w8 @ R9
 	ADDQ R13, R15
 	ADCQ R15, R9
-	MOVQ $0x0000000000000000, R15
-	ADCQ $0x00, R15
+	MOVQ $0, R15
+	ADCQ $0, R15
 
 	// |
 	MOVQ 72(DI), R10
@@ -840,7 +840,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R12
 	ADCQ DX, R13
 	ADDQ R14, R12
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w5 @ SI
 	XORQ R14, R14
@@ -849,7 +849,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, SI
 	ADCQ DX, R14
 	ADDQ R13, SI
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w6 @ (SP)
 	XORQ R13, R13
@@ -858,7 +858,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, (SP)
 	ADCQ DX, R13
 	ADDQ R14, (SP)
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w7 @ R8
 	XORQ R14, R14
@@ -867,7 +867,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R8
 	ADCQ DX, R14
 	ADDQ R13, R8
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w8 @ R9
 	XORQ R13, R13
@@ -876,13 +876,13 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R9
 	ADCQ DX, R13
 	ADDQ R14, R9
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w9 @ R10
 	ADDQ R13, R15
 	ADCQ R15, R10
-	MOVQ $0x0000000000000000, R15
-	ADCQ $0x00, R15
+	MOVQ $0, R15
+	ADCQ $0, R15
 
 	// |
 	MOVQ 80(DI), R11
@@ -906,7 +906,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, SI
 	ADCQ DX, R13
 	ADDQ R14, SI
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w6 @ (SP)
 	XORQ R14, R14
@@ -915,7 +915,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, (SP)
 	ADCQ DX, R14
 	ADDQ R13, (SP)
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w7 @ R8
 	XORQ R13, R13
@@ -924,7 +924,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R8
 	ADCQ DX, R13
 	ADDQ R14, R8
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w8 @ R9
 	XORQ R14, R14
@@ -933,7 +933,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R9
 	ADCQ DX, R14
 	ADDQ R13, R9
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w9 @ R10
 	XORQ R13, R13
@@ -942,13 +942,13 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R10
 	ADCQ DX, R13
 	ADDQ R14, R10
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w10 @ R11
 	ADDQ R13, R15
 	ADCQ R15, R11
-	MOVQ $0x0000000000000000, R15
-	ADCQ $0x00, R15
+	MOVQ $0, R15
+	ADCQ $0, R15
 
 	// |
 	MOVQ 88(DI), R12
@@ -972,7 +972,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, (SP)
 	ADCQ DX, R13
 	ADDQ R14, (SP)
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w7 @ R8
 	XORQ R14, R14
@@ -981,7 +981,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R8
 	ADCQ DX, R14
 	ADDQ R13, R8
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w8 @ R9
 	XORQ R13, R13
@@ -990,7 +990,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R9
 	ADCQ DX, R13
 	ADDQ R14, R9
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w9 @ R10
 	XORQ R14, R14
@@ -999,7 +999,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R10
 	ADCQ DX, R14
 	ADDQ R13, R10
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w10 @ R11
 	XORQ R13, R13
@@ -1008,13 +1008,13 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	ADDQ AX, R11
 	ADCQ DX, R13
 	ADDQ R14, R11
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w11 @ R12
 	ADDQ R13, R15
 	ADCQ R15, R12
-	MOVQ $0x0000000000000000, R15
-	ADCQ $0x00, R15
+	MOVQ $0, R15
+	ADCQ $0, R15
 
 	// | Reduce by modulus
 	MOVQ (SP), R13
@@ -1029,7 +1029,7 @@ TEXT ·mont(SB), NOSPLIT, $8-16
 	SBBQ ·modulus+32(SB), DX
 	MOVQ R12, SI
 	SBBQ ·modulus+40(SB), SI
-	SBBQ $0x00, R15
+	SBBQ $0, R15
 
 	// | Compare & Return
 	MOVQ    c+0(FP), DI
@@ -1062,10 +1062,10 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	XORQ R13, R13
 	XORQ R14, R14
 	XORQ R15, R15
-	MOVQ $0x00000000, (SP)
-	MOVQ $0x00000000, 8(SP)
-	MOVQ $0x00000000, 16(SP)
-	MOVQ $0x00000000, 24(SP)
+	MOVQ $0, (SP)
+	MOVQ $0, 8(SP)
+	MOVQ $0, 16(SP)
+	MOVQ $0, 24(SP)
 
 	// |
 	// | b0
@@ -1123,8 +1123,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R10
-	ADCQ $0x00, R11
-	ADCQ $0x00, R12
+	ADCQ $0, R11
+	ADCQ $0, R12
 
 	// | a1 * b1
 	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
@@ -1132,8 +1132,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R11
-	ADCQ $0x00, R12
-	ADCQ $0x00, R13
+	ADCQ $0, R12
+	ADCQ $0, R13
 
 	// | a2 * b1
 	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
@@ -1141,8 +1141,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R12
-	ADCQ $0x00, R13
-	ADCQ $0x00, R14
+	ADCQ $0, R13
+	ADCQ $0, R14
 
 	// | a3 * b1
 	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
@@ -1150,8 +1150,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R13
-	ADCQ $0x00, R14
-	ADCQ $0x00, R15
+	ADCQ $0, R14
+	ADCQ $0, R15
 
 	// | a4 * b1
 	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
@@ -1159,8 +1159,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
-	ADCQ $0x00, (SP)
+	ADCQ $0, R15
+	ADCQ $0, (SP)
 
 	// | a5 * b1
 	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
@@ -1168,8 +1168,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, (SP)
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, (SP)
+	ADCQ $0, 8(SP)
 
 	// |
 	// | b2
@@ -1181,8 +1181,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R11
-	ADCQ $0x00, R12
-	ADCQ $0x00, R13
+	ADCQ $0, R12
+	ADCQ $0, R13
 
 	// | a1 * b2
 	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
@@ -1190,8 +1190,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R12
-	ADCQ $0x00, R13
-	ADCQ $0x00, R14
+	ADCQ $0, R13
+	ADCQ $0, R14
 
 	// | a2 * b2
 	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
@@ -1199,8 +1199,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R13
-	ADCQ $0x00, R14
-	ADCQ $0x00, R15
+	ADCQ $0, R14
+	ADCQ $0, R15
 
 	// | a3 * b2
 	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
@@ -1208,8 +1208,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
-	ADCQ $0x00, (SP)
+	ADCQ $0, R15
+	ADCQ $0, (SP)
 
 	// | a4 * b2
 	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
@@ -1217,8 +1217,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, (SP)
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, (SP)
+	ADCQ $0, 8(SP)
 
 	// | a5 * b2
 	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
@@ -1226,8 +1226,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R15
 	ADCQ DX, (SP)
-	ADCQ $0x00, 8(SP)
-	ADCQ $0x00, 16(SP)
+	ADCQ $0, 8(SP)
+	ADCQ $0, 16(SP)
 
 	// |
 	// | b3
@@ -1239,8 +1239,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R12
-	ADCQ $0x00, R13
-	ADCQ $0x00, R14
+	ADCQ $0, R13
+	ADCQ $0, R14
 
 	// | a1 * b3
 	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
@@ -1248,8 +1248,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R13
-	ADCQ $0x00, R14
-	ADCQ $0x00, R15
+	ADCQ $0, R14
+	ADCQ $0, R15
 
 	// | a2 * b3
 	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
@@ -1257,8 +1257,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
-	ADCQ $0x00, (SP)
+	ADCQ $0, R15
+	ADCQ $0, (SP)
 
 	// | a3 * b3
 	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
@@ -1266,8 +1266,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, (SP)
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, (SP)
+	ADCQ $0, 8(SP)
 
 	// | a4 * b3
 	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
@@ -1275,8 +1275,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R15
 	ADCQ DX, (SP)
-	ADCQ $0x00, 8(SP)
-	ADCQ $0x00, 16(SP)
+	ADCQ $0, 8(SP)
+	ADCQ $0, 16(SP)
 
 	// | a5 * b3
 	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
@@ -1284,8 +1284,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, (SP)
 	ADCQ DX, 8(SP)
-	ADCQ $0x00, 16(SP)
-	ADCQ $0x00, 24(SP)
+	ADCQ $0, 16(SP)
+	ADCQ $0, 24(SP)
 
 	// |
 	// | b4
@@ -1297,8 +1297,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R13
-	ADCQ $0x00, R14
-	ADCQ $0x00, R15
+	ADCQ $0, R14
+	ADCQ $0, R15
 
 	// | a1 * b4
 	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
@@ -1306,8 +1306,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
-	ADCQ $0x00, (SP)
+	ADCQ $0, R15
+	ADCQ $0, (SP)
 
 	// | a2 * b4
 	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
@@ -1315,8 +1315,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, (SP)
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, (SP)
+	ADCQ $0, 8(SP)
 
 	// | a3 * b4
 	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
@@ -1324,8 +1324,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R15
 	ADCQ DX, (SP)
-	ADCQ $0x00, 8(SP)
-	ADCQ $0x00, 16(SP)
+	ADCQ $0, 8(SP)
+	ADCQ $0, 16(SP)
 
 	// | a4 * b4
 	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
@@ -1333,8 +1333,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, (SP)
 	ADCQ DX, 8(SP)
-	ADCQ $0x00, 16(SP)
-	ADCQ $0x00, 24(SP)
+	ADCQ $0, 16(SP)
+	ADCQ $0, 24(SP)
 
 	// | a5 * b4
 	// | (w9, w10, w11) @ (8(SP), 16(SP), 24(SP))
@@ -1342,7 +1342,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, 8(SP)
 	ADCQ DX, 16(SP)
-	ADCQ $0x00, 24(SP)
+	ADCQ $0, 24(SP)
 
 	// |
 	// | b5
@@ -1354,8 +1354,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
-	ADCQ $0x00, (SP)
+	ADCQ $0, R15
+	ADCQ $0, (SP)
 
 	// | a1 * b5
 	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
@@ -1363,8 +1363,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, (SP)
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, (SP)
+	ADCQ $0, 8(SP)
 
 	// | a2 * b5
 	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
@@ -1372,8 +1372,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, R15
 	ADCQ DX, (SP)
-	ADCQ $0x00, 8(SP)
-	ADCQ $0x00, 16(SP)
+	ADCQ $0, 8(SP)
+	ADCQ $0, 16(SP)
 
 	// | a3 * b5
 	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
@@ -1381,8 +1381,8 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, (SP)
 	ADCQ DX, 8(SP)
-	ADCQ $0x00, 16(SP)
-	ADCQ $0x00, 24(SP)
+	ADCQ $0, 16(SP)
+	ADCQ $0, 24(SP)
 
 	// | a4 * b5
 	// | (w9, w10, w11) @ (8(SP), 16(SP), 24(SP))
@@ -1390,7 +1390,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MULQ CX
 	ADDQ AX, 8(SP)
 	ADCQ DX, 16(SP)
-	ADCQ $0x00, 24(SP)
+	ADCQ $0, 24(SP)
 
 	// | a5 * b5
 	// | (w10, w11) @ (16(SP), 24(SP))
@@ -1423,7 +1423,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R9
 	ADCQ DX, SI
 	ADDQ DI, R9
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w2 @ R10
 	XORQ DI, DI
@@ -1432,7 +1432,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R10
 	ADCQ DX, DI
 	ADDQ SI, R10
-	ADCQ $0x00, DI
+	ADCQ $0, DI
 
 	// | w3 @ R11
 	XORQ SI, SI
@@ -1441,7 +1441,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R11
 	ADCQ DX, SI
 	ADDQ DI, R11
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w4 @ R12
 	XORQ DI, DI
@@ -1450,7 +1450,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R12
 	ADCQ DX, DI
 	ADDQ SI, R12
-	ADCQ $0x00, DI
+	ADCQ $0, DI
 
 	// | w5 @ R13
 	XORQ SI, SI
@@ -1459,12 +1459,12 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R13
 	ADCQ DX, SI
 	ADDQ DI, R13
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w6 @ R14
 	ADDQ SI, R14
-	MOVQ $0x0000000000000000, R15
-	ADCQ $0x00, R15
+	MOVQ $0, R15
+	ADCQ $0, R15
 
 	// |
 	MOVQ 32(SP), R8
@@ -1488,7 +1488,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R10
 	ADCQ DX, SI
 	ADDQ DI, R10
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w3 @ R11
 	XORQ DI, DI
@@ -1497,7 +1497,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R11
 	ADCQ DX, DI
 	ADDQ SI, R11
-	ADCQ $0x00, DI
+	ADCQ $0, DI
 
 	// | w4 @ R12
 	XORQ SI, SI
@@ -1506,7 +1506,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R12
 	ADCQ DX, SI
 	ADDQ DI, R12
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w5 @ R13
 	XORQ DI, DI
@@ -1515,7 +1515,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R13
 	ADCQ DX, DI
 	ADDQ SI, R13
-	ADCQ $0x00, DI
+	ADCQ $0, DI
 
 	// | w6 @ R14
 	XORQ SI, SI
@@ -1524,13 +1524,13 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R14
 	ADCQ DX, SI
 	ADDQ DI, R14
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w7 @ R8
 	ADDQ SI, R15
 	ADCQ R15, R8
-	MOVQ $0x0000000000000000, R15
-	ADCQ $0x00, R15
+	MOVQ $0, R15
+	ADCQ $0, R15
 
 	// |
 	MOVQ (SP), R9
@@ -1554,7 +1554,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R11
 	ADCQ DX, SI
 	ADDQ DI, R11
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w4 @ R12
 	XORQ DI, DI
@@ -1563,7 +1563,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R12
 	ADCQ DX, DI
 	ADDQ SI, R12
-	ADCQ $0x00, DI
+	ADCQ $0, DI
 
 	// | w5 @ R13
 	XORQ SI, SI
@@ -1572,7 +1572,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R13
 	ADCQ DX, SI
 	ADDQ DI, R13
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w6 @ R14
 	XORQ DI, DI
@@ -1581,7 +1581,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R14
 	ADCQ DX, DI
 	ADDQ SI, R14
-	ADCQ $0x00, DI
+	ADCQ $0, DI
 
 	// | w7 @ R8
 	XORQ SI, SI
@@ -1590,13 +1590,13 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R8
 	ADCQ DX, SI
 	ADDQ DI, R8
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w8 @ R9
 	ADDQ SI, R15
 	ADCQ R15, R9
-	MOVQ $0x0000000000000000, R15
-	ADCQ $0x00, R15
+	MOVQ $0, R15
+	ADCQ $0, R15
 
 	// |
 	MOVQ 8(SP), R10
@@ -1620,7 +1620,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R12
 	ADCQ DX, SI
 	ADDQ DI, R12
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w5 @ R13
 	XORQ DI, DI
@@ -1629,7 +1629,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R13
 	ADCQ DX, DI
 	ADDQ SI, R13
-	ADCQ $0x00, DI
+	ADCQ $0, DI
 
 	// | w6 @ R14
 	XORQ SI, SI
@@ -1638,7 +1638,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R14
 	ADCQ DX, SI
 	ADDQ DI, R14
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w7 @ R8
 	XORQ DI, DI
@@ -1647,7 +1647,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R8
 	ADCQ DX, DI
 	ADDQ SI, R8
-	ADCQ $0x00, DI
+	ADCQ $0, DI
 
 	// | w8 @ R9
 	XORQ SI, SI
@@ -1656,13 +1656,13 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R9
 	ADCQ DX, SI
 	ADDQ DI, R9
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w9 @ R10
 	ADDQ SI, R15
 	ADCQ R15, R10
-	MOVQ $0x0000000000000000, R15
-	ADCQ $0x00, R15
+	MOVQ $0, R15
+	ADCQ $0, R15
 
 	// |
 	MOVQ 16(SP), R11
@@ -1686,7 +1686,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R13
 	ADCQ DX, SI
 	ADDQ DI, R13
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w6 @ R14
 	XORQ DI, DI
@@ -1695,7 +1695,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R14
 	ADCQ DX, DI
 	ADDQ SI, R14
-	ADCQ $0x00, DI
+	ADCQ $0, DI
 
 	// | w7 @ R8
 	XORQ SI, SI
@@ -1704,7 +1704,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R8
 	ADCQ DX, SI
 	ADDQ DI, R8
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w8 @ R9
 	XORQ DI, DI
@@ -1713,7 +1713,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R9
 	ADCQ DX, DI
 	ADDQ SI, R9
-	ADCQ $0x00, DI
+	ADCQ $0, DI
 
 	// | w9 @ R10
 	XORQ SI, SI
@@ -1722,13 +1722,13 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R10
 	ADCQ DX, SI
 	ADDQ DI, R10
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w10 @ R11
 	ADDQ SI, R15
 	ADCQ R15, R11
-	MOVQ $0x0000000000000000, R15
-	ADCQ $0x00, R15
+	MOVQ $0, R15
+	ADCQ $0, R15
 
 	// |
 	MOVQ 24(SP), R12
@@ -1752,7 +1752,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R14
 	ADCQ DX, SI
 	ADDQ DI, R14
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w7 @ R8
 	XORQ DI, DI
@@ -1761,7 +1761,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R8
 	ADCQ DX, DI
 	ADDQ SI, R8
-	ADCQ $0x00, DI
+	ADCQ $0, DI
 
 	// | w8 @ R9
 	XORQ SI, SI
@@ -1770,7 +1770,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R9
 	ADCQ DX, SI
 	ADDQ DI, R9
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w9 @ R10
 	XORQ DI, DI
@@ -1779,7 +1779,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R10
 	ADCQ DX, DI
 	ADDQ SI, R10
-	ADCQ $0x00, DI
+	ADCQ $0, DI
 
 	// | w10 @ R11
 	XORQ SI, SI
@@ -1788,13 +1788,13 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	ADDQ AX, R11
 	ADCQ DX, SI
 	ADDQ DI, R11
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w11 @ R12
 	ADDQ SI, R15
 	ADCQ R15, R12
-	MOVQ $0x0000000000000000, R15
-	ADCQ $0x00, R15
+	MOVQ $0, R15
+	ADCQ $0, R15
 
 	// | Reduce by modulus
 	MOVQ R14, R13
@@ -1811,7 +1811,7 @@ TEXT ·montmul(SB), NOSPLIT, $56-24
 	MOVQ R12, BX
 	SBBQ ·modulus+40(SB), BX
 	MOVQ BX, 48(SP)
-	SBBQ $0x00, R15
+	SBBQ $0, R15
 
 	// | Compare & Return
 	MOVQ    c+0(FP), DI
@@ -1840,9 +1840,9 @@ TEXT ·square(SB), NOSPLIT, $24-16
 	XORQ R15, R15
 	XORQ CX, CX
 	XORQ SI, SI
-	MOVQ $0x00000000, (SP)
-	MOVQ $0x00000000, 8(SP)
-	MOVQ $0x00000000, 16(SP)
+	MOVQ $0, (SP)
+	MOVQ $0, 8(SP)
+	MOVQ $0, 16(SP)
 
 	// | a0
 	// | w0 @ R9
@@ -1857,7 +1857,7 @@ TEXT ·square(SB), NOSPLIT, $24-16
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, R12
+	ADCQ $0, R12
 	ADDQ AX, R10
 	ADCQ DX, R11
 
@@ -1866,40 +1866,40 @@ TEXT ·square(SB), NOSPLIT, $24-16
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 	ADDQ AX, R11
 	ADCQ DX, R12
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w3 @ R12
 	MOVQ 24(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 	ADDQ AX, R12
 	ADCQ DX, R13
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w4 @ R13
 	MOVQ 32(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, R15
+	ADCQ $0, R15
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
+	ADCQ $0, R15
 
 	// | w5 @ R14
 	MOVQ 40(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | a1
 	// | w2 @ R11
@@ -1908,48 +1908,48 @@ TEXT ·square(SB), NOSPLIT, $24-16
 	MULQ R8
 	ADDQ AX, R11
 	ADCQ DX, R12
-	ADCQ $0x00, R13
-	ADCQ $0x00, R14
+	ADCQ $0, R13
+	ADCQ $0, R14
 
 	// | w3 @ R12
 	MOVQ 16(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 	ADDQ AX, R12
 	ADCQ DX, R13
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w4 @ R13
 	MOVQ 24(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, R15
+	ADCQ $0, R15
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
+	ADCQ $0, R15
 
 	// | w5 @ R14
 	MOVQ 32(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w6 @ R15
 	MOVQ 40(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 	ADDQ AX, R15
 	ADCQ DX, CX
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | a2
 	// | w4 @ R13
@@ -1958,38 +1958,38 @@ TEXT ·square(SB), NOSPLIT, $24-16
 	MULQ R8
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
-	ADCQ $0x00, CX
+	ADCQ $0, R15
+	ADCQ $0, CX
 
 	// | w5 @ R14
 	MOVQ 24(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w6 @ R15
 	MOVQ 32(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 	ADDQ AX, R15
 	ADCQ DX, CX
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w7 @ CX
 	MOVQ 40(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, (SP)
+	ADCQ $0, (SP)
 	ADDQ AX, CX
 	ADCQ DX, SI
-	ADCQ $0x00, (SP)
+	ADCQ $0, (SP)
 
 	// | a3
 	// | w6 @ R15
@@ -1998,28 +1998,28 @@ TEXT ·square(SB), NOSPLIT, $24-16
 	MULQ R8
 	ADDQ AX, R15
 	ADCQ DX, CX
-	ADCQ $0x00, SI
-	ADCQ $0x00, (SP)
+	ADCQ $0, SI
+	ADCQ $0, (SP)
 
 	// | w7 @ CX
 	MOVQ 32(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, (SP)
+	ADCQ $0, (SP)
 	ADDQ AX, CX
 	ADCQ DX, SI
-	ADCQ $0x00, (SP)
+	ADCQ $0, (SP)
 
 	// | w8 @ SI
 	MOVQ 40(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, 8(SP)
 	ADDQ AX, SI
 	ADCQ DX, (SP)
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, 8(SP)
 
 	// | a4
 	// | w8 @ SI
@@ -2028,17 +2028,17 @@ TEXT ·square(SB), NOSPLIT, $24-16
 	MULQ R8
 	ADDQ AX, SI
 	ADCQ DX, (SP)
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, 8(SP)
 
 	// | w9 @ (SP)
 	MOVQ 40(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, 16(SP)
+	ADCQ $0, 16(SP)
 	ADDQ AX, (SP)
 	ADCQ DX, 8(SP)
-	ADCQ $0x00, 16(SP)
+	ADCQ $0, 16(SP)
 
 	// | a5
 	// | w10 @ 8(SP)
@@ -2077,9 +2077,9 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	XORQ R15, R15
 	XORQ CX, CX
 	XORQ SI, SI
-	MOVQ $0x00000000, (SP)
-	MOVQ $0x00000000, 8(SP)
-	MOVQ $0x00000000, 16(SP)
+	MOVQ $0, (SP)
+	MOVQ $0, 8(SP)
+	MOVQ $0, 16(SP)
 
 	// | a0
 	// | w0 @ R9
@@ -2094,7 +2094,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, R12
+	ADCQ $0, R12
 	ADDQ AX, R10
 	ADCQ DX, R11
 
@@ -2103,40 +2103,40 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 	ADDQ AX, R11
 	ADCQ DX, R12
-	ADCQ $0x00, R13
+	ADCQ $0, R13
 
 	// | w3 @ R12
 	MOVQ 24(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 	ADDQ AX, R12
 	ADCQ DX, R13
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w4 @ R13
 	MOVQ 32(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, R15
+	ADCQ $0, R15
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
+	ADCQ $0, R15
 
 	// | w5 @ R14
 	MOVQ 40(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | a1
 	// | w2 @ R11
@@ -2145,48 +2145,48 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	MULQ R8
 	ADDQ AX, R11
 	ADCQ DX, R12
-	ADCQ $0x00, R13
-	ADCQ $0x00, R14
+	ADCQ $0, R13
+	ADCQ $0, R14
 
 	// | w3 @ R12
 	MOVQ 16(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 	ADDQ AX, R12
 	ADCQ DX, R13
-	ADCQ $0x00, R14
+	ADCQ $0, R14
 
 	// | w4 @ R13
 	MOVQ 24(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, R15
+	ADCQ $0, R15
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
+	ADCQ $0, R15
 
 	// | w5 @ R14
 	MOVQ 32(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w6 @ R15
 	MOVQ 40(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 	ADDQ AX, R15
 	ADCQ DX, CX
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | a2
 	// | w4 @ R13
@@ -2195,38 +2195,38 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	MULQ R8
 	ADDQ AX, R13
 	ADCQ DX, R14
-	ADCQ $0x00, R15
-	ADCQ $0x00, CX
+	ADCQ $0, R15
+	ADCQ $0, CX
 
 	// | w5 @ R14
 	MOVQ 24(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 	ADDQ AX, R14
 	ADCQ DX, R15
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w6 @ R15
 	MOVQ 32(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 	ADDQ AX, R15
 	ADCQ DX, CX
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w7 @ CX
 	MOVQ 40(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, (SP)
+	ADCQ $0, (SP)
 	ADDQ AX, CX
 	ADCQ DX, SI
-	ADCQ $0x00, (SP)
+	ADCQ $0, (SP)
 
 	// | a3
 	// | w6 @ R15
@@ -2235,28 +2235,28 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	MULQ R8
 	ADDQ AX, R15
 	ADCQ DX, CX
-	ADCQ $0x00, SI
-	ADCQ $0x00, (SP)
+	ADCQ $0, SI
+	ADCQ $0, (SP)
 
 	// | w7 @ CX
 	MOVQ 32(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, (SP)
+	ADCQ $0, (SP)
 	ADDQ AX, CX
 	ADCQ DX, SI
-	ADCQ $0x00, (SP)
+	ADCQ $0, (SP)
 
 	// | w8 @ SI
 	MOVQ 40(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, 8(SP)
 	ADDQ AX, SI
 	ADCQ DX, (SP)
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, 8(SP)
 
 	// | a4
 	// | w8 @ SI
@@ -2265,17 +2265,17 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	MULQ R8
 	ADDQ AX, SI
 	ADCQ DX, (SP)
-	ADCQ $0x00, 8(SP)
+	ADCQ $0, 8(SP)
 
 	// | w9 @ (SP)
 	MOVQ 40(DI), AX
 	MULQ R8
 	ADDQ AX, AX
 	ADCQ DX, DX
-	ADCQ $0x00, 16(SP)
+	ADCQ $0, 16(SP)
 	ADDQ AX, (SP)
 	ADCQ DX, 8(SP)
-	ADCQ $0x00, 16(SP)
+	ADCQ $0, 16(SP)
 
 	// | a5
 	// | w10 @ 8(SP)
@@ -2310,7 +2310,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R10
 	ADCQ DX, CX
 	ADDQ SI, R10
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w2 @ R11
 	XORQ SI, SI
@@ -2319,7 +2319,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R11
 	ADCQ DX, SI
 	ADDQ CX, R11
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w3 @ R12
 	XORQ CX, CX
@@ -2328,7 +2328,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R12
 	ADCQ DX, CX
 	ADDQ SI, R12
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w4 @ R13
 	XORQ SI, SI
@@ -2337,7 +2337,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R13
 	ADCQ DX, SI
 	ADDQ CX, R13
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w5 @ R14
 	XORQ CX, CX
@@ -2346,12 +2346,12 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R14
 	ADCQ DX, CX
 	ADDQ SI, R14
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w6 @ R15
 	ADDQ CX, R15
-	MOVQ $0x0000000000000000, DI
-	ADCQ $0x00, DI
+	MOVQ $0, DI
+	ADCQ $0, DI
 
 	// |
 	MOVQ 32(SP), R9
@@ -2375,7 +2375,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R11
 	ADCQ DX, CX
 	ADDQ SI, R11
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w3 @ R12
 	XORQ SI, SI
@@ -2384,7 +2384,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R12
 	ADCQ DX, SI
 	ADDQ CX, R12
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w4 @ R13
 	XORQ CX, CX
@@ -2393,7 +2393,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R13
 	ADCQ DX, CX
 	ADDQ SI, R13
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w5 @ R14
 	XORQ SI, SI
@@ -2402,7 +2402,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R14
 	ADCQ DX, SI
 	ADDQ CX, R14
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w6 @ R15
 	XORQ CX, CX
@@ -2411,13 +2411,13 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R15
 	ADCQ DX, CX
 	ADDQ SI, R15
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w7 @ R9
 	ADDQ CX, DI
 	ADCQ DI, R9
-	MOVQ $0x0000000000000000, DI
-	ADCQ $0x00, DI
+	MOVQ $0, DI
+	ADCQ $0, DI
 
 	// |
 	MOVQ 24(SP), R10
@@ -2441,7 +2441,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R12
 	ADCQ DX, CX
 	ADDQ SI, R12
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w4 @ R13
 	XORQ SI, SI
@@ -2450,7 +2450,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R13
 	ADCQ DX, SI
 	ADDQ CX, R13
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w5 @ R14
 	XORQ CX, CX
@@ -2459,7 +2459,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R14
 	ADCQ DX, CX
 	ADDQ SI, R14
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w6 @ R15
 	XORQ SI, SI
@@ -2468,7 +2468,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R15
 	ADCQ DX, SI
 	ADDQ CX, R15
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w7 @ R9
 	XORQ CX, CX
@@ -2477,13 +2477,13 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R9
 	ADCQ DX, CX
 	ADDQ SI, R9
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w8 @ R10
 	ADDQ CX, DI
 	ADCQ DI, R10
-	MOVQ $0x0000000000000000, DI
-	ADCQ $0x00, DI
+	MOVQ $0, DI
+	ADCQ $0, DI
 
 	// |
 	MOVQ (SP), R11
@@ -2507,7 +2507,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R13
 	ADCQ DX, CX
 	ADDQ SI, R13
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w5 @ R14
 	XORQ SI, SI
@@ -2516,7 +2516,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R14
 	ADCQ DX, SI
 	ADDQ CX, R14
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w6 @ R15
 	XORQ CX, CX
@@ -2525,7 +2525,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R15
 	ADCQ DX, CX
 	ADDQ SI, R15
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w7 @ R9
 	XORQ SI, SI
@@ -2534,7 +2534,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R9
 	ADCQ DX, SI
 	ADDQ CX, R9
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w8 @ R10
 	XORQ CX, CX
@@ -2543,13 +2543,13 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R10
 	ADCQ DX, CX
 	ADDQ SI, R10
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w9 @ R11
 	ADDQ CX, DI
 	ADCQ DI, R11
-	MOVQ $0x0000000000000000, DI
-	ADCQ $0x00, DI
+	MOVQ $0, DI
+	ADCQ $0, DI
 
 	// |
 	MOVQ 8(SP), R12
@@ -2573,7 +2573,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R14
 	ADCQ DX, CX
 	ADDQ SI, R14
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w6 @ R15
 	XORQ SI, SI
@@ -2582,7 +2582,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R15
 	ADCQ DX, SI
 	ADDQ CX, R15
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w7 @ R9
 	XORQ CX, CX
@@ -2591,7 +2591,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R9
 	ADCQ DX, CX
 	ADDQ SI, R9
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w8 @ R10
 	XORQ SI, SI
@@ -2600,7 +2600,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R10
 	ADCQ DX, SI
 	ADDQ CX, R10
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w9 @ R11
 	XORQ CX, CX
@@ -2609,13 +2609,13 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R11
 	ADCQ DX, CX
 	ADDQ SI, R11
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w10 @ R12
 	ADDQ CX, DI
 	ADCQ DI, R12
-	MOVQ $0x0000000000000000, DI
-	ADCQ $0x00, DI
+	MOVQ $0, DI
+	ADCQ $0, DI
 
 	// |
 	MOVQ 16(SP), R13
@@ -2639,7 +2639,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R15
 	ADCQ DX, CX
 	ADDQ SI, R15
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w7 @ R9
 	XORQ SI, SI
@@ -2648,7 +2648,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R9
 	ADCQ DX, SI
 	ADDQ CX, R9
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w8 @ R10
 	XORQ CX, CX
@@ -2657,7 +2657,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R10
 	ADCQ DX, CX
 	ADDQ SI, R10
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w9 @ R11
 	XORQ SI, SI
@@ -2666,7 +2666,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R11
 	ADCQ DX, SI
 	ADDQ CX, R11
-	ADCQ $0x00, SI
+	ADCQ $0, SI
 
 	// | w10 @ R12
 	XORQ CX, CX
@@ -2675,13 +2675,13 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	ADDQ AX, R12
 	ADCQ DX, CX
 	ADDQ SI, R12
-	ADCQ $0x00, CX
+	ADCQ $0, CX
 
 	// | w11 @ R13
 	ADDQ CX, DI
 	ADCQ DI, R13
-	MOVQ $0x0000000000000000, DI
-	ADCQ $0x00, DI
+	MOVQ $0, DI
+	ADCQ $0, DI
 
 	// | Compare & Return
 	MOVQ    R15, R8
@@ -2696,7 +2696,7 @@ TEXT ·montsquare(SB), NOSPLIT, $40-16
 	SBBQ    ·modulus+32(SB), DX
 	MOVQ    R13, SI
 	SBBQ    ·modulus+40(SB), SI
-	SBBQ    $0x00, DI
+	SBBQ    $0, DI
 	MOVQ    c+0(FP), DI
 	CMOVQCC R8, R15
 	MOVQ    R15, (DI)
