@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestBLSPairing(t *testing.T) {
+func TestPairing(t *testing.T) {
 	e := NewBLSPairingEngine()
 	t.Run("Single Expected", func(t *testing.T) {
 		G := &PointG1{}
@@ -42,7 +42,7 @@ func TestBLSPairing(t *testing.T) {
 	})
 }
 
-func TestBLSPairing2(t *testing.T) {
+func TestPairingMulti(t *testing.T) {
 	e := NewBLSPairingEngine()
 	G := &PointG1{}
 	H := &PointG2{}
