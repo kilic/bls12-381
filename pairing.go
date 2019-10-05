@@ -171,7 +171,7 @@ func (e *BLSPairingEngine) millerLoop(f *Fe12, points []PointG1, twistPoints []P
 
 func (e *BLSPairingEngine) exp(c, a *Fe12) {
 	fp12 := e.Fp12
-	fp12.Exp(c, a, x)
+	fp12.CyclotomicExp(c, a, x)
 	fp12.Conjugate(c, c)
 }
 
@@ -185,10 +185,10 @@ func (e *BLSPairingEngine) finalExp(f *Fe12) {
 	fp12.Copy(&t[1], &t[2])
 	fp12.FrobeniusMapAssign(&t[2], 2)
 	fp12.MulAssign(&t[2], &t[1])
-	fp12.Square(&t[1], &t[2])
+	fp12.CyclotomicSquare(&t[1], &t[2])
 	fp12.Conjugate(&t[1], &t[1])
 	e.exp(&t[3], &t[2])
-	fp12.Square(&t[4], &t[3])
+	fp12.CyclotomicSquare(&t[4], &t[3])
 	fp12.Mul(&t[5], &t[1], &t[3])
 	e.exp(&t[1], &t[5])
 	e.exp(&t[0], &t[1])

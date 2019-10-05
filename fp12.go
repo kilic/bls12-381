@@ -9,19 +9,24 @@ import (
 type Fe12 [2]Fe6
 
 type Fp12 struct {
-	f *Fp6
-	t [4]*Fe6
+	f  *Fp6
+	t  [4]*Fe6
+	t2 [9]*Fe2
 }
 
 func NewFp12(f *Fp6) *Fp12 {
 	t := [4]*Fe6{}
+	t2 := [9]*Fe2{}
 	for i := 0; i < 4; i++ {
 		t[i] = f.Zero()
 	}
-	if f == nil {
-		return &Fp12{NewFp6(nil), t}
+	for i := 0; i < 9; i++ {
+		t2[i] = &Fe2{}
 	}
-	return &Fp12{f, t}
+	if f == nil {
+		return &Fp12{NewFp6(nil), t, t2}
+	}
+	return &Fp12{f, t, t2}
 }
 
 var Fp12One = Fe12{Fp6One, Fp6Zero}
@@ -153,6 +158,62 @@ func (fp *Fp12) Square(c, a *Fe12) {
 	fp.f.Copy(&c[1], t[3])
 }
 
+func (fp *Fp12) CyclotomicSquare(c, a *Fe12) {
+	t := fp.t2
+	fp.f.f.Mul(t[0], &a[0][0], &a[1][1])
+	fp.f.f.Add(t[1], &a[0][0], &a[1][1])
+	fp.f.f.MulByNonResidue(t[2], &a[1][1])
+	fp.f.f.Add(t[2], t[2], &a[0][0])
+	fp.f.f.MulByNonResidue(t[3], t[0])
+	fp.f.f.Mul(t[4], t[1], t[2])
+	fp.f.f.Sub(t[4], t[4], t[0])
+	fp.f.f.Sub(t[4], t[4], t[3])
+	fp.f.f.Double(t[5], t[0])
+	fp.f.f.Mul(t[0], &a[1][0], &a[0][2])
+	fp.f.f.Add(t[1], &a[1][0], &a[0][2])
+	fp.f.f.MulByNonResidue(t[2], &a[0][2])
+	fp.f.f.Add(t[2], t[2], &a[1][0])
+	fp.f.f.MulByNonResidue(t[3], t[0])
+	fp.f.f.Mul(t[6], t[1], t[2])
+	fp.f.f.Sub(t[6], t[6], t[0])
+	fp.f.f.Sub(t[6], t[6], t[3])
+	fp.f.f.Double(t[7], t[0])
+	fp.f.f.Mul(t[0], &a[0][1], &a[1][2])
+	fp.f.f.Add(t[1], &a[0][1], &a[1][2])
+	fp.f.f.MulByNonResidue(t[2], &a[1][2])
+	fp.f.f.Add(t[2], t[2], &a[0][1])
+	fp.f.f.MulByNonResidue(t[3], t[0])
+	fp.f.f.Mul(t[8], t[1], t[2])
+	fp.f.f.Sub(t[8], t[8], t[0])
+	fp.f.f.Sub(t[8], t[8], t[3])
+	fp.f.f.Double(t[0], t[0])
+	fp.f.f.MulByNonResidue(t[0], t[0])
+	fp.f.f.Sub(t[1], t[4], &a[0][0])
+	fp.f.f.Double(t[1], t[1])
+	fp.f.f.Add(t[1], t[1], t[4])
+	fp.f.f.Copy(&c[0][0], t[1])
+	fp.f.f.Add(t[1], t[5], &a[1][1])
+	fp.f.f.Double(t[1], t[1])
+	fp.f.f.Add(t[1], t[1], t[5])
+	fp.f.f.Copy(&c[1][1], t[1])
+	fp.f.f.Add(t[1], t[0], &a[1][0])
+	fp.f.f.Double(t[1], t[1])
+	fp.f.f.Add(t[1], t[1], t[0])
+	fp.f.f.Copy(&c[1][0], t[1])
+	fp.f.f.Sub(t[1], t[8], &a[0][2])
+	fp.f.f.Double(t[1], t[1])
+	fp.f.f.Add(t[1], t[1], t[8])
+	fp.f.f.Copy(&c[0][2], t[1])
+	fp.f.f.Sub(t[1], t[6], &a[0][1])
+	fp.f.f.Double(t[1], t[1])
+	fp.f.f.Add(t[1], t[1], t[6])
+	fp.f.f.Copy(&c[0][1], t[1])
+	fp.f.f.Add(t[1], t[7], &a[1][2])
+	fp.f.f.Double(t[1], t[1])
+	fp.f.f.Add(t[1], t[1], t[7])
+	fp.f.f.Copy(&c[1][2], t[1])
+}
+
 func (fp *Fp12) Inverse(c, a *Fe12) {
 	t := fp.t
 	fp.f.Square(t[0], &a[0])
@@ -175,6 +236,17 @@ func (fq *Fp12) Exp(c, a *Fe12, e *big.Int) {
 	z := fq.One()
 	for i := e.BitLen() - 1; i >= 0; i-- {
 		fq.Square(z, z)
+		if e.Bit(i) == 1 {
+			fq.Mul(z, z, a)
+		}
+	}
+	fq.Copy(c, z)
+}
+
+func (fq *Fp12) CyclotomicExp(c, a *Fe12, e *big.Int) {
+	z := fq.One()
+	for i := e.BitLen() - 1; i >= 0; i-- {
+		fq.CyclotomicSquare(z, z)
 		if e.Bit(i) == 1 {
 			fq.Mul(z, z, a)
 		}
