@@ -20,7 +20,6 @@ TEXT ·add(SB), NOSPLIT, $0-24
 	ADCQ 32(SI), R12
 	MOVQ 40(DI), R13
 	ADCQ 40(SI), R13
-	ADCQ $0x00, AX
 
 	// |
 	MOVQ R8, R14
@@ -35,7 +34,6 @@ TEXT ·add(SB), NOSPLIT, $0-24
 	SBBQ ·modulus+32(SB), SI
 	MOVQ R13, BX
 	SBBQ ·modulus+40(SB), BX
-	SBBQ $0x00, AX
 
 	// |
 	MOVQ    c+0(FP), DI
@@ -183,7 +181,6 @@ TEXT ·double(SB), NOSPLIT, $8-16
 	ADCQ R12, R12
 	MOVQ 40(DI), R13
 	ADCQ R13, R13
-	ADCQ $0x00, AX
 
 	// |
 	MOVQ R8, R14
@@ -198,7 +195,6 @@ TEXT ·double(SB), NOSPLIT, $8-16
 	SBBQ ·modulus+32(SB), SI
 	MOVQ R13, BX
 	SBBQ ·modulus+40(SB), BX
-	SBBQ $0x00, AX
 
 	// |
 	MOVQ    c+0(FP), DI
