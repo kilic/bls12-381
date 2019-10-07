@@ -1,30 +1,37 @@
 package blssig
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
+	"errors"
+	"io"
 	"math/big"
 
 	bls "github.com/kilic/bls12-381"
+	"github.com/prysmaticlabs/prysm/shared/bytesutil"
 )
 
 type PointG1 = bls.PointG1
-type PublicKey = bls.PointG1
 type PointG2 = bls.PointG2
+type PublicKey = bls.PointG1
 type Signature = bls.PointG2
+type SecretKey = *big.Int
 
-func Sign(msg [32]byte, domain [8]byte, privateKey *big.Int) *PointG2 {
+var curveOrder, _ = new(big.Int).SetString("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16)
+
+func Sign(msg [32]byte, domain [8]byte, privateKey *big.Int) *Signature {
 	g2 := newG2()
-	signature := hashToPointWithDomain(g2, msg, domain)
+	signature := hashWithDomain(g2, msg, domain)
 	g2.MulScalar(signature, signature, privateKey)
 	return signature
 }
 
-func Verify(msg [32]byte, domain [8]byte, signature *PointG2, publicKey *PointG1) bool {
+func Verify(msg [32]byte, domain [8]byte, signature *Signature, publicKey *PublicKey) bool {
 	e := bls.NewBLSPairingEngine()
-	return pairingCheck(e, hashToPointWithDomain(e.G2, msg, domain), signature, publicKey)
+	return pairingCheck(e, hashWithDomain(e.G2, msg, domain), signature, publicKey)
 }
 
-func pairingCheck(e *bls.BLSPairingEngine, msgHash, signature *PointG2, publicKey *PointG1) bool {
+func pairingCheck(e *bls.BLSPairingEngine, msgHash, signature *Signature, publicKey *PublicKey) bool {
 	target := &bls.Fe12{}
 	e.Pair(target,
 		[]bls.PointG1{
@@ -39,12 +46,12 @@ func pairingCheck(e *bls.BLSPairingEngine, msgHash, signature *PointG2, publicKe
 	return e.Fp12.Equal(&bls.Fp12One, target)
 }
 
-func VerifyAggregateCommon(msg [32]byte, domain [8]byte, publicKeys []*PointG1, signature *PointG2) bool {
+func VerifyAggregateCommon(msg [32]byte, domain [8]byte, publicKeys []*PublicKey, signature *Signature) bool {
 	if len(publicKeys) == 0 {
 		return false
 	}
 	e := bls.NewBLSPairingEngine()
-	msgHash := hashToPointWithDomain(e.G2, msg, domain)
+	msgHash := hashWithDomain(e.G2, msg, domain)
 	aggregated := &bls.PointG1{}
 	e.G1.Copy(aggregated, publicKeys[0])
 	for i := 1; i < len(publicKeys); i++ {
@@ -53,7 +60,7 @@ func VerifyAggregateCommon(msg [32]byte, domain [8]byte, publicKeys []*PointG1, 
 	return pairingCheck(e, msgHash, signature, aggregated)
 }
 
-func VerifyAggregate(msg [][32]byte, domain [8]byte, publicKeys []*PointG1, signature *PointG2) bool {
+func VerifyAggregate(msg [][32]byte, domain [8]byte, publicKeys []*PublicKey, signature *Signature) bool {
 	size := len(publicKeys)
 	if size == 0 {
 		return false
@@ -68,49 +75,142 @@ func VerifyAggregate(msg [][32]byte, domain [8]byte, publicKeys []*PointG1, sign
 	e.G2.Copy(&twistPoints[0], signature)
 	for i := 0; i < size; i++ {
 		e.G1.Copy(&points[i+1], publicKeys[i])
-		e.G2.Copy(&twistPoints[i+1], hashToPointWithDomain(e.G2, msg[i], domain))
+		e.G2.Copy(&twistPoints[i+1], hashWithDomain(e.G2, msg[i], domain))
 	}
 	target := &bls.Fe12{}
 	e.Pair(target, points, twistPoints)
 	return e.Fp12.Equal(&bls.Fp12One, target)
 }
 
-func AggregatePublicKey(p1 *PointG1, p2 *PointG1) *PointG1 {
+func AggregatePublicKey(p1 *PublicKey, p2 *PublicKey) *PublicKey {
 	return newG1().Add(p1, p1, p2)
 }
 
-func NewG1FromCompressed(in []byte) (*PointG1, error) {
+func AggregatePublicKeys(keys []*PublicKey) *PointG1 {
+	g := newG1()
+	if len(keys) == 0 {
+		return g.Zero()
+	}
+	aggregated := new(PublicKey).Set(keys[0])
+	for _, p := range keys[1:] {
+		g.Add(aggregated, aggregated, p)
+	}
+	return aggregated
+}
+
+func AggregateSignature(p1 *Signature, p2 *Signature) *Signature {
+	return newG2().Add(p1, p1, p2)
+}
+
+func AggregateSignatures(keys []*Signature) *Signature {
+	g := newG2()
+	if len(keys) == 0 {
+		return g.Zero()
+	}
+	aggregated := new(Signature).Set(keys[0])
+	for _, p := range keys[1:] {
+		g.Add(aggregated, aggregated, p)
+	}
+	return aggregated
+}
+
+func SecretKeyFromBytes(priv []byte) (SecretKey, error) {
+	b := bytesutil.ToBytes32(priv)
+	k := new(big.Int).SetBytes(b[:])
+	if curveOrder.Cmp(k) < 0 {
+		return nil, errors.New("invalid private key")
+	}
+	return k, nil
+}
+
+func RandSecretKey(r io.Reader) (SecretKey, error) {
+	k, err := rand.Int(r, curveOrder)
+	if err != nil {
+		return nil, err
+	}
+	return k, nil
+}
+
+func NewPublicKeyFromCompresssed(in []byte) (*PointG1, error) {
+	return newG1FromCompressed(in)
+}
+
+func NewPublicKeyFromUncompresssed(in []byte) (*PointG1, error) {
+	return newG1FromCompressed(in)
+}
+
+func PublicKeyToCompressed(p *PointG1) []byte {
+	return g1ToCompressed(p)
+}
+
+func PublicKeyToUncompressed(p *PointG1) []byte {
+	return g1ToCompressed(p)
+}
+
+func NewSignatureFromCompresssed(in []byte) (*PointG2, error) {
+	return newG2FromCompressed(in)
+}
+
+func NewSignatureFromUncompresssed(in []byte) (*PointG2, error) {
+	return newG2FromUncompressed(in)
+}
+
+func SignatureToCompressed(p *Signature) []byte {
+	return g2ToCompressed(p)
+}
+
+func SignatureToUncompressed(p *Signature) []byte {
+	return g2ToUncompressed(p)
+}
+
+func newG1FromCompressed(in []byte) (*PointG1, error) {
 	return newG1().FromCompressed(in)
 }
 
-func NewG1FromUncompressed(in []byte) (*PointG1, error) {
+func newG1FromUncompressed(in []byte) (*PointG1, error) {
 	return newG1().FromUncompressed(in)
 }
 
-func NewG2FromCompressed(in []byte) (*PointG2, error) {
+func g1ToCompressed(p *PointG1) []byte {
+	return newG1().ToCompressed(p)
+}
+
+func g1ToUncompressed(p *PointG1) []byte {
+	return newG1().ToUncompressed(p)
+}
+
+func newG2FromCompressed(in []byte) (*PointG2, error) {
 	return newG2().FromCompressed(in)
 }
 
-func NewG2FromUncompressed(in []byte) (*PointG2, error) {
+func newG2FromUncompressed(in []byte) (*PointG2, error) {
 	return newG2().FromUncompressed(in)
 }
 
-func PublicKeyFromSecretKey(secret *big.Int) *PointG1 {
+func g2ToCompressed(p *PointG2) []byte {
+	return newG2().ToCompressed(p)
+}
+
+func g2ToUncompressed(p *PointG2) []byte {
+	return newG2().ToUncompressed(p)
+}
+
+func PublicKeyFromSecretKey(secret SecretKey) *PublicKey {
 	p := &PointG1{}
 	return newG1().MulScalar(p, &bls.G1One, secret)
 }
 
-func HashToPointWithDomain(msg [32]byte, domain [8]byte) *PointG2 {
-	return hashToPointWithDomain(newG2(), msg, domain)
+func HashWithDomain(msg [32]byte, domain [8]byte) *PointG2 {
+	return hashWithDomain(newG2(), msg, domain)
 }
 
-func hashToPointWithDomain(g2 *bls.G2, msg [32]byte, domain [8]byte) *PointG2 {
+func hashWithDomain(g2 *bls.G2, msg [32]byte, domain [8]byte) *PointG2 {
 	xReBytes := [41]byte{}
 	xImBytes := [41]byte{}
 	xBytes := make([]byte, 96)
 	copy(xReBytes[:32], msg[:])
 	copy(xReBytes[32:40], domain[:])
-	xImBytes[40] = 0x01
+	xReBytes[40] = 0x01
 	copy(xImBytes[:32], msg[:])
 	copy(xImBytes[32:40], domain[:])
 	xImBytes[40] = 0x02
