@@ -1,0 +1,3 @@
+input: {privkey: '0x47b8192d77bf871b62e87859d653922725724a5c031afeabc60bcef5ff665138',
+  message: '0xabababababababababababababababababababababababababababababababab', domain: '0x0100000000000000'}
+output: '0x862d79002fac26284a63e3d6ea69444c16b8ee36cf6bfb0f5194c7d8f69f277c5b3aae8f70ad697c3b3064a0c064ae0f1774be5513f8483427a1fe4d45feca8550d6b5136918cf0de7f5d00669e12c2d08da63da9c080bbfaef5f36d73a32b7a'

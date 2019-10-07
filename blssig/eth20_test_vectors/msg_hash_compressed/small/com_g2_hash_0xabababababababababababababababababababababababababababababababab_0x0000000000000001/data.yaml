@@ -1,0 +1,4 @@
+input: {message: '0xabababababababababababababababababababababababababababababababab',
+  domain: '0x0000000000000001'}
+output: ['0xb8353e744de5a77082ff8151f365aa08705248338d12df6f05bd91eb90a9034b16bb011e2777130dfd97243674e49a71',
+  '0x1532c533d3236fe37f786cec80dd4e5f93a2e37cf66bce5ec8ca909d85f0480856204779d3b504223bc37c175caf78fc']
