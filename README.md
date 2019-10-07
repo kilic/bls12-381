@@ -7,8 +7,8 @@ _wip_. _Do not use in production_.
 - [x] group operations
 - [x] serialization
 - [x] pairing
-- [ ] hash to g1 & g2
-- [ ] bls signature scheme
+- [ ] hash to g1 & g2 (pending for [standart](https://github.com/cfrg/draft-irtf-cfrg-bls-signature))
+- [x] bls signature scheme
 - [ ] arm arch field operations
 - [ ] fallback field operations
 
@@ -17,7 +17,7 @@ _wip_. _Do not use in production_.
 on _2.7 GHz i5_
 
 ```
-BenchmarkPairing  2174828 ns/op
+BenchmarkPairing  1672306 ns/op
 ```
 
 #### Authors
