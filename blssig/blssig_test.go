@@ -36,7 +36,7 @@ func testFiles(path string) [][]byte {
 }
 
 func TestAggregatePubkeys(t *testing.T) {
-	testVectors := testFiles("eth20_test_vectors/aggregate_pubkeys/small")
+	testVectors := testFiles("tests/aggregate_pubkeys/small")
 	for i, data := range testVectors {
 		var v testVectorDataAggregatePubkeys
 		if err := yaml.Unmarshal(data, &v); err != nil {
@@ -66,7 +66,7 @@ type testVectorDataAggregateSignatures struct {
 }
 
 func TestAggregateSignatures(t *testing.T) {
-	testVectors := testFiles("eth20_test_vectors/aggregate_sigs/small")
+	testVectors := testFiles("tests/aggregate_sigs/small")
 	for i, data := range testVectors {
 		var v testVectorDataAggregateSignatures
 		if err := yaml.Unmarshal(data, &v); err != nil {
@@ -96,7 +96,7 @@ type testVectorDataPrivToPub struct {
 }
 
 func TestPrivToPub(t *testing.T) {
-	testVectors := testFiles("eth20_test_vectors/priv_to_pub/small")
+	testVectors := testFiles("tests/priv_to_pub/small")
 	for i, data := range testVectors {
 		var v testVectorDataPrivToPub
 		if err := yaml.Unmarshal(data, &v); err != nil {
@@ -126,7 +126,7 @@ type testVectorDataHashCompressed struct {
 }
 
 func TestHashCompressed(t *testing.T) {
-	testVectors := testFiles("eth20_test_vectors/msg_hash_compressed/small")
+	testVectors := testFiles("tests/msg_hash_compressed/small")
 	for i, data := range testVectors {
 		var v testVectorDataHashCompressed
 		if err := yaml.Unmarshal(data, &v); err != nil {
@@ -156,7 +156,7 @@ type testVectorSignMessage struct {
 }
 
 func TestSignMessage(t *testing.T) {
-	testVectors := testFiles("eth20_test_vectors/sign_msg/small")
+	testVectors := testFiles("tests/sign_msg/small")
 	for i, data := range testVectors {
 		var v testVectorSignMessage
 		if err := yaml.Unmarshal(data, &v); err != nil {
