@@ -2,6 +2,7 @@ package bls
 
 import (
 	"crypto/rand"
+	"io/ioutil"
 	"math/big"
 	"testing"
 )
@@ -105,6 +106,46 @@ func TestG2(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestZKCryptoVectors_G2UncompressedValid(t *testing.T) {
+	data, err := ioutil.ReadFile("tests/g2_uncompressed_valid_test_vectors.dat")
+	if err != nil {
+		panic(err)
+	}
+	g := NewG2(nil)
+	p1 := g.Zero()
+	for i := 0; i < 1000; i++ {
+		vector := data[i*192 : (i+1)*192]
+		p2, err := g.FromUncompressed(vector)
+		if err != nil {
+			t.Fatal("decoing fails", err, i)
+		}
+		if !g.Equal(p1, p2) {
+			t.Fatalf("\nwant: %s\nhave: %s\n", p1, p2)
+		}
+		g.Add(p1, p1, &G2One)
+	}
+}
+
+func TestZKCryptoVectors_G2CompressedValid(t *testing.T) {
+	data, err := ioutil.ReadFile("tests/g2_compressed_valid_test_vectors.dat")
+	if err != nil {
+		panic(err)
+	}
+	g := NewG2(nil)
+	p1 := g.Zero()
+	for i := 0; i < 1000; i++ {
+		vector := data[i*96 : (i+1)*96]
+		p2, err := g.FromCompressed(vector)
+		if err != nil {
+			t.Fatal("decoing fails", err, i)
+		}
+		if !g.Equal(p1, p2) {
+			t.Fatalf("\nwant: %s\nhave: %s\n", p1, p2)
+		}
+		g.Add(p1, p1, &G2One)
+	}
 }
 
 func BenchmarkG2Add(t *testing.B) {

@@ -42,6 +42,14 @@ func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 	if in[0]&(1<<5) != 0 {
 		return nil, fmt.Errorf("sort flag should be zero")
 	}
+	if in[0]&(1<<6) != 0 {
+		for i, v := range in {
+			if (i == 0 && v != 0x40) || (i != 0 && v != 0x00) {
+				return nil, fmt.Errorf("input string should be zero when infinity flag is set")
+			}
+		}
+		return g.Zero(), nil
+	}
 	in[0] &= 0x1f
 	x, y := &Fe{}, &Fe{}
 	if err := g.f.NewElementFromBytes(x, in[:48]); err != nil {
@@ -49,11 +57,6 @@ func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 	}
 	if err := g.f.NewElementFromBytes(y, in[48:]); err != nil {
 		return nil, err
-	}
-	if in[0]&(1<<6) == 1 {
-		if !(x.IsZero() && y.IsZero()) {
-			return nil, fmt.Errorf("input string should be zero when infinity flag is set")
-		}
 	}
 	p := &PointG1{}
 	g.f.Copy(&p[0], x)
@@ -86,13 +89,13 @@ func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 	var in [48]byte
 	copy(in[:], compressed[:])
 	if in[0]&(1<<7) == 0 {
-		return nil, fmt.Errorf("bad compression")
+		return nil, fmt.Errorf("compression flag should be set")
 	}
 	if in[0]&(1<<6) != 0 {
-		in[0] &= 0x3f
-		for i := 0; i < 48; i++ {
-			if in[i] != 0 {
-				return nil, fmt.Errorf("bad infinity compression")
+		// in[0] == (1 << 6) + (1 << 7)
+		for i, v := range in {
+			if (i == 0 && v != 0xc0) || (i != 0 && v != 0x00) {
+				return nil, fmt.Errorf("input string should be zero when infinity flag is set")
 			}
 		}
 		return g.Zero(), nil
@@ -111,7 +114,7 @@ func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 	if ok := g.f.Sqrt(y, y); !ok {
 		return nil, fmt.Errorf("point is not on curve")
 	}
-	// select lexicographically, should be in mont reduced form
+	// select lexicographically, should be in normalized form
 	negY, negYn, yn := &Fe{}, &Fe{}, &Fe{}
 	g.f.Demont(yn, y)
 	g.f.Neg(negY, y)
