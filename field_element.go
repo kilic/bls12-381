@@ -11,12 +11,6 @@ import (
 type Fe [6]uint64
 type lfe [12]uint64
 
-func (fe *Fe) print() {
-	for i := 0; i < len(fe); i++ {
-		fmt.Printf("0x%16.16x,\n", fe[i])
-	}
-}
-
 func (fe *Fe) Bytes() []byte {
 	out := make([]byte, 48)
 	var a int
@@ -211,4 +205,21 @@ func (f *Fe) rand(max *Fe, r io.Reader) error {
 		}
 	}
 	return nil
+}
+
+func (fe *lfe) Bytes() []byte {
+	out := make([]byte, 96)
+	var a int
+	for i := 0; i < 12; i++ {
+		a = 96 - i*8
+		out[a-1] = byte(fe[i])
+		out[a-2] = byte(fe[i] >> 8)
+		out[a-3] = byte(fe[i] >> 16)
+		out[a-4] = byte(fe[i] >> 24)
+		out[a-5] = byte(fe[i] >> 32)
+		out[a-6] = byte(fe[i] >> 40)
+		out[a-7] = byte(fe[i] >> 48)
+		out[a-8] = byte(fe[i] >> 56)
+	}
+	return out
 }

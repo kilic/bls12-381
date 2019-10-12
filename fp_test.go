@@ -737,3 +737,21 @@ func BenchmarkFp2(t *testing.B) {
 		}
 	})
 }
+
+func TestLazyMul(t *testing.T) {
+	var a, b Fe
+	c := &lfe{}
+	field := NewFp()
+	for i := 0; i < n; i++ {
+		field.RandElement(&a, rand.Reader)
+		field.RandElement(&b, rand.Reader)
+		mul(c, &a, &b)
+		ab, bb := a.Big(), b.Big()
+		cc := new(big.Int).Mul(ab, bb)
+		expected := make([]byte, 96)
+		copy(expected[96-len(cc.Bytes()):], cc.Bytes())
+		if !bytes.Equal(c.Bytes(), expected) {
+			t.Fatalf("")
+		}
+	}
+}

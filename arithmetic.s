@@ -716,24 +716,24 @@ TEXT ·mul(SB), NOSPLIT, $16-24
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R10
-	// MOVQ $0, R11
-  // ADCQ $0, R11
 
 	// | a5 * b5
 	// | (w10, w11) @ (R10, R11)
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R10
+	ADCQ $0, DX
 
 	// |  w0,  w1,  w2,  w3,  w4,  w5,  w6,  w7,  w8,  w9, w10, w11
 	// | ret, ret, ret, ret, ret, R12, R13, R14,  R8,  R9, R10,  DX
-	MOVQ R12, 32(R15)
-	MOVQ R13, 40(R15)
-	MOVQ R14, 48(R15)
-	MOVQ R8, 56(R15)
-	MOVQ R9, 64(R15)
-	MOVQ R10, 72(R15)
-	MOVQ DX, 80(R15)
+/*   | ret               */		
+	MOVQ R12, 40(R15)
+	MOVQ R13, 48(R15)
+	MOVQ R14, 56(R15)
+	MOVQ R8, 64(R15)
+	MOVQ R9, 72(R15)
+	MOVQ R10, 80(R15)
+	MOVQ DX, 88(R15)
 
 	RET
 /*   | end               */	
