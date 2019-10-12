@@ -118,7 +118,7 @@ func (f *Fp) Demont(c, a *Fe) {
 }
 
 func (f *Fp) Add(c, a, b *Fe) {
-	add(c, a, b)
+	add6(c, a, b)
 }
 
 func (f *Fp) Double(c, a *Fe) {
@@ -143,6 +143,10 @@ func (f *Fp) Square(c, a *Fe) {
 
 func (f *Fp) Mul(c, a, b *Fe) {
 	montmul(c, a, b)
+}
+
+func (f *Fp) lmul(c *lfe, a, b *Fe) {
+	mul(c, a, b)
 }
 
 func (f *Fp) Exp(c, a *Fe, e *big.Int) {

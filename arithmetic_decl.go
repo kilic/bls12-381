@@ -1,7 +1,9 @@
 package bls
 
 //go:noescape
-func add(c, a, b *Fe)
+func add6(c, a, b *Fe)
+
+func mul(c *lfe, a, b *Fe)
 
 //go:noescape
 func addn(a, b *Fe) uint64

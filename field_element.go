@@ -9,6 +9,7 @@ import (
 )
 
 type Fe [6]uint64
+type lfe [12]uint64
 
 func (fe *Fe) print() {
 	for i := 0; i < len(fe); i++ {
