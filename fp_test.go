@@ -755,3 +755,18 @@ func TestLazyMul(t *testing.T) {
 		}
 	}
 }
+
+func TestMontRed(t *testing.T) {
+	field := NewFp()
+	for i := 0; i < n; i++ {
+		var a, c Fe
+		var lc lfe
+		field.RandElement(&a, rand.Reader)
+		cBig := new(big.Int).Mul(a.Big(), r1.Big())
+		lc.FromBytes(cBig.Bytes())
+		mont(&c, &lc)
+		if !c.Equals(&a) {
+			t.Fatalf("")
+		}
+	}
+}

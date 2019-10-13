@@ -223,3 +223,22 @@ func (fe *lfe) Bytes() []byte {
 	}
 	return out
 }
+
+func (fe *lfe) FromBytes(in []byte) *lfe {
+	size := 96
+	l := len(in)
+	if l >= size {
+		l = size
+	}
+	padded := make([]byte, size)
+	copy(padded[size-l:], in[:])
+	var a int
+	for i := 0; i < 12; i++ {
+		a = size - i*8
+		fe[i] = uint64(padded[a-1]) | uint64(padded[a-2])<<8 |
+			uint64(padded[a-3])<<16 | uint64(padded[a-4])<<24 |
+			uint64(padded[a-5])<<32 | uint64(padded[a-6])<<40 |
+			uint64(padded[a-7])<<48 | uint64(padded[a-8])<<56
+	}
+	return fe
+}

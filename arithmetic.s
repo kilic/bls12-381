@@ -338,12 +338,13 @@ TEXT ·neg(SB), NOSPLIT, $0-16
 	MOVQ R12, 32(DI)
 	MOVQ R13, 40(DI)
 	RET
+/*   | end neg               */
 
 
-// func montmul(c *lfe, a *Fe, b *Fe)
-TEXT ·mul(SB), NOSPLIT, $16-24
+// func mul(c *lfe, a *Fe, b *Fe)
+TEXT ·mul(SB), NOSPLIT, $0-24
 
-/*   | inputs               */	
+/*   | inputs              */
 
 	MOVQ a+8(FP), DI
 	MOVQ b+16(FP), SI
@@ -367,7 +368,7 @@ TEXT ·mul(SB), NOSPLIT, $16-24
   MOVQ $0, R14
   MOVQ $0, BX
 
-/*   | i = 0               */
+/*   | i0                  */
 
 	// | b0 @ CX
 	MOVQ (SI), CX
@@ -417,7 +418,7 @@ TEXT ·mul(SB), NOSPLIT, $16-24
 	// |  w0,  w1,  w2,  w3,  w4,  w5,  w6,  w7,  w8,  w9, w10, w11
 	// | ret,  R8,  R9, R10, R11, R12, R13,   -,  -,   -,   -,   -
 
-/*   | i = 1               */
+/*   | i1                  */
 
 	// | b1 @ CX
 	MOVQ 8(SI), CX
@@ -479,7 +480,7 @@ TEXT ·mul(SB), NOSPLIT, $16-24
 	// |  w0,  w1,  w2,  w3,  w4,  w5,  w6,  w7,  w8,  w9, w10, w11
 	// | ret, ret,  R9, R10, R11, R12, R13, R14,  -,   -,   -,   -
 
-/*   | i = 2               */
+/*   | i2                  */
 
 	// | b2 @ CX
 	MOVQ 16(SI), CX
@@ -542,7 +543,7 @@ TEXT ·mul(SB), NOSPLIT, $16-24
 	// |  w0,  w1,  w2,  w3,  w4,  w5,  w6,  w7,  w8,  w9, w10, w11
 	// | ret, ret, ret, R10, R11, R12, R13, R14,  R8,   -,   -,   -
 
-/*   | i = 3               */
+/*   | i3                  */
 
 	// | b3 @ CX
 	MOVQ 24(SI), CX
@@ -605,7 +606,7 @@ TEXT ·mul(SB), NOSPLIT, $16-24
 	// |  w0,  w1,  w2,  w3,  w4,  w5,  w6,  w7,  w8,  w9, w10, w11
 	// | ret, ret, ret, ret, R11, R12, R13, R14,  R8,  R9,   -,   -
 
-/*   | i = 4               */
+/*   | i4                  */
 
 	// | b4 @ CX
 	MOVQ 32(SI), CX
@@ -668,7 +669,7 @@ TEXT ·mul(SB), NOSPLIT, $16-24
 	// |  w0,  w1,  w2,  w3,  w4,  w5,  w6,  w7,  w8,  w9, w10, w11
 	// | ret, ret, ret, ret, ret, R12, R13, R14,  R8,  R9, R10,   -
 
-/*   | i = 5               */
+/*   | i5                  */
 
 		// | b5 @ CX
 	MOVQ 40(SI), CX
@@ -726,7 +727,7 @@ TEXT ·mul(SB), NOSPLIT, $16-24
 
 	// |  w0,  w1,  w2,  w3,  w4,  w5,  w6,  w7,  w8,  w9, w10, w11
 	// | ret, ret, ret, ret, ret, R12, R13, R14,  R8,  R9, R10,  DX
-/*   | ret               */		
+/*   | ret                 */
 	MOVQ R12, 40(R15)
 	MOVQ R13, 48(R15)
 	MOVQ R14, 56(R15)
@@ -736,12 +737,433 @@ TEXT ·mul(SB), NOSPLIT, $16-24
 	MOVQ DX, 88(R15)
 
 	RET
-/*   | end               */	
+/*   | end mul             */	
+
+// func mont(c *fe, a *lfe)
+TEXT ·mont(SB), NOSPLIT, $0-24
+
+/*   | inputs               */
+
+	MOVQ a+8(FP), SI
+	MOVQ 8(SI), R8
+	MOVQ 16(SI), R9
+	MOVQ 24(SI), R10
+	MOVQ 32(SI), R11
+	MOVQ 40(SI), R12
+	MOVQ 48(SI), R13
+	MOVQ 56(SI), R14
+	MOVQ 64(SI), R15
+
+/*   | i0                  */
+
+	// | (u @ BX) = (w0 @ 0(SI)) * inverse_p
+	MOVQ 0(SI), AX
+	MULQ ·inp+0(SB)
+	MOVQ AX, BX
+
+	MOVQ $0, CX
+	MOVQ ·modulus+0(SB), AX
+	MULQ BX
+	ADCQ DX, CX
+
+	// | w1 @ R8
+	MOVQ ·modulus+8(SB), AX
+	MULQ BX
+	ADDQ AX, R8
+	ADCQ $0, DX
+	ADDQ CX, R8
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w2 @ R9
+	MOVQ ·modulus+16(SB), AX
+	MULQ BX
+	ADDQ AX, R9
+	ADCQ $0, DX
+	ADDQ CX, R9
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w3 @ R10
+	MOVQ ·modulus+24(SB), AX
+	MULQ BX
+	ADDQ AX, R10
+	ADCQ $0, DX
+	ADDQ CX, R10
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w4 @ R11
+	MOVQ ·modulus+32(SB), AX
+	MULQ BX
+	ADDQ AX, R11
+	ADCQ $0, DX
+	ADDQ CX, R11
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w5 @ R12
+	MOVQ ·modulus+40(SB), AX
+	MULQ BX
+	ADDQ AX, R12
+	ADCQ $0, DX
+	ADDQ CX, R12
+	// | w6 @ R13
+	ADCQ DX, R13
+	
+	// | long_carry @ DI should be added to w7
+	MOVQ $0, DI
+	ADCQ $0, DI
+
+	// |  w1,  w2,  w3,  w4,  w5,  w6,  w7,  w8,  w9, w10, w11
+	// |  R8,  R9, R10, R11, R12, R13, R14,   -,   -,   -,   -
+
+/*   | i1                  */
+
+		// | (u @ BX) = (w1 @ R8) * inverse_p
+	MOVQ R8, AX
+	MULQ ·inp+0(SB)
+	MOVQ AX, BX
+
+	MOVQ $0, CX
+	MOVQ ·modulus+0(SB), AX
+	MULQ BX
+	ADCQ DX, CX
+	// | R8 is idle now
+
+	// | w2 @ R9
+	MOVQ ·modulus+8(SB), AX
+	MULQ BX
+	ADDQ AX, R9
+	ADCQ $0, DX
+	ADDQ CX, R9
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w3 @ R10
+	MOVQ ·modulus+16(SB), AX
+	MULQ BX
+	ADDQ AX, R10
+	ADCQ $0, DX
+	ADDQ CX, R10
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w4 @ R11
+	MOVQ ·modulus+24(SB), AX
+	MULQ BX
+	ADDQ AX, R11
+	ADCQ $0, DX
+	ADDQ CX, R11
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w5 @ R12
+	MOVQ ·modulus+32(SB), AX
+	MULQ BX
+	ADDQ AX, R12
+	ADCQ $0, DX
+	ADDQ CX, R12
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w6 @ R13
+	// | in the last round of the iteration
+	// | we don't use the short carry @ CX
+	// | instead we bring back long_carry @ DI
+	MOVQ ·modulus+40(SB), AX
+	MULQ BX
+	ADDQ AX, R13
+	ADCQ DX, DI
+	ADDQ CX, R13
+	// | w7 @ R14
+	ADCQ DI, R14
+	// | long_carry @ DI should be added to w8
+	MOVQ $0, DI
+	ADCQ $0, DI
+
+	// |   -,  w2,  w3,  w4,  w5,  w6,  w7,  w8,  w9, w10, w11
+	// |  R8,  R9, R10, R11, R12, R13, R14,   -,   -,   -,   -
+
+/*   | i2                  */
+
+		// | (u @ BX) = (w2 @ R9) * inverse_p
+	MOVQ R9, AX
+	MULQ ·inp+0(SB)
+	MOVQ AX, BX
+
+	MOVQ $0, CX
+	MOVQ ·modulus+0(SB), AX
+	MULQ BX
+	ADCQ DX, CX
+	// | R9 is idle now
+
+	// | w3 @ R10
+	MOVQ ·modulus+8(SB), AX
+	MULQ BX
+	ADDQ AX, R10
+	ADCQ $0, DX
+	ADDQ CX, R10
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w4 @ R11
+	MOVQ ·modulus+16(SB), AX
+	MULQ BX
+	ADDQ AX, R11
+	ADCQ $0, DX
+	ADDQ CX, R11
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w5 @ R12
+	MOVQ ·modulus+24(SB), AX
+	MULQ BX
+	ADDQ AX, R12
+	ADCQ $0, DX
+	ADDQ CX, R12
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w6 @ R13
+	MOVQ ·modulus+32(SB), AX
+	MULQ BX
+	ADDQ AX, R13
+	ADCQ $0, DX
+	ADDQ CX, R13
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w7 @ R14
+	MOVQ ·modulus+40(SB), AX
+	MULQ BX
+	ADDQ AX, R14
+	ADCQ DX, DI
+	ADDQ CX, R14
+	// | w8 @ R15
+	ADCQ DI, R15
+	// | long_carry @ DI should be added to w8
+	MOVQ $0, DI
+	ADCQ $0, DI
+
+	// |   -,   -,  w3,  w4,  w5,  w6,  w7,  w8,  w9, w10, w11
+	// |  R8,  R9, R10, R11, R12, R13, R14, R15,   -,   -,   -
+
+/*   | i3                  */
+
+  // | w9 @ R8
+	MOVQ 72(SI), R8
+
+		// | (u @ BX) = (w3 @ R10) * inverse_p
+	MOVQ R10, AX
+	MULQ ·inp+0(SB)
+	MOVQ AX, BX
+
+	MOVQ $0, CX
+	MOVQ ·modulus+0(SB), AX
+	MULQ BX
+	ADCQ DX, CX
+	// | R10 is idle now
+
+	// | w4 @ R11
+	MOVQ ·modulus+8(SB), AX
+	MULQ BX
+	ADDQ AX, R11
+	ADCQ $0, DX
+	ADDQ CX, R11
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w5 @ R12
+	MOVQ ·modulus+16(SB), AX
+	MULQ BX
+	ADDQ AX, R12
+	ADCQ $0, DX
+	ADDQ CX, R12
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w6 @ R13
+	MOVQ ·modulus+24(SB), AX
+	MULQ BX
+	ADDQ AX, R13
+	ADCQ $0, DX
+	ADDQ CX, R13
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w7 @ R14
+	MOVQ ·modulus+32(SB), AX
+	MULQ BX
+	ADDQ AX, R14
+	ADCQ $0, DX
+	ADDQ CX, R14
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w8 @ R15
+	MOVQ ·modulus+40(SB), AX
+	MULQ BX
+	ADDQ AX, R15
+	ADCQ DX, DI
+	ADDQ CX, R15
+	// | w9 @ R8
+	ADCQ DI, R8
+	// | long_carry @ DI should be added to w8
+	MOVQ $0, DI
+	ADCQ $0, DI
+
+	// |   -,   -,  w4,  w5,  w6,  w7,  w8,  w9, w10, w11
+	// |  R9, R10, R11, R12, R13, R14, R15,  R8,   -,   -
+
+/*   | i4                  */
+
+  // | w10 @ R9
+	MOVQ 80(SI), R9
+
+	// | (u @ BX) = (w4 @ R11) * inverse_p
+	MOVQ R11, AX
+	MULQ ·inp+0(SB)
+	MOVQ AX, BX
+
+	MOVQ $0, CX
+	MOVQ ·modulus+0(SB), AX
+	MULQ BX
+	ADCQ DX, CX
+	// | R11 is idle now
+
+	// | w5 @ R12
+	MOVQ ·modulus+8(SB), AX
+	MULQ BX
+	ADDQ AX, R12
+	ADCQ $0, DX
+	ADDQ CX, R12
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w6 @ R13
+	MOVQ ·modulus+16(SB), AX
+	MULQ BX
+	ADDQ AX, R13
+	ADCQ $0, DX
+	ADDQ CX, R13
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w7 @ R14
+	MOVQ ·modulus+24(SB), AX
+	MULQ BX
+	ADDQ AX, R14
+	ADCQ $0, DX
+	ADDQ CX, R14
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w8 @ R15
+	MOVQ ·modulus+32(SB), AX
+	MULQ BX
+	ADDQ AX, R15
+	ADCQ $0, DX
+	ADDQ CX, R15
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w9 @ R8
+	MOVQ ·modulus+40(SB), AX
+	MULQ BX
+	ADDQ AX, R8
+	ADCQ DX, DI
+	ADDQ CX, R8
+	// | w10 @ R9
+	ADCQ DI, R9
+	// | long_carry @ DI should be added to w8
+	MOVQ $0, DI
+	ADCQ $0, DI
+
+	// |   -,   -,  w5,  w6,  w7,  w8,  w9, w10, w11
+	// | R10, R11, R12, R13, R14, R15,  R8,  R9,   -
+
+/*   | i5                  */
+
+  // | w11 @ R10
+	MOVQ 88(SI), R10
+
+	// | (u @ BX) = (w5 @ R12) * inverse_p
+	MOVQ R12, AX
+	MULQ ·inp+0(SB)
+	MOVQ AX, BX
+
+	MOVQ $0, CX
+	MOVQ ·modulus+0(SB), AX
+	MULQ BX
+	ADCQ DX, CX
+
+	// | w6 @ R13
+	MOVQ ·modulus+8(SB), AX
+	MULQ BX
+	ADDQ AX, R13
+	ADCQ $0, DX
+	ADDQ CX, R13
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w7 @ R14
+	MOVQ ·modulus+16(SB), AX
+	MULQ BX
+	ADDQ AX, R14
+	ADCQ $0, DX
+	ADDQ CX, R14
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w8 @ R15
+	MOVQ ·modulus+24(SB), AX
+	MULQ BX
+	ADDQ AX, R15
+	ADCQ $0, DX
+	ADDQ CX, R15
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w9 @ R8
+	MOVQ ·modulus+32(SB), AX
+	MULQ BX
+	ADDQ AX, R8
+	ADCQ $0, DX
+	ADDQ CX, R8
+	MOVQ $0, CX
+	ADCQ DX, CX
+
+	// | w10 @ R9
+	MOVQ ·modulus+40(SB), AX
+	MULQ BX
+	ADDQ AX, R9
+	ADCQ DX, DI
+	ADDQ CX, R9
+	// | w11 @ R10
+	ADCQ DI, R10
+
+	// |  w6,  w7,  w8,  w9, w10, w11
+	// | R13, R14, R15,  R8,  R9, R10
+
+/*   | out                      */
+
+	MOVQ c+0(FP), SI
+	MOVQ R13, 0(SI) 
+	MOVQ R14, 8(SI) 
+	MOVQ R15, 16(SI) 
+	MOVQ R8, 24(SI) 
+	MOVQ R9, 32(SI) 
+	MOVQ R10, 40(SI) 
+
+	RET
+/*   | end mont                  */
+
 
 // func montmul(c *Fe, a *Fe, b *Fe)
 TEXT ·montmul(SB), NOSPLIT, $16-24
 
-/*   | inputs               */	
+/*   | inputs               */
 
 	MOVQ a+8(FP), DI
 	MOVQ b+16(FP), SI

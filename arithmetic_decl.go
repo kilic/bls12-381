@@ -3,7 +3,11 @@ package bls
 //go:noescape
 func add6(c, a, b *Fe)
 
+//go:noescape
 func mul(c *lfe, a, b *Fe)
+
+//go:noescape
+func mont(a *Fe, c *lfe)
 
 //go:noescape
 func addn(a, b *Fe) uint64
