@@ -93,6 +93,19 @@ func (f *Fp) Copy(dst *Fe, src *Fe) *Fe {
 	return dst.Set(src)
 }
 
+func (f *Fp) CopyL(dst *lfe, src *Fe) {
+	dst[0] = src[0]
+	dst[1] = src[1]
+	dst[2] = src[2]
+	dst[3] = src[3]
+	dst[4] = src[4]
+	dst[5] = src[5]
+}
+
+func (f *Fp) lcopy(dst, src *lfe) {
+	dst.Set(src)
+}
+
 func (f *Fp) RandElement(fe *Fe, r io.Reader) (*Fe, error) {
 	bi, err := rand.Int(r, modulus.Big())
 	if err != nil {
@@ -121,12 +134,68 @@ func (f *Fp) Add(c, a, b *Fe) {
 	add6(c, a, b)
 }
 
+func (f *Fp) add6(c, a, b *Fe) {
+	add6(c, a, b)
+}
+
+func (f *Fp) ladd6(c, a, b *Fe) {
+	ladd6(c, a, b)
+}
+
+func (f *Fp) mont(c *Fe, a *lfe) {
+	mont(c, a)
+}
+
+func (f *Fp) ladd12(c, a, b *lfe) {
+	ladd12(c, a, b)
+}
+
+func (f *Fp) ladd12opt2(c, a, b *lfe) {
+	ladd12_opt2(c, a, b)
+}
+
 func (f *Fp) Double(c, a *Fe) {
-	double(c, a)
+	double6(c, a)
+}
+
+func (f *Fp) ldouble6(c, a *Fe) {
+	ldouble6(c, a)
+}
+
+func (f *Fp) ldouble12(c, a *lfe) {
+	ldouble12(c, a)
+}
+
+func (f *Fp) ldouble12opt2(c, a *lfe) {
+	ldouble12_opt2(c, a)
 }
 
 func (f *Fp) Sub(c, a, b *Fe) {
-	sub(c, a, b)
+	sub6(c, a, b)
+}
+
+func (f *Fp) sub6(c, a, b *Fe) {
+	sub6(c, a, b)
+}
+
+func (f *Fp) lsub6(c, a, b *Fe) {
+	lsub6(c, a, b)
+}
+
+func (f *Fp) lsub12opt2(c, a, b *lfe) {
+	lsub12_opt2(c, a, b)
+}
+
+func (f *Fp) lsub12opt1h2(c, a, b *lfe) {
+	lsub12_opt1_h2(c, a, b)
+}
+
+func (f *Fp) lsub12opt1h1(c, a, b *lfe) {
+	lsub12_opt1_h1(c, a, b)
+}
+
+func (f *Fp) lsub12(c, a, b *lfe) {
+	lsub12(c, a, b)
 }
 
 func (f *Fp) Neg(c, a *Fe) {
@@ -205,7 +274,7 @@ func (f *Fp) InvMontUp(inv, fe *Fe) {
 		subn(u, r)
 		// Phase 2
 		for i := k; i < 384*2; i++ {
-			double(u, u)
+			double6(u, u)
 		}
 		inv.Set(u)
 	} else {
@@ -295,10 +364,10 @@ func (f *Fp) InvEEA(inv, fe *Fe) {
 		}
 		if u.Cmp(v) == -1 {
 			subn(v, u)
-			sub(x2, x2, x1)
+			sub6(x2, x2, x1)
 		} else {
 			subn(u, v)
-			sub(x1, x1, x2)
+			sub6(x1, x1, x2)
 		}
 	}
 	if u.IsOne() {

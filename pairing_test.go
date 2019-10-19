@@ -85,6 +85,7 @@ func TestPairingMulti(t *testing.T) {
 		t.Fatalf("bad pairing")
 	}
 }
+
 func BenchmarkPairing(t *testing.B) {
 	e := NewBLSPairingEngine()
 	G := &PointG1{}

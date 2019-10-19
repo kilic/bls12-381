@@ -8,6 +8,16 @@ import "math/big"
 
 var modulus Fe = Fe{0xb9feffffffffaaab, 0x1eabfffeb153ffff, 0x6730d2a0f6b0f624, 0x64774b84f38512bf, 0x4b1ba7b6434bacd7, 0x1a0111ea397fe69a}
 
+const modulus0 uint64 = 0x00
+const modulus1 uint64 = 0x00
+const modulus2 uint64 = 0x00
+const modulus3 uint64 = 0x00
+const modulus4 uint64 = 0x00
+const modulus5 uint64 = 0x00
+
+var h2 [7]uint64 = [7]uint64{0xc000000000000000, 0xee7fbfffffffeaaa, 0x07aaffffac54ffff, 0xd9cc34a83dac3d89, 0xd91dd2e13ce144af, 0x92c6e9ed90d2eb35, 0x0680447a8e5ff9a6}
+var h1 [7]uint64 = [7]uint64{0x8000000000000000, 0xdcff7fffffffd555, 0x0f55ffff58a9ffff, 0xb39869507b587b12, 0xb23ba5c279c2895f, 0x258dd3db21a5d66b, 0x0d0088f51cbff34d}
+
 // inp = -p^(-1) mod 2^64
 var inp uint64 = 0x89f3fffcfffcfffd
 

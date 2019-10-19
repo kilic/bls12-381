@@ -6,8 +6,6 @@ import (
 	"math/big"
 )
 
-type Fe2 [2]Fe
-
 type Fp2 struct {
 	f *Fp
 	t [4]*Fe
@@ -83,6 +81,11 @@ func (fp *Fp2) Copy(c, a *Fe2) *Fe2 {
 	return c
 }
 
+func (fp *Fp2) lcopy(c, a *lfe2) {
+	fp.f.lcopy(&c[0], &a[0])
+	fp.f.lcopy(&c[1], &a[1])
+}
+
 func (fp *Fp2) MulByNonResidue(c, a *Fe2) {
 	t := fp.t
 	fp.f.Sub(t[0], &a[0], &a[1])
@@ -95,14 +98,64 @@ func (fp *Fp2) Add(c, a, b *Fe2) {
 	fp.f.Add(&c[1], &a[1], &b[1])
 }
 
+func (fp *Fp2) add6(c, a, b *Fe2) {
+	fp.f.add6(&c[0], &a[0], &b[0])
+	fp.f.add6(&c[1], &a[1], &b[1])
+}
+
+func (fp *Fp2) ladd6(c, a, b *Fe2) {
+	fp.f.ladd6(&c[0], &a[0], &b[0])
+	fp.f.ladd6(&c[1], &a[1], &b[1])
+}
+
+func (fp *Fp2) ladd12(c, a, b *lfe2) {
+	fp.f.ladd12(&c[0], &a[0], &b[0])
+	fp.f.ladd12(&c[1], &a[1], &b[1])
+}
+
+func (fp *Fp2) ladd12opt2(c, a, b *lfe2) {
+	fp.f.ladd12opt2(&c[0], &a[0], &b[0])
+	fp.f.ladd12opt2(&c[1], &a[1], &b[1])
+}
+
 func (fp *Fp2) Double(c, a *Fe2) {
 	fp.f.Double(&c[0], &a[0])
 	fp.f.Double(&c[1], &a[1])
 }
 
+func (fp *Fp2) ldouble6(c, a, b *Fe2) {
+	fp.f.ldouble6(&c[0], &a[0])
+	fp.f.ldouble6(&c[1], &a[1])
+}
+
+func (fp *Fp2) ldouble12(c, a, b *lfe2) {
+	fp.f.ldouble12(&c[0], &a[0])
+	fp.f.ldouble12(&c[1], &a[1])
+}
+
 func (fp *Fp2) Sub(c, a, b *Fe2) {
 	fp.f.Sub(&c[0], &a[0], &b[0])
 	fp.f.Sub(&c[1], &a[1], &b[1])
+}
+
+func (fp *Fp2) sub6(c, a, b *Fe2) {
+	fp.f.sub6(&c[0], &a[0], &b[0])
+	fp.f.sub6(&c[1], &a[1], &b[1])
+}
+
+func (fp *Fp2) lsub6(c, a, b *Fe2) {
+	fp.f.lsub6(&c[0], &a[0], &b[0])
+	fp.f.lsub6(&c[1], &a[1], &b[1])
+}
+
+func (fp *Fp2) lsub12(c, a, b *lfe2) {
+	fp.f.lsub12(&c[0], &a[0], &b[0])
+	fp.f.lsub12(&c[1], &a[1], &b[1])
+}
+
+func (fp *Fp2) lsub12opt2(c, a, b *lfe2) {
+	fp.f.lsub12opt2(&c[0], &a[0], &b[0])
+	fp.f.lsub12opt2(&c[1], &a[1], &b[1])
 }
 
 func (fp *Fp2) Neg(c, a *Fe2) {
@@ -114,6 +167,8 @@ func (fp *Fp2) Conjugate(c, a *Fe2) {
 	fp.f.Copy(&c[0], &a[0])
 	fp.f.Neg(&c[1], &a[1])
 }
+
+var l0, l1, l2, l3, l4, l5 lfe
 
 func (fp *Fp2) Mul(c, a, b *Fe2) {
 	t := fp.t
@@ -128,13 +183,55 @@ func (fp *Fp2) Mul(c, a, b *Fe2) {
 	fp.f.Sub(&c[1], t[0], t[1])
 }
 
+func (fp *Fp2) mul(c *lfe2, a, b *Fe2) {
+	t := fp.t
+	fp.f.lmul(&l1, &a[0], &b[0])
+	fp.f.lmul(&l2, &a[1], &b[1])
+	fp.f.ladd6(t[0], &a[0], &a[1])
+	fp.f.ladd6(t[1], &b[0], &b[1])
+	fp.f.lmul(&l3, t[0], t[1])
+	fp.f.lsub12(&l3, &l3, &l1)
+	fp.f.lsub12(&c[1], &l3, &l2)
+	fp.f.lsub12opt2(&c[0], &l1, &l2)
+	// fp.f.lsub12opt1h2(&c[0], &l1, &l2)
+}
+
+func (fp *Fp2) mulr(c, a, b *Fe2) {
+	t := fp.t
+	fp.f.lmul(&l1, &a[0], &b[0])
+	fp.f.lmul(&l2, &a[1], &b[1])
+	fp.f.ladd6(t[0], &a[0], &a[1])
+	fp.f.ladd6(t[1], &b[0], &b[1])
+	fp.f.lmul(&l3, t[0], t[1])
+	fp.f.lsub12(&l3, &l3, &l1)
+	fp.f.lsub12(&l3, &l3, &l2)
+	fp.f.mont(&c[1], &l3)
+	// fp.f.lsub12opt2(&c[0], &l1, &l2)
+	fp.f.lsub12opt1h2(&l1, &l1, &l2)
+	fp.f.mont(&c[0], &l1)
+}
+
 func (fp *Fp2) Square(c, a *Fe2) {
 	t := fp.t
-	fp.f.Add(t[0], &a[0], &a[1])
-	fp.f.Sub(t[1], &a[0], &a[1])
-	fp.f.Double(t[2], &a[0])
+	fp.f.ladd6(t[0], &a[0], &a[1])
+	fp.f.sub6(t[1], &a[0], &a[1])
+	fp.f.ldouble6(t[2], &a[0])
 	fp.f.Mul(&c[0], t[0], t[1])
 	fp.f.Mul(&c[1], t[2], &a[1])
+}
+
+func (fp *Fp2) square(c *lfe2, a *Fe2) {
+	t := fp.t
+	fp.f.ladd6(t[0], &a[0], &a[1])
+	fp.f.lsub6(t[1], &a[0], &a[1])
+	fp.f.lmul(&c[0], t[0], t[1])
+	fp.f.ldouble6(t[2], &a[0])
+	fp.f.lmul(&c[1], t[2], &a[1])
+}
+
+func (fp *Fp2) mont(c *Fe2, a *lfe2) {
+	fp.f.mont(&c[0], &a[0])
+	fp.f.mont(&c[1], &a[1])
 }
 
 func (fp *Fp2) Inverse(c, a *Fe2) {

@@ -1,8 +1,9 @@
 #include "textflag.h"
 
-// add6 single-precision addition with modular reduction
-// c = (a + b) % p
+
 // func add6(c *Fe, a *Fe, b *Fe)
+// single-precision addition with modular reduction
+// c = (a + b) % p
 TEXT ·add6(SB), NOSPLIT, $0-24
 	// |
 	MOVQ a+8(FP), DI
@@ -53,10 +54,71 @@ TEXT ·add6(SB), NOSPLIT, $0-24
 	MOVQ    R12, 32(DI)
 	MOVQ    R13, 40(DI)
 	RET
+/*   | end add6            */
 
-// ladd6, single-precision addition without modular reduction.
-// c = (a + b)
+
+
+TEXT ·add6alt(SB), NOSPLIT, $0-24
+	// |
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+
+	// |
+	ADDQ (SI), R8
+	ADCQ 8(SI), R9
+	ADCQ 16(SI), R10
+	ADCQ 24(SI), R11
+	ADCQ 32(SI), R12
+	ADCQ 40(SI), R13
+
+	// |
+	MOVQ R8, R14
+	MOVQ R9, R15
+	MOVQ R10, CX
+	MOVQ R11, DX
+	MOVQ R12, SI
+	MOVQ R13, BX
+	MOVQ $0xb9feffffffffaaab, DI
+	SUBQ DI, R14
+	MOVQ $0x1eabfffeb153ffff, DI
+	SBBQ DI, R15
+	MOVQ $0x6730d2a0f6b0f624, DI
+	SBBQ DI, CX
+	MOVQ $0x64774b84f38512bf, DI
+	SBBQ DI, DX
+	MOVQ $0x4b1ba7b6434bacd7, DI
+	SBBQ DI, SI
+	MOVQ $0x1a0111ea397fe69a, DI
+	SBBQ DI, BX
+	CMOVQCC R14, R8
+	CMOVQCC R15, R9
+	CMOVQCC CX, R10
+	CMOVQCC DX, R11
+	CMOVQCC SI, R12
+	CMOVQCC BX, R13
+
+	// |
+	MOVQ    c+0(FP), DI
+	MOVQ    R8, (DI)
+	MOVQ    R9, 8(DI)
+	MOVQ    R10, 16(DI)
+	MOVQ    R11, 24(DI)
+	MOVQ    R12, 32(DI)
+	MOVQ    R13, 40(DI)
+	RET
+/*   | end add6alt            */
+
 // func ladd6(c *Fe, a *Fe, b *Fe)
+// single-precision addition *without* modular reduction.
+// c = (a + b)
 TEXT ·ladd6(SB), NOSPLIT, $0-24
 	// |
 	MOVQ a+8(FP), DI
@@ -87,10 +149,11 @@ TEXT ·ladd6(SB), NOSPLIT, $0-24
 	MOVQ    R12, 32(DI)
 	MOVQ    R13, 40(DI)
 	RET
+/*   | end ladd6          */
 
-// ladd12, double-precision additiona
-// c = (a + b)
 // func ladd12(c *lfe, a *fle, b *lfe)
+// double-precision additiona
+// c = (a + b)
 TEXT ·ladd12(SB), NOSPLIT, $0-24
 	// |
 	MOVQ a+8(FP), DI
@@ -103,6 +166,12 @@ TEXT ·ladd12(SB), NOSPLIT, $0-24
 	MOVQ 24(DI), R11
 	MOVQ 32(DI), R12
 	MOVQ 40(DI), R13
+	MOVQ 48(DI), R14
+	MOVQ 56(DI), R15
+	MOVQ 64(DI), AX
+	MOVQ 72(DI), BX
+	MOVQ 80(DI), CX
+	MOVQ 88(DI), DX
 
 	// |
 	ADDQ (SI), R8
@@ -111,41 +180,104 @@ TEXT ·ladd12(SB), NOSPLIT, $0-24
 	ADCQ 24(SI), R11
 	ADCQ 32(SI), R12
 	ADCQ 40(SI), R13
+	ADCQ 48(SI), R14
+	ADCQ 56(SI), R15
+	ADCQ 64(SI), AX
+	ADCQ 72(SI), BX
+	ADCQ 80(SI), CX
+	ADCQ 88(SI), DX
 
 	// |
-	MOVQ    c+0(FP), BX
-	MOVQ    R8, (BX)
-	MOVQ    R9, 8(BX)
-	MOVQ    R10, 16(BX)
-	MOVQ    R11, 24(BX)
-	MOVQ    R12, 32(BX)
-	MOVQ    R13, 40(BX)
-
-	// |
-	MOVQ 48(DI), R8
-	MOVQ 56(DI), R9
-	MOVQ 64(DI), R10
-	MOVQ 72(DI), R11
-	MOVQ 80(DI), R12
-	MOVQ 88(DI), R13
-
-	// |
-	ADDQ 48(SI), R8
-	ADCQ 56(SI), R9
-	ADCQ 64(SI), R10
-	ADCQ 72(SI), R11
-	ADCQ 80(SI), R12
-	ADCQ 88(SI), R13
-
-	// |
-	MOVQ    R8, 48(BX)
-	MOVQ    R9, 56(BX)
-	MOVQ    R10,64(BX)
-	MOVQ    R11,72(BX)
-	MOVQ    R12,80(BX)
-	MOVQ    R13,88(BX)
-
+	MOVQ    c+0(FP), SI
+	MOVQ    R8, (SI)
+	MOVQ    R9, 8(SI)
+	MOVQ    R10, 16(SI)
+	MOVQ    R11, 24(SI)
+	MOVQ    R12, 32(SI)
+	MOVQ    R13, 40(SI)
+	MOVQ    R14, 48(SI)
+	MOVQ    R15, 56(SI)
+	MOVQ    AX, 64(SI)
+	MOVQ    BX, 72(SI)
+	MOVQ    CX, 80(SI)
+	MOVQ    DX, 88(SI)
 	RET
+/*   | end ladd12          */
+
+// func ladd12_opt2(c *lfe, a *fle, b *lfe)
+// double-precision addition
+// c = (a + b)
+TEXT ·ladd12_opt2(SB), NOSPLIT, $0-24
+	// |
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+	MOVQ 48(DI), R14
+	MOVQ 56(DI), R15
+	MOVQ 64(DI), AX
+	MOVQ 72(DI), BX
+	MOVQ 80(DI), CX
+	MOVQ 88(DI), DX
+
+	// |
+	ADDQ (SI), R8
+	ADCQ 8(SI), R9
+	ADCQ 16(SI), R10
+	ADCQ 24(SI), R11
+	ADCQ 32(SI), R12
+	ADCQ 40(SI), R13
+	ADCQ 48(SI), R14
+	ADCQ 56(SI), R15
+	ADCQ 64(SI), AX
+	ADCQ 72(SI), BX
+	ADCQ 80(SI), CX
+	ADCQ 88(SI), DX
+
+	// |
+	MOVQ    c+0(FP), DI
+	MOVQ    R8, (DI)
+	MOVQ    R9, 8(DI)
+	MOVQ    R10, 16(DI)
+	MOVQ    R11, 24(DI)
+	MOVQ    R12, 32(DI)
+	MOVQ    R13, 40(DI)
+
+	// |
+	MOVQ R14, R8
+	MOVQ R15, R9
+	MOVQ AX, R10
+	MOVQ BX, R11
+	MOVQ CX, R12
+	MOVQ DX, R13
+	SUBQ ·modulus+0(SB), R8
+	SBBQ ·modulus+8(SB), R9
+	SBBQ ·modulus+16(SB), R10
+	SBBQ ·modulus+24(SB), R11
+	SBBQ ·modulus+32(SB), R12
+	SBBQ ·modulus+40(SB), R13
+	CMOVQCC R8, R14
+	CMOVQCC R9, R15
+	CMOVQCC R10, AX
+	CMOVQCC R11, BX
+	CMOVQCC R12, CX
+	CMOVQCC R13, DX
+
+	// |
+	MOVQ R14, 48(DI)
+	MOVQ R15, 56(DI)
+	MOVQ AX, 64(DI)
+	MOVQ BX, 72(DI)
+	MOVQ CX, 80(DI)
+	MOVQ DX, 88(DI)
+	RET
+/*   | end ladd12          */
 
 // func addn(a *Fe, b *Fe) uint64
 TEXT ·addn(SB), NOSPLIT, $0-24
@@ -179,8 +311,12 @@ TEXT ·addn(SB), NOSPLIT, $0-24
 	MOVQ AX, ret+16(FP)
 	RET
 
+/*   | end addn            */
+
 // func sub(c *Fe, a *Fe, b *Fe)
-TEXT ·sub(SB), NOSPLIT, $0-24
+// single-precision subtraction with modular reduction
+// c = (a - b) % p
+TEXT ·sub6(SB), NOSPLIT, $0-24
 	// |
 	MOVQ a+8(FP), DI
 	MOVQ b+16(FP), SI
@@ -229,6 +365,108 @@ TEXT ·sub(SB), NOSPLIT, $0-24
 	MOVQ R12, 32(DI)
 	MOVQ R13, 40(DI)
 	RET
+/*   | end sub6           */
+
+// func lsub6(c *Fe, a *Fe, b *Fe)
+// single-precision subtraction without reduction
+// c = (a - b)
+TEXT ·lsub6(SB), NOSPLIT, $0-24
+	// |
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+	SUBQ (SI), R8
+	SBBQ 8(SI), R9
+	SBBQ 16(SI), R10
+	SBBQ 24(SI), R11
+	SBBQ 32(SI), R12
+	SBBQ 40(SI), R13
+
+	// |
+	MOVQ    ·modulus+0(SB), R14
+	MOVQ    ·modulus+8(SB), R15
+	MOVQ    ·modulus+16(SB), CX
+	MOVQ    ·modulus+24(SB), DX
+	MOVQ    ·modulus+32(SB), SI
+	MOVQ    ·modulus+40(SB), BX
+	ADDQ R14, R8
+	ADCQ R15, R9
+	ADCQ CX, R10
+	ADCQ DX, R11
+	ADCQ SI, R12
+	ADCQ BX, R13
+
+	// |
+	MOVQ c+0(FP), DI
+	MOVQ R8, (DI)
+	MOVQ R9, 8(DI)
+	MOVQ R10, 16(DI)
+	MOVQ R11, 24(DI)
+	MOVQ R12, 32(DI)
+	MOVQ R13, 40(DI)
+	RET
+/*   | end sub6           */
+
+// func sub(c *Fe, a *Fe, b *Fe)
+// single-precision subtraction with modular reduction
+// c = (a - b) % p
+TEXT ·sub6alt(SB), NOSPLIT, $0-24
+	// |
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+	XORQ AX, AX
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+	SUBQ (SI), R8
+	SBBQ 8(SI), R9
+	SBBQ 16(SI), R10
+	SBBQ 24(SI), R11
+	SBBQ 32(SI), R12
+	SBBQ 40(SI), R13
+
+	// |
+	MOVQ $0xb9feffffffffaaab, R14
+	MOVQ $0x1eabfffeb153ffff, R15
+	MOVQ $0x6730d2a0f6b0f624, CX
+	MOVQ $0x64774b84f38512bf, DX
+	MOVQ $0x4b1ba7b6434bacd7, SI
+	MOVQ $0x1a0111ea397fe69a, BX
+	CMOVQCC AX, R14
+	CMOVQCC AX, R15
+	CMOVQCC AX, CX
+	CMOVQCC AX, DX
+	CMOVQCC AX, SI
+	CMOVQCC AX, BX
+	ADDQ R14, R8
+	ADCQ R15, R9
+	ADCQ CX, R10
+	ADCQ DX, R11
+	ADCQ SI, R12
+	ADCQ BX, R13
+
+	// |
+	MOVQ c+0(FP), DI
+	MOVQ R8, (DI)
+	MOVQ R9, 8(DI)
+	MOVQ R10, 16(DI)
+	MOVQ R11, 24(DI)
+	MOVQ R12, 32(DI)
+	MOVQ R13, 40(DI)
+	RET
+/*   | end sub6           */
 
 // func subn(a *Fe, b *Fe) uint64
 TEXT ·subn(SB), NOSPLIT, $0-24
@@ -261,9 +499,432 @@ TEXT ·subn(SB), NOSPLIT, $0-24
 	MOVQ R13, 40(DI)
 	MOVQ AX, ret+16(FP)
 	RET
+/*   | end subn           */
+
+// func lsub12(c *lfe, a *fle, b *lfe)
+// c = (a - b)
+// no carry check
+TEXT ·lsub12(SB), NOSPLIT, $0-24
+
+	// |
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+	MOVQ 48(DI), R14
+	MOVQ 56(DI), R15
+	MOVQ 64(DI), AX
+	MOVQ 72(DI), BX
+	MOVQ 80(DI), CX
+	MOVQ 88(DI), DX
+
+	// |
+	SUBQ (SI), R8
+	SBBQ 8(SI), R9
+	SBBQ 16(SI), R10
+	SBBQ 24(SI), R11
+	SBBQ 32(SI), R12
+	SBBQ 40(SI), R13
+	SBBQ 48(SI), R14
+	SBBQ 56(SI), R15
+	SBBQ 64(SI), AX
+	SBBQ 72(SI), BX
+	SBBQ 80(SI), CX
+	SBBQ 88(SI), DX
+
+	// |
+	MOVQ c+0(FP), DI
+	MOVQ R8, (DI)
+	MOVQ R9, 8(DI)
+	MOVQ R10, 16(DI)
+	MOVQ R11, 24(DI)
+	MOVQ R12, 32(DI)
+	MOVQ R13, 40(DI)
+	MOVQ R14, 48(DI)
+	MOVQ R15, 56(DI)
+	MOVQ AX, 64(DI)
+	MOVQ BX, 72(DI)
+	MOVQ CX, 80(DI)
+	MOVQ DX, 88(DI)
+	RET
+/*   | end lsub12          */
+
+// func lsub12_opt2(c *lfe, a *fle, b *lfe)
+// [AKLGL] Option2 double-precision subtraction.
+// https://eprint.iacr.org/2010/526
+// c = (a - b)
+// if c is negative, 
+// then correct by c = c + (2^N)p
+TEXT ·lsub12_opt2(SB), NOSPLIT, $0-24
+
+	// |
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+	MOVQ 48(DI), R14
+	MOVQ 56(DI), R15
+	MOVQ 64(DI), AX
+	MOVQ 72(DI), BX
+	MOVQ 80(DI), CX
+	MOVQ 88(DI), DX
+
+	// |
+	SUBQ (SI), R8
+	SBBQ 8(SI), R9
+	SBBQ 16(SI), R10
+	SBBQ 24(SI), R11
+	SBBQ 32(SI), R12
+	SBBQ 40(SI), R13
+	SBBQ 48(SI), R14
+	SBBQ 56(SI), R15
+	SBBQ 64(SI), AX
+	SBBQ 72(SI), BX
+	SBBQ 80(SI), CX
+	SBBQ 88(SI), DX
+
+	// |
+	MOVQ c+0(FP), DI
+	MOVQ R8, (DI)
+	MOVQ R9, 8(DI)
+	MOVQ R10, 16(DI)
+	MOVQ R11, 24(DI)
+	MOVQ R12, 32(DI)
+	MOVQ R13, 40(DI)
+
+	// |
+	MOVQ $0, R8
+	MOVQ $0, R9
+	MOVQ $0, R10
+	MOVQ $0, R11
+	MOVQ $0, R12
+	MOVQ $0, R13
+	CMOVQCS ·modulus+0(SB), R8
+	CMOVQCS ·modulus+8(SB), R9
+	CMOVQCS ·modulus+16(SB), R10
+	CMOVQCS ·modulus+24(SB), R11
+	CMOVQCS ·modulus+32(SB), R12
+	CMOVQCS ·modulus+40(SB), R13
+	ADDQ R8, R14
+	ADCQ R9, R15
+	ADCQ R10, AX
+	ADCQ R11, BX
+	ADCQ R12, CX
+	ADCQ R13, DX
+
+	// |
+	MOVQ R14, 48(DI)
+	MOVQ R15, 56(DI)
+	MOVQ AX, 64(DI)
+	MOVQ BX, 72(DI)
+	MOVQ CX, 80(DI)
+	MOVQ DX, 88(DI)
+	RET
+/*   | end lsub12_opt2          */
+
+
+// func lsub12_opt1_h2(c *lfe, a *fle, b *lfe)
+// [AKLGL] double-precision subtraction, option 1. h = 2
+// https://eprint.iacr.org/2010/526
+// c = (a - b) + p*2^(N-2)
+TEXT ·lsub12_opt1_h2(SB), NOSPLIT, $0-24
+
+	// |
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+	MOVQ 48(DI), R14
+	MOVQ 56(DI), R15
+	MOVQ 64(DI), AX
+	MOVQ 72(DI), BX
+	MOVQ 80(DI), CX
+	MOVQ 88(DI), DX
+
+	// |
+	SUBQ (SI), R8
+	SBBQ 8(SI), R9
+	SBBQ 16(SI), R10
+	SBBQ 24(SI), R11
+	SBBQ 32(SI), R12
+	SBBQ 40(SI), R13
+	SBBQ 48(SI), R14
+	SBBQ 56(SI), R15
+	SBBQ 64(SI), AX
+	SBBQ 72(SI), BX
+	SBBQ 80(SI), CX
+	SBBQ 88(SI), DX
+
+	// |
+	ADDQ ·h2+0(SB), R13
+	ADCQ ·h2+8(SB), R14
+	ADCQ ·h2+16(SB), R15
+	ADCQ ·h2+24(SB), AX
+	ADCQ ·h2+32(SB), BX
+	ADCQ ·h2+40(SB), CX
+	ADCQ ·h2+48(SB), DX
+
+	// |
+	MOVQ c+0(FP), DI
+	MOVQ R8, (DI)
+	MOVQ R9, 8(DI)
+	MOVQ R10, 16(DI)
+	MOVQ R11, 24(DI)
+	MOVQ R12, 32(DI)
+	MOVQ R13, 40(DI)
+	MOVQ R14, 48(DI)
+	MOVQ R15, 56(DI)
+	MOVQ AX, 64(DI)
+	MOVQ BX, 72(DI)
+	MOVQ CX, 80(DI)
+	MOVQ DX, 88(DI)
+	RET
+/*   | end lsub12_opt1_h2       */
+
+// func lsub12_opt1_h1(c *lfe, a *fle, b *lfe)
+// [AKLGL] double-precision subtraction, option 1. h = 1
+// https://eprint.iacr.org/2010/526
+// c = (a - b) + p*2^(N-1)
+TEXT ·lsub12_opt1_h1(SB), NOSPLIT, $0-24
+
+	// |
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+	MOVQ 48(DI), R14
+	MOVQ 56(DI), R15
+	MOVQ 64(DI), AX
+	MOVQ 72(DI), BX
+	MOVQ 80(DI), CX
+	MOVQ 88(DI), DX
+
+	// |
+	SUBQ (SI), R8
+	SBBQ 8(SI), R9
+	SBBQ 16(SI), R10
+	SBBQ 24(SI), R11
+	SBBQ 32(SI), R12
+	SBBQ 40(SI), R13
+	SBBQ 48(SI), R14
+	SBBQ 56(SI), R15
+	SBBQ 64(SI), AX
+	SBBQ 72(SI), BX
+	SBBQ 80(SI), CX
+	SBBQ 88(SI), DX
+
+	// |
+	ADDQ ·h1+0(SB), R13
+	ADCQ ·h1+8(SB), R14
+	ADCQ ·h1+16(SB), R15
+	ADCQ ·h1+24(SB), AX
+	ADCQ ·h1+32(SB), BX
+	ADCQ ·h1+40(SB), CX
+	ADCQ ·h1+48(SB), DX
+
+	// |
+	MOVQ c+0(FP), DI
+	MOVQ R8, (DI)
+	MOVQ R9, 8(DI)
+	MOVQ R10, 16(DI)
+	MOVQ R11, 24(DI)
+	MOVQ R12, 32(DI)
+	MOVQ R13, 40(DI)
+	MOVQ R14, 48(DI)
+	MOVQ R15, 56(DI)
+	MOVQ AX, 64(DI)
+	MOVQ BX, 72(DI)
+	MOVQ CX, 80(DI)
+	MOVQ DX, 88(DI)
+	RET
+/*   | end lsub12_opt1_h2       */
+
+// func ldouble6(c *Fe, a *Fe)
+// single-precision doubling
+// c = 2 * a
+TEXT ·ldouble6(SB), NOSPLIT, $0-16
+	// |
+	MOVQ a+8(FP), DI
+
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+
+	// |
+	ADDQ R8, R8
+	ADCQ R9, R9
+	ADCQ R10, R10
+	ADCQ R11, R11
+	ADCQ R12, R12
+	ADCQ R13, R13
+
+	// |
+	MOVQ c+0(FP), DI
+	MOVQ R8, (DI)
+	MOVQ R9, 8(DI)
+	MOVQ R10, 16(DI)
+	MOVQ R11, 24(DI)
+	MOVQ R12, 32(DI)
+	MOVQ R13, 40(DI)
+
+	RET
+/*   | end ldouble6        */
+
+// func ldouble12(c *lfe, a *fle)
+// double-precision additiona
+// c = 2 * a
+TEXT ·ldouble12(SB), NOSPLIT, $0-16
+	// |
+	MOVQ a+8(FP), DI
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+	MOVQ 48(DI), R14
+	MOVQ 56(DI), R15
+	MOVQ 64(DI), AX
+	MOVQ 72(DI), BX
+	MOVQ 80(DI), CX
+	MOVQ 88(DI), DX
+
+	// |
+	ADDQ R8, R8
+	ADCQ R9, R9
+	ADCQ R10, R10
+	ADCQ R11, R11
+	ADCQ R12, R12
+	ADCQ R13, R13
+	ADCQ R14, R14
+	ADCQ R15, R15
+	ADCQ AX, AX
+	ADCQ BX, BX
+	ADCQ CX, CX
+	ADCQ DX, DX
+
+	// |
+	MOVQ    c+0(FP), SI
+	MOVQ    R8, (SI)
+	MOVQ    R9, 8(SI)
+	MOVQ    R10, 16(SI)
+	MOVQ    R11, 24(SI)
+	MOVQ    R12, 32(SI)
+	MOVQ    R13, 40(SI)
+	MOVQ    R14, 48(SI)
+	MOVQ    R15, 56(SI)
+	MOVQ    AX, 64(SI)
+	MOVQ    BX, 72(SI)
+	MOVQ    CX, 80(SI)
+	MOVQ    DX, 88(SI)
+	RET
+/*   | end ldouble12          */
+
+// func ldouble12_opt2(c *lfe, a *fle)
+// double-precision additiona
+// c = 2 * a
+TEXT ·ldouble12_opt2(SB), NOSPLIT, $0-16
+	// |
+	MOVQ a+8(FP), DI
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+	MOVQ 48(DI), R14
+	MOVQ 56(DI), R15
+	MOVQ 64(DI), AX
+	MOVQ 72(DI), BX
+	MOVQ 80(DI), CX
+	MOVQ 88(DI), DX
+
+	// |
+	ADDQ R8, R8
+	ADCQ R9, R9
+	ADCQ R10, R10
+	ADCQ R11, R11
+	ADCQ R12, R12
+	ADCQ R13, R13
+	ADCQ R14, R14
+	ADCQ R15, R15
+	ADCQ AX, AX
+	ADCQ BX, BX
+	ADCQ CX, CX
+	ADCQ DX, DX
+
+	// |
+	MOVQ    c+0(FP), SI
+	MOVQ    R8, (SI)
+	MOVQ    R9, 8(SI)
+	MOVQ    R10, 16(SI)
+	MOVQ    R11, 24(SI)
+	MOVQ    R12, 32(SI)
+	MOVQ    R13, 40(SI)
+
+	// |
+	MOVQ R14, R8
+	MOVQ R15, R9
+	MOVQ AX, R10
+	MOVQ BX, R11
+	MOVQ CX, R12
+	MOVQ DX, R13
+	SUBQ ·modulus+0(SB), R8
+	SBBQ ·modulus+8(SB), R9
+	SBBQ ·modulus+16(SB), R10
+	SBBQ ·modulus+24(SB), R11
+	SBBQ ·modulus+32(SB), R12
+	SBBQ ·modulus+40(SB), R13
+	CMOVQCC R8, R14
+	CMOVQCC R9, R15
+	CMOVQCC R10, AX
+	CMOVQCC R11, BX
+	CMOVQCC R12, CX
+	CMOVQCC R13, DX
+
+	// |
+	MOVQ    R14, 48(SI)
+	MOVQ    R15, 56(SI)
+	MOVQ    AX, 64(SI)
+	MOVQ    BX, 72(SI)
+	MOVQ    CX, 80(SI)
+	MOVQ    DX, 88(SI)
+	RET
+/*   | end ldouble12_opt2          */
 
 // func double(c *Fe, a *Fe)
-TEXT ·double(SB), NOSPLIT, $0-16
+TEXT ·double6(SB), NOSPLIT, $0-16
 	// |
 	MOVQ a+8(FP), DI
 
@@ -309,6 +970,7 @@ TEXT ·double(SB), NOSPLIT, $0-16
 	MOVQ R12, 32(DI)
 	MOVQ R13, 40(DI)
 	RET
+/*   | end double6         */
 
 // func neg(c *Fe, a *Fe)
 TEXT ·neg(SB), NOSPLIT, $0-16
@@ -338,8 +1000,7 @@ TEXT ·neg(SB), NOSPLIT, $0-16
 	MOVQ R12, 32(DI)
 	MOVQ R13, 40(DI)
 	RET
-/*   | end neg               */
-
+/*   | end neg             */
 
 // func mul(c *lfe, a *Fe, b *Fe)
 TEXT ·mul(SB), NOSPLIT, $0-24
@@ -742,7 +1403,7 @@ TEXT ·mul(SB), NOSPLIT, $0-24
 // func mont(c *fe, a *lfe)
 TEXT ·mont(SB), NOSPLIT, $0-24
 
-/*   | inputs               */
+/*   | inputs              */
 
 	MOVQ a+8(FP), SI
 	MOVQ 8(SI), R8
@@ -1146,7 +1807,7 @@ TEXT ·mont(SB), NOSPLIT, $0-24
 	// |  w6,  w7,  w8,  w9, w10, w11
 	// | R13, R14, R15,  R8,  R9, R10
 
-/*   | out                      */
+/*   | out                 */
 
 	MOVQ c+0(FP), SI
 	MOVQ R13, 0(SI) 
@@ -1156,8 +1817,40 @@ TEXT ·mont(SB), NOSPLIT, $0-24
 	MOVQ R9, 32(SI) 
 	MOVQ R10, 40(SI) 
 
+/*   | reduction           */
+
+  // | c = (w6, w7, w8, w9, w10, w11) @ (R9, R10, R11, DI, CX, R14)
+	MOVQ R13, AX
+	MOVQ R14, BX
+	MOVQ R15, CX
+	MOVQ R8, DX
+	MOVQ R9, R11
+	MOVQ R10, R12
+	SUBQ ·modulus+0(SB), AX
+	SBBQ ·modulus+8(SB), BX
+	SBBQ ·modulus+16(SB), CX
+	SBBQ ·modulus+24(SB), DX
+	SBBQ ·modulus+32(SB), R11
+	SBBQ ·modulus+40(SB), R12
+	CMOVQCC AX, R13
+	CMOVQCC BX, R14
+	CMOVQCC CX, R15
+	CMOVQCC DX, R8
+	CMOVQCC R11, R9
+	CMOVQCC R12, R10
+
+/*   | out                 */
+
+	MOVQ c+0(FP), SI
+	MOVQ R13, (SI)
+	MOVQ R14, 8(SI)
+	MOVQ R15, 16(SI)
+	MOVQ R8, 24(SI)
+	MOVQ R9, 32(SI)
+	MOVQ R10, 40(SI)
+
 	RET
-/*   | end mont                  */
+/*   | end mont            */
 
 
 // func montmul(c *Fe, a *Fe, b *Fe)
@@ -2002,7 +2695,7 @@ TEXT ·montmul(SB), NOSPLIT, $16-24
 	CMOVQCC R15, CX
 	CMOVQCC R13, R14
 
-/*   | return               */
+/*   | out                  */
 
 	MOVQ c+0(FP), SI
 	MOVQ R9, (SI)
@@ -2012,3 +2705,5 @@ TEXT ·montmul(SB), NOSPLIT, $16-24
 	MOVQ CX, 32(SI)
 	MOVQ R14, 40(SI)
   RET
+
+/*   | end montmul          */

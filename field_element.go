@@ -8,8 +8,12 @@ import (
 	"math/bits"
 )
 
-type Fe [6]uint64
-type lfe [12]uint64
+type Fe /***		***/ [6]uint64
+type lfe /**		***/ [12]uint64
+type Fe2 /**		***/ [2]Fe
+type lfe2 /*		***/ [2]lfe
+type Fe6 /**		***/ [3]Fe2
+type lfe6 /*		***/ [3]lfe2
 
 func (fe *Fe) Bytes() []byte {
 	out := make([]byte, 48)
@@ -241,4 +245,42 @@ func (fe *lfe) FromBytes(in []byte) *lfe {
 			uint64(padded[a-7])<<48 | uint64(padded[a-8])<<56
 	}
 	return fe
+}
+
+func (fe lfe) String() (s string) {
+	for i := 12; i >= 0; i-- {
+		s = fmt.Sprintf("%s%16.16x", s, fe[i])
+	}
+	return "0x" + s
+}
+
+func (fe *lfe) Set(fe2 *lfe) {
+	fe[0] = fe2[0]
+	fe[1] = fe2[1]
+	fe[2] = fe2[2]
+	fe[3] = fe2[3]
+	fe[4] = fe2[4]
+	fe[5] = fe2[5]
+	fe[6] = fe2[6]
+	fe[7] = fe2[7]
+	fe[8] = fe2[8]
+	fe[9] = fe2[9]
+	fe[10] = fe2[10]
+	fe[11] = fe2[11]
+}
+
+func (fe Fe2) String() (s string) {
+	return fe[0].String() + "\n" + fe[1].String()
+}
+
+func (fe lfe2) String() (s string) {
+	return fe[0].String() + "\n" + fe[1].String()
+}
+
+func (fe Fe6) String() (s string) {
+	return fe[0].String() + "\n" + fe[1].String() + "\n" + fe[2].String()
+}
+
+func (fe lfe6) String() (s string) {
+	return fe[0].String() + "\n" + fe[1].String() + "\n" + fe[2].String()
 }

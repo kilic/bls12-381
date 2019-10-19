@@ -118,42 +118,50 @@ func (fq *Fp12) Conjugate(c, a *Fe12) {
 
 func (fp *Fp12) Mul(c, a, b *Fe12) {
 	t := fp.t
-	fp.f.Mul(t[1], &a[0], &b[0])
-	fp.f.Mul(t[2], &a[1], &b[1])
+	//fp.f.Mul(t[1], &a[0], &b[0])
+	fp.f.mulr(t[1], &a[0], &b[0])
+	//fp.f.Mul(t[2], &a[1], &b[1])
+	fp.f.mulr(t[2], &a[1], &b[1])
 	fp.f.Add(t[0], t[1], t[2])
 	fp.f.MulByNonResidue(t[2], t[2])
 	fp.f.Add(t[3], t[1], t[2])
 	fp.f.Add(t[1], &a[0], &a[1])
 	fp.f.Add(t[2], &b[0], &b[1])
-	fp.f.Mul(t[1], t[1], t[2])
+	//fp.f.Mul(t[1], t[1], t[2])
+	fp.f.mulr(t[1], t[1], t[2])
 	fp.f.Copy(&c[0], t[3])
 	fp.f.Sub(&c[1], t[1], t[0])
 }
 
 func (fp *Fp12) MulAssign(a, b *Fe12) {
 	t := fp.t
-	fp.f.Mul(t[1], &a[0], &b[0])
-	fp.f.Mul(t[2], &a[1], &b[1])
+	//fp.f.Mul(t[1], &a[0], &b[0])
+	fp.f.mulr(t[1], &a[0], &b[0])
+	// fp.f.Mul(t[2], &a[1], &b[1])
+	fp.f.mulr(t[2], &a[1], &b[1])
 	fp.f.Add(t[0], t[1], t[2])
 	fp.f.MulByNonResidue(t[2], t[2])
 	fp.f.Add(t[3], t[1], t[2])
 	fp.f.Add(t[1], &a[0], &a[1])
 	fp.f.Add(t[2], &b[0], &b[1])
-	fp.f.Mul(t[1], t[1], t[2])
+	// fp.f.Mul(t[1], t[1], t[2])
+	fp.f.mulr(t[1], t[1], t[2])
 	fp.f.Copy(&a[0], t[3])
 	fp.f.Sub(&a[1], t[1], t[0])
 }
 
 func (fp *Fp12) Square(c, a *Fe12) {
 	t := fp.t
-	fp.f.Mul(t[0], &a[0], &a[1])
+	// fp.f.Mul(t[0], &a[0], &a[1])
+	fp.f.mulr(t[0], &a[0], &a[1])
 	fp.f.Double(t[3], t[0])
 	fp.f.MulByNonResidue(t[1], t[0])
 	fp.f.Add(t[0], t[1], t[0])
 	fp.f.MulByNonResidue(t[1], &a[1])
 	fp.f.Add(t[1], t[1], &a[0])
 	fp.f.Add(t[2], &a[0], &a[1])
-	fp.f.Mul(t[2], t[1], t[2])
+	// fp.f.Mul(t[2], t[1], t[2])
+	fp.f.mulr(t[2], t[1], t[2])
 	fp.f.Sub(&c[0], t[2], t[0])
 	fp.f.Copy(&c[1], t[3])
 }
