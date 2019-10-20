@@ -116,111 +116,210 @@ func (fq *Fp12) Conjugate(c, a *Fe12) {
 	fq.f.Neg(&c[1], &a[1])
 }
 
-func (fp *Fp12) Mul(c, a, b *Fe12) {
+// func (fp *Fp12) Mul(c, a, b *Fe12) {
+// 	t := fp.t
+// 	fp.f.Mul(t[1], &a[0], &b[0])
+// 	fp.f.Mul(t[2], &a[1], &b[1])
+// 	fp.f.Add(t[0], t[1], t[2])
+// 	fp.f.MulByNonResidue(t[2], t[2])
+// 	fp.f.Add(t[3], t[1], t[2])
+// 	fp.f.Add(t[1], &a[0], &a[1])
+// 	fp.f.Add(t[2], &b[0], &b[1])
+// 	fp.f.Mul(t[1], t[1], t[2])
+// 	fp.f.Copy(&c[0], t[3])
+// 	fp.f.Sub(&c[1], t[1], t[0])
+// }
+
+var lx0, lx1, lx2, lx3 lfe6
+
+func (fp *Fp12) mul(c, a, b *Fe12) {
 	t := fp.t
-	//fp.f.Mul(t[1], &a[0], &b[0])
-	fp.f.mulr(t[1], &a[0], &b[0])
-	//fp.f.Mul(t[2], &a[1], &b[1])
-	fp.f.mulr(t[2], &a[1], &b[1])
-	fp.f.Add(t[0], t[1], t[2])
-	fp.f.MulByNonResidue(t[2], t[2])
-	fp.f.Add(t[3], t[1], t[2])
-	fp.f.Add(t[1], &a[0], &a[1])
-	fp.f.Add(t[2], &b[0], &b[1])
-	//fp.f.Mul(t[1], t[1], t[2])
-	fp.f.mulr(t[1], t[1], t[2])
-	fp.f.Copy(&c[0], t[3])
-	fp.f.Sub(&c[1], t[1], t[0])
+	fp.f.lmul(&lx0, &a[0], &b[0])
+	fp.f.lmul(&lx1, &a[1], &b[1])
+	fp.f.add6(t[0], &a[0], &a[1])
+	fp.f.add6(t[1], &b[0], &b[1])
+	fp.f.lmul(&lx2, t[0], t[1])
+	fp.f.add12(&lx3, &lx0, &lx1)
+	fp.f.sub12(&lx2, &lx2, &lx3)
+	fp.f.mont(&c[1], &lx2)
+	fp.f.mulByNonResidue12(&lx2, &lx1)
+	fp.f.add12(&lx2, &lx0, &lx2)
+	fp.f.mont(&c[0], &lx2)
 }
 
-func (fp *Fp12) MulAssign(a, b *Fe12) {
+func (fp *Fp12) mulAssign(a, b *Fe12) {
 	t := fp.t
-	//fp.f.Mul(t[1], &a[0], &b[0])
-	fp.f.mulr(t[1], &a[0], &b[0])
-	// fp.f.Mul(t[2], &a[1], &b[1])
-	fp.f.mulr(t[2], &a[1], &b[1])
-	fp.f.Add(t[0], t[1], t[2])
-	fp.f.MulByNonResidue(t[2], t[2])
-	fp.f.Add(t[3], t[1], t[2])
-	fp.f.Add(t[1], &a[0], &a[1])
-	fp.f.Add(t[2], &b[0], &b[1])
-	// fp.f.Mul(t[1], t[1], t[2])
-	fp.f.mulr(t[1], t[1], t[2])
-	fp.f.Copy(&a[0], t[3])
-	fp.f.Sub(&a[1], t[1], t[0])
+	fp.f.lmul(&lx0, &a[0], &b[0])
+	fp.f.lmul(&lx1, &a[1], &b[1])
+	fp.f.add6(t[0], &a[0], &a[1])
+	fp.f.add6(t[1], &b[0], &b[1])
+	fp.f.lmul(&lx2, t[0], t[1])
+	fp.f.add12(&lx3, &lx0, &lx1)
+	fp.f.sub12(&lx2, &lx2, &lx3)
+	fp.f.mont(&a[1], &lx2)
+	fp.f.mulByNonResidue12(&lx2, &lx1)
+	fp.f.add12(&lx2, &lx0, &lx2)
+	fp.f.mont(&a[0], &lx2)
 }
+
+// func (fp *Fp12) MulAssign(a, b *Fe12) {
+// 	t := fp.t
+// 	fp.f.Mul(t[1], &a[0], &b[0])
+// 	fp.f.Mul(t[2], &a[1], &b[1])
+// 	fp.f.Add(t[0], t[1], t[2])
+// 	fp.f.MulByNonResidue(t[2], t[2])
+// 	fp.f.Add(t[3], t[1], t[2])
+// 	fp.f.Add(t[1], &a[0], &a[1])
+// 	fp.f.Add(t[2], &b[0], &b[1])
+// 	fp.f.Mul(t[1], t[1], t[2])
+// 	fp.f.Copy(&a[0], t[3])
+// 	fp.f.Sub(&a[1], t[1], t[0])
+// }
 
 func (fp *Fp12) Square(c, a *Fe12) {
 	t := fp.t
-	// fp.f.Mul(t[0], &a[0], &a[1])
-	fp.f.mulr(t[0], &a[0], &a[1])
+	fp.f.Mul(t[0], &a[0], &a[1])
 	fp.f.Double(t[3], t[0])
 	fp.f.MulByNonResidue(t[1], t[0])
 	fp.f.Add(t[0], t[1], t[0])
 	fp.f.MulByNonResidue(t[1], &a[1])
 	fp.f.Add(t[1], t[1], &a[0])
 	fp.f.Add(t[2], &a[0], &a[1])
-	// fp.f.Mul(t[2], t[1], t[2])
-	fp.f.mulr(t[2], t[1], t[2])
+	fp.f.Mul(t[2], t[1], t[2])
 	fp.f.Sub(&c[0], t[2], t[0])
 	fp.f.Copy(&c[1], t[3])
 }
 
+// fp.f.f.Mul(t[0], &a0, &a1)
+// fp.f.f.Add(t[1], &a0, &a1)
+// fp.f.f.MulByNonResidue(t[2], &a1)
+// fp.f.f.Add(t[2], t[2], &a0)
+// fp.f.f.MulByNonResidue(t[3], t[0])
+// fp.f.f.Mul(t[4], t[1], t[2])
+// fp.f.f.Sub(t[4], t[4], t[0])
+// fp.f.f.Sub(t[4], t[4], t[3])
+// fp.f.f.Double(t[5], t[0])
+
+func (fp *Fp12) fp4Square(c0, c1, a0, a1 *Fe2) {
+	t := fp.t2
+	fp2 := fp.f.f
+	// fp2.add6(t[0], a0, a1)
+	// fp2.lmul(&lt0, a0, a1)
+	// fp2.mulByNonResidue6(t[1], a1)
+	// fp2.add6(t[1], t[1], a0)
+	// fp2.mulByNonResidue12unsafe(&lt1, &lt0)
+	// fp2.lmul(&lt2, t[0], t[1])
+	// fp2.sub12(&lt2, &lt2, &lt0)
+	// fp2.sub12(&lt2, &lt2, &lt1)
+	// fp2.double12(&lt0, &lt0)
+	// fp2.mont(c0, &lt2)
+	// fp2.mont(c1, &lt0)
+
+	fp2.add6(t[0], a0, a1)
+	fp2.mul(t[8], a0, a1)
+	fp2.mulByNonResidue6(t[1], a1)
+	fp2.add6(t[1], t[1], a0)
+	fp2.mulByNonResidue6(t[7], t[8])
+	fp2.mul(t[6], t[0], t[1])
+	fp2.sub6(t[6], t[6], t[8])
+	fp2.sub6(c0, t[6], t[7])
+	fp2.double6(c1, t[8])
+}
+
 func (fp *Fp12) CyclotomicSquare(c, a *Fe12) {
 	t := fp.t2
-	fp.f.f.Mul(t[0], &a[0][0], &a[1][1])
-	fp.f.f.Add(t[1], &a[0][0], &a[1][1])
-	fp.f.f.MulByNonResidue(t[2], &a[1][1])
-	fp.f.f.Add(t[2], t[2], &a[0][0])
-	fp.f.f.MulByNonResidue(t[3], t[0])
-	fp.f.f.Mul(t[4], t[1], t[2])
-	fp.f.f.Sub(t[4], t[4], t[0])
-	fp.f.f.Sub(t[4], t[4], t[3])
-	fp.f.f.Double(t[5], t[0])
-	fp.f.f.Mul(t[0], &a[1][0], &a[0][2])
-	fp.f.f.Add(t[1], &a[1][0], &a[0][2])
-	fp.f.f.MulByNonResidue(t[2], &a[0][2])
-	fp.f.f.Add(t[2], t[2], &a[1][0])
-	fp.f.f.MulByNonResidue(t[3], t[0])
-	fp.f.f.Mul(t[6], t[1], t[2])
-	fp.f.f.Sub(t[6], t[6], t[0])
-	fp.f.f.Sub(t[6], t[6], t[3])
-	fp.f.f.Double(t[7], t[0])
-	fp.f.f.Mul(t[0], &a[0][1], &a[1][2])
-	fp.f.f.Add(t[1], &a[0][1], &a[1][2])
-	fp.f.f.MulByNonResidue(t[2], &a[1][2])
-	fp.f.f.Add(t[2], t[2], &a[0][1])
-	fp.f.f.MulByNonResidue(t[3], t[0])
-	fp.f.f.Mul(t[8], t[1], t[2])
-	fp.f.f.Sub(t[8], t[8], t[0])
-	fp.f.f.Sub(t[8], t[8], t[3])
-	fp.f.f.Double(t[0], t[0])
-	fp.f.f.MulByNonResidue(t[0], t[0])
-	fp.f.f.Sub(t[1], t[4], &a[0][0])
-	fp.f.f.Double(t[1], t[1])
-	fp.f.f.Add(t[1], t[1], t[4])
-	fp.f.f.Copy(&c[0][0], t[1])
-	fp.f.f.Add(t[1], t[5], &a[1][1])
-	fp.f.f.Double(t[1], t[1])
-	fp.f.f.Add(t[1], t[1], t[5])
-	fp.f.f.Copy(&c[1][1], t[1])
-	fp.f.f.Add(t[1], t[0], &a[1][0])
-	fp.f.f.Double(t[1], t[1])
-	fp.f.f.Add(t[1], t[1], t[0])
-	fp.f.f.Copy(&c[1][0], t[1])
-	fp.f.f.Sub(t[1], t[8], &a[0][2])
-	fp.f.f.Double(t[1], t[1])
-	fp.f.f.Add(t[1], t[1], t[8])
-	fp.f.f.Copy(&c[0][2], t[1])
-	fp.f.f.Sub(t[1], t[6], &a[0][1])
-	fp.f.f.Double(t[1], t[1])
-	fp.f.f.Add(t[1], t[1], t[6])
-	fp.f.f.Copy(&c[0][1], t[1])
-	fp.f.f.Add(t[1], t[7], &a[1][2])
-	fp.f.f.Double(t[1], t[1])
-	fp.f.f.Add(t[1], t[1], t[7])
-	fp.f.f.Copy(&c[1][2], t[1])
+	fp2 := fp.f.f
+	fp.fp4Square(t[3], t[4], &a[0][0], &a[1][1])
+	//
+	fp2.sub6(t[2], t[3], &a[0][0])
+	fp2.double6(t[2], t[2])
+	fp2.add6(&c[0][0], t[2], t[3])
+	//
+	fp2.add6(t[2], t[4], &a[1][1])
+	fp2.double6(t[2], t[2])
+	fp2.add6(&c[1][1], t[2], t[4])
+
+	fp.fp4Square(t[3], t[4], &a[1][0], &a[0][2])
+	fp.fp4Square(t[5], t[6], &a[0][1], &a[1][2])
+	//
+	fp2.sub6(t[2], t[3], &a[0][1])
+	fp2.double6(t[2], t[2])
+	fp2.add6(&c[0][1], t[2], t[3])
+	//
+	fp2.add6(t[2], t[4], &a[1][2])
+	fp2.double6(t[2], t[2])
+	fp2.add6(&c[1][2], t[2], t[4])
+	//
+	fp2.mulByNonResidue(t[3], t[6])
+	fp2.add6(t[2], t[3], &a[1][0])
+	fp2.double6(t[2], t[2])
+	fp2.add6(&c[1][0], t[2], t[3])
+	//
+	//
+	fp2.sub6(t[2], t[5], &a[0][2])
+	fp2.double6(t[2], t[2])
+	fp2.add6(&c[0][2], t[2], t[5])
 }
+
+// func (fp *Fp12) CyclotomicSquare(c, a *Fe12) {
+// 	t := fp.t2
+
+// 	fp.f.f.Mul(t[0], &a[0][0], &a[1][1])
+// 	fp.f.f.Add(t[1], &a[0][0], &a[1][1])
+// 	fp.f.f.MulByNonResidue(t[2], &a[1][1])
+// 	fp.f.f.Add(t[2], t[2], &a[0][0])
+// 	fp.f.f.MulByNonResidue(t[3], t[0])
+// 	fp.f.f.Mul(t[4], t[1], t[2])
+// 	fp.f.f.Sub(t[4], t[4], t[0])
+// 	fp.f.f.Sub(t[4], t[4], t[3])
+// 	fp.f.f.Double(t[5], t[0])
+
+// 	fp.f.f.Mul(t[0], &a[1][0], &a[0][2])
+// 	fp.f.f.Add(t[1], &a[1][0], &a[0][2])
+// 	fp.f.f.MulByNonResidue(t[2], &a[0][2])
+// 	fp.f.f.Add(t[2], t[2], &a[1][0])
+// 	fp.f.f.MulByNonResidue(t[3], t[0])
+// 	fp.f.f.Mul(t[6], t[1], t[2])
+// 	fp.f.f.Sub(t[6], t[6], t[0])
+// 	fp.f.f.Sub(t[6], t[6], t[3])
+// 	fp.f.f.Double(t[7], t[0])
+
+// 	fp.f.f.Mul(t[0], &a[0][1], &a[1][2])
+// 	fp.f.f.Add(t[1], &a[0][1], &a[1][2])
+// 	fp.f.f.MulByNonResidue(t[2], &a[1][2])
+// 	fp.f.f.Add(t[2], t[2], &a[0][1])
+// 	fp.f.f.MulByNonResidue(t[3], t[0])
+// 	fp.f.f.Mul(t[8], t[1], t[2])
+// 	fp.f.f.Sub(t[8], t[8], t[0])
+// 	fp.f.f.Sub(t[8], t[8], t[3])
+// 	fp.f.f.Double(t[0], t[0])
+
+// 	fp.f.f.MulByNonResidue(t[0], t[0])
+// 	fp.f.f.Sub(t[1], t[4], &a[0][0])
+// 	fp.f.f.Double(t[1], t[1])
+// 	fp.f.f.Add(t[1], t[1], t[4])
+// 	fp.f.f.Copy(&c[0][0], t[1])
+// 	fp.f.f.Add(t[1], t[5], &a[1][1])
+// 	fp.f.f.Double(t[1], t[1])
+// 	fp.f.f.Add(t[1], t[1], t[5])
+// 	fp.f.f.Copy(&c[1][1], t[1])
+// 	fp.f.f.Add(t[1], t[0], &a[1][0])
+// 	fp.f.f.Double(t[1], t[1])
+// 	fp.f.f.Add(t[1], t[1], t[0])
+// 	fp.f.f.Copy(&c[1][0], t[1])
+// 	fp.f.f.Sub(t[1], t[8], &a[0][2])
+// 	fp.f.f.Double(t[1], t[1])
+// 	fp.f.f.Add(t[1], t[1], t[8])
+// 	fp.f.f.Copy(&c[0][2], t[1])
+// 	fp.f.f.Sub(t[1], t[6], &a[0][1])
+// 	fp.f.f.Double(t[1], t[1])
+// 	fp.f.f.Add(t[1], t[1], t[6])
+// 	fp.f.f.Copy(&c[0][1], t[1])
+// 	fp.f.f.Add(t[1], t[7], &a[1][2])
+// 	fp.f.f.Double(t[1], t[1])
+// 	fp.f.f.Add(t[1], t[1], t[7])
+// 	fp.f.f.Copy(&c[1][2], t[1])
+// }
 
 func (fp *Fp12) Inverse(c, a *Fe12) {
 	t := fp.t
@@ -237,7 +336,7 @@ func (fp *Fp12) Inverse(c, a *Fe12) {
 func (fp *Fp12) Div(c, a, b *Fe12) {
 	t0 := fp.NewElement()
 	fp.Inverse(t0, b)
-	fp.Mul(c, a, t0)
+	fp.mul(c, a, t0)
 }
 
 func (fq *Fp12) Exp(c, a *Fe12, e *big.Int) {
@@ -245,7 +344,7 @@ func (fq *Fp12) Exp(c, a *Fe12, e *big.Int) {
 	for i := e.BitLen() - 1; i >= 0; i-- {
 		fq.Square(z, z)
 		if e.Bit(i) == 1 {
-			fq.Mul(z, z, a)
+			fq.mul(z, z, a)
 		}
 	}
 	fq.Copy(c, z)
@@ -256,7 +355,7 @@ func (fq *Fp12) CyclotomicExp(c, a *Fe12, e *big.Int) {
 	for i := e.BitLen() - 1; i >= 0; i-- {
 		fq.CyclotomicSquare(z, z)
 		if e.Bit(i) == 1 {
-			fq.Mul(z, z, a)
+			fq.mul(z, z, a)
 		}
 	}
 	fq.Copy(c, z)
@@ -267,10 +366,10 @@ func (fp *Fp12) MulBy034Assign(a *Fe12, c0, c3, c4 *Fe2) {
 	t := fp.t
 	fp.f.MulByBaseField(t[0], &a[0], c0)
 	fp.f.Copy(t[1], &a[1])
-	fp.f.MulBy01(t[1], c3, c4)
+	fp.f.mulBy01(t[1], c3, c4)
 	fp.f.f.Add(o, c0, c3)
 	fp.f.Add(t[2], &a[1], &a[0])
-	fp.f.MulBy01(t[2], o, c4)
+	fp.f.mulBy01(t[2], o, c4)
 	fp.f.Sub(t[2], t[2], t[0])
 	fp.f.Sub(&a[1], t[2], t[1])
 	fp.f.MulByNonResidue(t[1], t[1])
@@ -281,12 +380,12 @@ func (fp *Fp12) MulBy014Assign(a *Fe12, c0, c1, c4 *Fe2) {
 	o := &Fe2{}
 	t := fp.t
 	fp.f.Copy(t[0], &a[0])
-	fp.f.MulBy01(t[0], c0, c1)
+	fp.f.mulBy01(t[0], c0, c1)
 	fp.f.Copy(t[1], &a[1])
-	fp.f.MulBy1(t[1], c4)
+	fp.f.mulBy1(t[1], c4)
 	fp.f.f.Add(o, c1, c4)
 	fp.f.Add(&a[1], &a[1], &a[0])
-	fp.f.MulBy01(&a[1], c0, o)
+	fp.f.mulBy01(&a[1], c0, o)
 	fp.f.Sub(&a[1], &a[1], t[0])
 	fp.f.Sub(&a[1], &a[1], t[1])
 	fp.f.MulByNonResidue(t[1], t[1])

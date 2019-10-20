@@ -2,6 +2,7 @@ package bls
 
 import (
 	"crypto/rand"
+	"fmt"
 	"math/big"
 	"testing"
 )
@@ -37,7 +38,11 @@ func TestPairing(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !e.Fp12.Equal(f1, f2) {
+			fmt.Println(f1)
+			fmt.Println()
+			fmt.Println(f2)
 			t.Fatal("bad pairing")
+
 		}
 	})
 }

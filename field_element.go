@@ -269,6 +269,21 @@ func (fe *lfe) Set(fe2 *lfe) {
 	fe[11] = fe2[11]
 }
 
+func (fe *lfe) SetSingle(fe2 *Fe) {
+	fe[0] = fe2[0]
+	fe[1] = fe2[1]
+	fe[2] = fe2[2]
+	fe[3] = fe2[3]
+	fe[4] = fe2[4]
+	fe[5] = fe2[5]
+	fe[6] = 0
+	fe[7] = 0
+	fe[8] = 0
+	fe[9] = 0
+	fe[10] = 0
+	fe[11] = 0
+}
+
 func (fe Fe2) String() (s string) {
 	return fe[0].String() + "\n" + fe[1].String()
 }
@@ -283,4 +298,8 @@ func (fe Fe6) String() (s string) {
 
 func (fe lfe6) String() (s string) {
 	return fe[0].String() + "\n" + fe[1].String() + "\n" + fe[2].String()
+}
+
+func (fe Fe12) String() (s string) {
+	return fe[0].String() + "\n" + fe[1].String()
 }

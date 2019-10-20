@@ -93,17 +93,16 @@ func (f *Fp) Copy(dst *Fe, src *Fe) *Fe {
 	return dst.Set(src)
 }
 
-func (f *Fp) CopyL(dst *lfe, src *Fe) {
-	dst[0] = src[0]
-	dst[1] = src[1]
-	dst[2] = src[2]
-	dst[3] = src[3]
-	dst[4] = src[4]
-	dst[5] = src[5]
+func (f *Fp) copy(dst *Fe, src *Fe) *Fe {
+	return dst.Set(src)
 }
 
 func (f *Fp) lcopy(dst, src *lfe) {
 	dst.Set(src)
+}
+
+func (f *Fp) copyMixed(dst *lfe, src *Fe) {
+	dst.SetSingle(src)
 }
 
 func (f *Fp) RandElement(fe *Fe, r io.Reader) (*Fe, error) {
@@ -134,68 +133,20 @@ func (f *Fp) Add(c, a, b *Fe) {
 	add6(c, a, b)
 }
 
-func (f *Fp) add6(c, a, b *Fe) {
-	add6(c, a, b)
-}
-
-func (f *Fp) ladd6(c, a, b *Fe) {
-	ladd6(c, a, b)
-}
-
-func (f *Fp) mont(c *Fe, a *lfe) {
-	mont(c, a)
-}
-
-func (f *Fp) ladd12(c, a, b *lfe) {
-	ladd12(c, a, b)
-}
-
-func (f *Fp) ladd12opt2(c, a, b *lfe) {
-	ladd12_opt2(c, a, b)
-}
-
 func (f *Fp) Double(c, a *Fe) {
 	double6(c, a)
 }
 
-func (f *Fp) ldouble6(c, a *Fe) {
-	ldouble6(c, a)
-}
-
-func (f *Fp) ldouble12(c, a *lfe) {
-	ldouble12(c, a)
-}
-
-func (f *Fp) ldouble12opt2(c, a *lfe) {
-	ldouble12_opt2(c, a)
+func (f *Fp) Square(c, a *Fe) {
+	montmul(c, a, a)
 }
 
 func (f *Fp) Sub(c, a, b *Fe) {
 	sub6(c, a, b)
 }
 
-func (f *Fp) sub6(c, a, b *Fe) {
-	sub6(c, a, b)
-}
-
-func (f *Fp) lsub6(c, a, b *Fe) {
-	lsub6(c, a, b)
-}
-
-func (f *Fp) lsub12opt2(c, a, b *lfe) {
-	lsub12_opt2(c, a, b)
-}
-
-func (f *Fp) lsub12opt1h2(c, a, b *lfe) {
-	lsub12_opt1_h2(c, a, b)
-}
-
-func (f *Fp) lsub12opt1h1(c, a, b *lfe) {
-	lsub12_opt1_h1(c, a, b)
-}
-
-func (f *Fp) lsub12(c, a, b *lfe) {
-	lsub12(c, a, b)
+func (f *Fp) Mul(c, a, b *Fe) {
+	montmul(c, a, b)
 }
 
 func (f *Fp) Neg(c, a *Fe) {
@@ -204,18 +155,6 @@ func (f *Fp) Neg(c, a *Fe) {
 	} else {
 		neg(c, a)
 	}
-}
-
-func (f *Fp) Square(c, a *Fe) {
-	montmul(c, a, a)
-}
-
-func (f *Fp) Mul(c, a, b *Fe) {
-	montmul(c, a, b)
-}
-
-func (f *Fp) lmul(c *lfe, a, b *Fe) {
-	mul(c, a, b)
 }
 
 func (f *Fp) Exp(c, a *Fe, e *big.Int) {
@@ -227,6 +166,70 @@ func (f *Fp) Exp(c, a *Fe, e *big.Int) {
 		}
 	}
 	c.Set(z)
+}
+
+func (f *Fp) add(c, a, b *Fe) {
+	add6(c, a, b)
+}
+
+func (f *Fp) add6(c, a, b *Fe) {
+	add6(c, a, b)
+}
+
+func (f *Fp) ladd6(c, a, b *Fe) {
+	ladd6(c, a, b)
+}
+
+func (f *Fp) add12(c, a, b *lfe) {
+	add12(c, a, b)
+}
+
+func (f *Fp) ladd12(c, a, b *lfe) {
+	ladd12(c, a, b)
+}
+
+func (f *Fp) double6(c, a *Fe) {
+	double6(c, a)
+}
+
+func (f *Fp) ldouble6(c, a *Fe) {
+	ldouble6(c, a)
+}
+
+func (f *Fp) double12(c, a *lfe) {
+	double12(c, a)
+}
+
+func (f *Fp) ldouble12(c, a *lfe) {
+	ldouble12(c, a)
+}
+
+func (f *Fp) sub(c, a, b *Fe) { sub6(c, a, b) }
+
+func (f *Fp) sub6(c, a, b *Fe) { sub6(c, a, b) }
+
+func (f *Fp) lsub6(c, a, b *Fe) {
+	lsub6(c, a, b)
+}
+
+func (f *Fp) sub12(c, a, b *lfe) {
+	sub12(c, a, b)
+}
+
+func (f *Fp) lsub12(c, a, b *lfe) {
+	lsub12(c, a, b)
+}
+
+func (f *Fp) lmul(c *lfe, a, b *Fe) {
+	mul(c, a, b)
+}
+
+func (f *Fp) mont(c *Fe, a *lfe) {
+	mont(c, a)
+}
+
+func (f *Fp) mul(c, a, b *Fe) {
+	montmul(c, a, b)
 }
 
 func (f *Fp) Inverse(inv, fe *Fe) {
