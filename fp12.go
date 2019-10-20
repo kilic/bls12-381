@@ -226,7 +226,7 @@ func (fp *Fp12) fp4Square(c0, c1, a0, a1 *Fe2) {
 	fp2.double6(c1, t[8])
 }
 
-func (fp *Fp12) CyclotomicSquare(c, a *Fe12) {
+func (fp *Fp12) cyclotomicSquare(c, a *Fe12) {
 	t := fp.t2
 	fp2 := fp.f.f
 	fp.fp4Square(t[3], t[4], &a[0][0], &a[1][1])
@@ -353,7 +353,7 @@ func (fq *Fp12) Exp(c, a *Fe12, e *big.Int) {
 func (fq *Fp12) CyclotomicExp(c, a *Fe12, e *big.Int) {
 	z := fq.One()
 	for i := e.BitLen() - 1; i >= 0; i-- {
-		fq.CyclotomicSquare(z, z)
+		fq.cyclotomicSquare(z, z)
 		if e.Bit(i) == 1 {
 			fq.mul(z, z, a)
 		}
@@ -361,27 +361,27 @@ func (fq *Fp12) CyclotomicExp(c, a *Fe12, e *big.Int) {
 	fq.Copy(c, z)
 }
 
-func (fp *Fp12) MulBy034Assign(a *Fe12, c0, c3, c4 *Fe2) {
-	o := &Fe2{}
-	t := fp.t
-	fp.f.MulByBaseField(t[0], &a[0], c0)
-	fp.f.Copy(t[1], &a[1])
-	fp.f.mulBy01(t[1], c3, c4)
-	fp.f.f.Add(o, c0, c3)
-	fp.f.Add(t[2], &a[1], &a[0])
-	fp.f.mulBy01(t[2], o, c4)
-	fp.f.Sub(t[2], t[2], t[0])
-	fp.f.Sub(&a[1], t[2], t[1])
-	fp.f.MulByNonResidue(t[1], t[1])
-	fp.f.Add(&a[0], t[0], t[1])
-}
+// func (fp *Fp12) MulBy034Assign(a *Fe12, c0, c3, c4 *Fe2) {
+// 	o := &Fe2{}
+// 	t := fp.t
+// 	fp.f.MulByBaseField(t[0], &a[0], c0)
+// 	fp.f.Copy(t[1], &a[1])
+// 	fp.f.mulBy01(t[1], c3, c4)
+// 	fp.f.f.Add(o, c0, c3)
+// 	fp.f.Add(t[2], &a[1], &a[0])
+// 	fp.f.mulBy01(t[2], o, c4)
+// 	fp.f.Sub(t[2], t[2], t[0])
+// 	fp.f.Sub(&a[1], t[2], t[1])
+// 	fp.f.MulByNonResidue(t[1], t[1])
+// 	fp.f.Add(&a[0], t[0], t[1])
+// }
 
 func (fp *Fp12) MulBy014Assign(a *Fe12, c0, c1, c4 *Fe2) {
 	o := &Fe2{}
 	t := fp.t
-	fp.f.Copy(t[0], &a[0])
+	fp.f.copy(t[0], &a[0])
+	fp.f.copy(t[1], &a[1])
 	fp.f.mulBy01(t[0], c0, c1)
-	fp.f.Copy(t[1], &a[1])
 	fp.f.mulBy1(t[1], c4)
 	fp.f.f.Add(o, c1, c4)
 	fp.f.Add(&a[1], &a[1], &a[0])

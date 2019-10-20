@@ -1135,7 +1135,7 @@ func BenchmarkFp12X(t *testing.B) {
 	t.Run("Faster", func(t *testing.B) {
 		t.ResetTimer()
 		for i := 0; i < t.N; i++ {
-			field.CyclotomicSquare(&c, &a)
+			field.cyclotomicSquare(&c, &a)
 		}
 	})
 }
@@ -1240,7 +1240,7 @@ func BenchmarkCS(t *testing.B) {
 	var field = NewFp12(nil)
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
-		field.CyclotomicSquare(&c, &a)
+		field.cyclotomicSquare(&c, &a)
 	}
 }
 
