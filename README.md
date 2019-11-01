@@ -23,8 +23,3 @@ BenchmarkPairing  1145435 ns/op
 #### Authors
 
 Sait İmamoğlu, Onur Kılıç
-
-#### Testing
-
-* Lazies
-* NonBMI2
