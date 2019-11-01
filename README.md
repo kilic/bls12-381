@@ -17,9 +17,14 @@ _wip_. _Do not use in production_.
 on _2.7 GHz i5_
 
 ```
-BenchmarkPairing  1672306 ns/op
+BenchmarkPairing  1145435 ns/op
 ```
 
 #### Authors
 
 Sait İmamoğlu, Onur Kılıç
+
+#### Testing
+
+* Lazies
+* NonBMI2

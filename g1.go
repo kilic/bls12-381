@@ -5,7 +5,7 @@ import (
 	"math/big"
 )
 
-type PointG1 [3]Fe
+type PointG1 [3]fe
 
 func (p *PointG1) Set(p2 *PointG1) *PointG1 {
 	p[0].Set(&p2[0])
@@ -15,14 +15,17 @@ func (p *PointG1) Set(p2 *PointG1) *PointG1 {
 }
 
 type G1 struct {
-	f *Fp
-	t [9]*Fe
+	f *fp
+	t [9]*fe
 }
 
-func NewG1(f *Fp) *G1 {
-	t := [9]*Fe{}
+func NewG1(f *fp) *G1 {
+	t := [9]*fe{}
 	for i := 0; i < 9; i++ {
-		t[i] = f.Zero()
+		t[i] = f.zero()
+	}
+	if f == nil {
+		f = newFp()
 	}
 	return &G1{
 		f: f,
@@ -51,17 +54,17 @@ func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 		return g.Zero(), nil
 	}
 	in[0] &= 0x1f
-	x, y := &Fe{}, &Fe{}
-	if err := g.f.NewElementFromBytes(x, in[:48]); err != nil {
+	x, y := &fe{}, &fe{}
+	if err := g.f.newElementFromBytes(x, in[:48]); err != nil {
 		return nil, err
 	}
-	if err := g.f.NewElementFromBytes(y, in[48:]); err != nil {
+	if err := g.f.newElementFromBytes(y, in[48:]); err != nil {
 		return nil, err
 	}
 	p := &PointG1{}
-	g.f.Copy(&p[0], x)
-	g.f.Copy(&p[1], y)
-	g.f.Copy(&p[2], &FpOne)
+	g.f.copy(&p[0], x)
+	g.f.copy(&p[1], y)
+	g.f.copy(&p[2], &fpOne)
 	if !g.IsOnCurve(p) {
 		return nil, fmt.Errorf("point is not on curve")
 	}
@@ -77,8 +80,8 @@ func (g *G1) ToUncompressed(p *PointG1) []byte {
 	if g.IsZero(p) {
 		out[0] |= 1 << 6
 	}
-	copy(out[:48], g.f.ToBytes(&p[0]))
-	copy(out[48:], g.f.ToBytes(&p[1]))
+	copy(out[:48], g.f.toBytes(&p[0]))
+	copy(out[48:], g.f.toBytes(&p[1]))
 	return out
 }
 
@@ -102,30 +105,30 @@ func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 	}
 	a := in[0]&(1<<5) != 0
 	in[0] &= 0x1f
-	x := &Fe{}
-	if err := g.f.NewElementFromBytes(x, in[:]); err != nil {
+	x := &fe{}
+	if err := g.f.newElementFromBytes(x, in[:]); err != nil {
 		return nil, err
 	}
 	// solve curve equation
-	y := &Fe{}
-	g.f.Square(y, x)
-	g.f.Mul(y, y, x)
-	g.f.Add(y, y, b)
-	if ok := g.f.Sqrt(y, y); !ok {
+	y := &fe{}
+	g.f.square(y, x)
+	g.f.mul(y, y, x)
+	g.f.add(y, y, b)
+	if ok := g.f.sqrt(y, y); !ok {
 		return nil, fmt.Errorf("point is not on curve")
 	}
 	// select lexicographically, should be in normalized form
-	negY, negYn, yn := &Fe{}, &Fe{}, &Fe{}
-	g.f.Demont(yn, y)
-	g.f.Neg(negY, y)
-	g.f.Neg(negYn, yn)
+	negY, negYn, yn := &fe{}, &fe{}, &fe{}
+	g.f.demont(yn, y)
+	g.f.neg(negY, y)
+	g.f.neg(negYn, yn)
 	if yn.Cmp(negYn) > -1 != a {
-		g.f.Copy(y, negY)
+		g.f.copy(y, negY)
 	}
 	p := &PointG1{}
-	g.f.Copy(&p[0], x)
-	g.f.Copy(&p[1], y)
-	g.f.Copy(&p[2], &FpOne)
+	g.f.copy(&p[0], x)
+	g.f.copy(&p[1], y)
+	g.f.copy(&p[2], &fpOne)
 	if !g.isTorsionFree(p) {
 		return nil, fmt.Errorf("point is not on correct subgroup")
 	}
@@ -138,11 +141,11 @@ func (g *G1) ToCompressed(p *PointG1) []byte {
 	if g.IsZero(p) {
 		out[0] |= 1 << 6
 	} else {
-		copy(out[:], g.f.ToBytes(&p[0]))
-		y, negY := &Fe{}, &Fe{}
-		g.f.Copy(y, &p[1])
-		g.f.Demont(y, y)
-		g.f.Neg(negY, y)
+		copy(out[:], g.f.toBytes(&p[0]))
+		y, negY := &fe{}, &fe{}
+		g.f.copy(y, &p[1])
+		g.f.demont(y, y)
+		g.f.neg(negY, y)
 		if y.Cmp(negY) > 0 {
 			out[0] |= 1 << 5
 		}
@@ -153,13 +156,13 @@ func (g *G1) ToCompressed(p *PointG1) []byte {
 
 func (g *G1) fromRawUnchecked(in []byte) *PointG1 {
 	p := &PointG1{}
-	if err := g.f.NewElementFromBytes(&p[0], in[:48]); err != nil {
+	if err := g.f.newElementFromBytes(&p[0], in[:48]); err != nil {
 		panic(err)
 	}
-	if err := g.f.NewElementFromBytes(&p[1], in[48:]); err != nil {
+	if err := g.f.newElementFromBytes(&p[1], in[48:]); err != nil {
 		panic(err)
 	}
-	g.f.Copy(&p[2], &FpOne)
+	g.f.copy(&p[2], &fpOne)
 	return p
 }
 
@@ -171,10 +174,18 @@ func (g *G1) isTorsionFree(p *PointG1) bool {
 
 func (g *G1) Zero() *PointG1 {
 	return &PointG1{
-		*g.f.Zero(),
-		*g.f.One(),
-		*g.f.Zero(),
+		*g.f.zero(),
+		*g.f.one(),
+		*g.f.zero(),
 	}
+}
+
+func (g *G1) NegativeOne() *PointG1 {
+	return g.Copy(&PointG1{}, &g1NegativeOne)
+}
+
+func (g *G1) One() *PointG1 {
+	return g.Copy(&PointG1{}, &g1One)
 }
 
 func (g *G1) Copy(dst *PointG1, src *PointG1) *PointG1 {
@@ -182,7 +193,7 @@ func (g *G1) Copy(dst *PointG1, src *PointG1) *PointG1 {
 }
 
 func (g *G1) IsZero(p *PointG1) bool {
-	return g.f.IsZero(&p[2])
+	return g.f.isZero(&p[2])
 }
 
 func (g *G1) Equal(p1, p2 *PointG1) bool {
@@ -193,15 +204,15 @@ func (g *G1) Equal(p1, p2 *PointG1) bool {
 		return g.IsZero(p1)
 	}
 	t := g.t
-	g.f.Square(t[0], &p1[2])
-	g.f.Square(t[1], &p2[2])
-	g.f.Mul(t[2], t[0], &p2[0])
-	g.f.Mul(t[3], t[1], &p1[0])
-	g.f.Mul(t[0], t[0], &p1[2])
-	g.f.Mul(t[1], t[1], &p2[2])
-	g.f.Mul(t[1], t[1], &p1[1])
-	g.f.Mul(t[0], t[0], &p2[1])
-	return g.f.Equal(t[0], t[1]) && g.f.Equal(t[2], t[3])
+	g.f.square(t[0], &p1[2])
+	g.f.square(t[1], &p2[2])
+	g.f.mul(t[2], t[0], &p2[0])
+	g.f.mul(t[3], t[1], &p1[0])
+	g.f.mul(t[0], t[0], &p1[2])
+	g.f.mul(t[1], t[1], &p2[2])
+	g.f.mul(t[1], t[1], &p1[1])
+	g.f.mul(t[0], t[0], &p2[1])
+	return g.f.equal(t[0], t[1]) && g.f.equal(t[2], t[3])
 }
 
 func (g *G1) IsOnCurve(p *PointG1) bool {
@@ -209,19 +220,19 @@ func (g *G1) IsOnCurve(p *PointG1) bool {
 		return true
 	}
 	t := g.t
-	g.f.Square(t[0], &p[1])
-	g.f.Square(t[1], &p[0])
-	g.f.Mul(t[1], t[1], &p[0])
-	g.f.Square(t[2], &p[2])
-	g.f.Square(t[3], t[2])
-	g.f.Mul(t[2], t[2], t[3])
-	g.f.Mul(t[2], b, t[2])
-	g.f.Add(t[1], t[1], t[2])
-	return g.f.Equal(t[0], t[1])
+	g.f.square(t[0], &p[1])
+	g.f.square(t[1], &p[0])
+	g.f.mul(t[1], t[1], &p[0])
+	g.f.square(t[2], &p[2])
+	g.f.square(t[3], t[2])
+	g.f.mul(t[2], t[2], t[3])
+	g.f.mul(t[2], b, t[2])
+	g.f.add(t[1], t[1], t[2])
+	return g.f.equal(t[0], t[1])
 }
 
 func (g *G1) IsAffine(p *PointG1) bool {
-	return g.f.Equal(&p[2], &FpOne)
+	return g.f.equal(&p[2], &fpOne)
 }
 
 func (g *G1) Affine(p *PointG1) {
@@ -230,12 +241,12 @@ func (g *G1) Affine(p *PointG1) {
 	}
 	if !g.IsAffine(p) {
 		t := g.t
-		g.f.Inverse(t[0], &p[2])
-		g.f.Square(t[1], t[0])
-		g.f.Mul(&p[0], &p[0], t[1])
-		g.f.Mul(t[0], t[0], t[1])
-		g.f.Mul(&p[1], &p[1], t[0])
-		g.f.Copy(&p[2], g.f.One())
+		g.f.inverse(t[0], &p[2])
+		g.f.square(t[1], t[0])
+		g.f.mul(&p[0], &p[0], t[1])
+		g.f.mul(t[0], t[0], t[1])
+		g.f.mul(&p[1], &p[1], t[0])
+		g.f.copy(&p[2], g.f.one())
 	}
 }
 
@@ -249,42 +260,42 @@ func (g *G1) Add(r, p1, p2 *PointG1) *PointG1 {
 		return r
 	}
 	t := g.t
-	g.f.Square(t[7], &p1[2])
-	g.f.Mul(t[1], &p2[0], t[7])
-	g.f.Mul(t[2], &p1[2], t[7])
-	g.f.Mul(t[0], &p2[1], t[2])
-	g.f.Square(t[8], &p2[2])
-	g.f.Mul(t[3], &p1[0], t[8])
-	g.f.Mul(t[4], &p2[2], t[8])
-	g.f.Mul(t[2], &p1[1], t[4])
-	if g.f.Equal(t[1], t[3]) {
-		if g.f.Equal(t[0], t[2]) {
+	g.f.square(t[7], &p1[2])
+	g.f.mul(t[1], &p2[0], t[7])
+	g.f.mul(t[2], &p1[2], t[7])
+	g.f.mul(t[0], &p2[1], t[2])
+	g.f.square(t[8], &p2[2])
+	g.f.mul(t[3], &p1[0], t[8])
+	g.f.mul(t[4], &p2[2], t[8])
+	g.f.mul(t[2], &p1[1], t[4])
+	if g.f.equal(t[1], t[3]) {
+		if g.f.equal(t[0], t[2]) {
 			return g.Double(r, p1)
 		} else {
 			return g.Copy(r, infinity)
 		}
 	}
-	g.f.Sub(t[1], t[1], t[3])
-	g.f.Double(t[4], t[1])
-	g.f.Square(t[4], t[4])
-	g.f.Mul(t[5], t[1], t[4])
-	g.f.Sub(t[0], t[0], t[2])
-	g.f.Double(t[0], t[0])
-	g.f.Square(t[6], t[0])
-	g.f.Sub(t[6], t[6], t[5])
-	g.f.Mul(t[3], t[3], t[4])
-	g.f.Double(t[4], t[3])
-	g.f.Sub(&r[0], t[6], t[4])
-	g.f.Sub(t[4], t[3], &r[0])
-	g.f.Mul(t[6], t[2], t[5])
-	g.f.Double(t[6], t[6])
-	g.f.Mul(t[0], t[0], t[4])
-	g.f.Sub(&r[1], t[0], t[6])
-	g.f.Add(t[0], &p1[2], &p2[2])
-	g.f.Square(t[0], t[0])
-	g.f.Sub(t[0], t[0], t[7])
-	g.f.Sub(t[0], t[0], t[8])
-	g.f.Mul(&r[2], t[0], t[1])
+	g.f.sub(t[1], t[1], t[3])
+	g.f.double(t[4], t[1])
+	g.f.square(t[4], t[4])
+	g.f.mul(t[5], t[1], t[4])
+	g.f.sub(t[0], t[0], t[2])
+	g.f.double(t[0], t[0])
+	g.f.square(t[6], t[0])
+	g.f.sub(t[6], t[6], t[5])
+	g.f.mul(t[3], t[3], t[4])
+	g.f.double(t[4], t[3])
+	g.f.sub(&r[0], t[6], t[4])
+	g.f.sub(t[4], t[3], &r[0])
+	g.f.mul(t[6], t[2], t[5])
+	g.f.double(t[6], t[6])
+	g.f.mul(t[0], t[0], t[4])
+	g.f.sub(&r[1], t[0], t[6])
+	g.f.add(t[0], &p1[2], &p2[2])
+	g.f.square(t[0], t[0])
+	g.f.sub(t[0], t[0], t[7])
+	g.f.sub(t[0], t[0], t[8])
+	g.f.mul(&r[2], t[0], t[1])
 	return r
 }
 
@@ -294,35 +305,35 @@ func (g *G1) Double(r, p *PointG1) *PointG1 {
 		return r
 	}
 	t := g.t
-	g.f.Square(t[0], &p[0])
-	g.f.Square(t[1], &p[1])
-	g.f.Square(t[2], t[1])
-	g.f.Add(t[1], &p[0], t[1])
-	g.f.Square(t[1], t[1])
-	g.f.Sub(t[1], t[1], t[0])
-	g.f.Sub(t[1], t[1], t[2])
-	g.f.Double(t[1], t[1])
-	g.f.Double(t[3], t[0])
-	g.f.Add(t[0], t[3], t[0])
-	g.f.Square(t[4], t[0])
-	g.f.Double(t[3], t[1])
-	g.f.Sub(&r[0], t[4], t[3])
-	g.f.Sub(t[1], t[1], &r[0])
-	g.f.Double(t[2], t[2])
-	g.f.Double(t[2], t[2])
-	g.f.Double(t[2], t[2])
-	g.f.Mul(t[0], t[0], t[1])
-	g.f.Sub(t[1], t[0], t[2])
-	g.f.Mul(t[0], &p[1], &p[2])
-	g.f.Copy(&r[1], t[1])
-	g.f.Double(&r[2], t[0])
+	g.f.square(t[0], &p[0])
+	g.f.square(t[1], &p[1])
+	g.f.square(t[2], t[1])
+	g.f.add(t[1], &p[0], t[1])
+	g.f.square(t[1], t[1])
+	g.f.sub(t[1], t[1], t[0])
+	g.f.sub(t[1], t[1], t[2])
+	g.f.double(t[1], t[1])
+	g.f.double(t[3], t[0])
+	g.f.add(t[0], t[3], t[0])
+	g.f.square(t[4], t[0])
+	g.f.double(t[3], t[1])
+	g.f.sub(&r[0], t[4], t[3])
+	g.f.sub(t[1], t[1], &r[0])
+	g.f.double(t[2], t[2])
+	g.f.double(t[2], t[2])
+	g.f.double(t[2], t[2])
+	g.f.mul(t[0], t[0], t[1])
+	g.f.sub(t[1], t[0], t[2])
+	g.f.mul(t[0], &p[1], &p[2])
+	g.f.copy(&r[1], t[1])
+	g.f.double(&r[2], t[0])
 	return r
 }
 
 func (g *G1) Neg(r, p *PointG1) *PointG1 {
-	g.f.Copy(&r[0], &p[0])
-	g.f.Neg(&r[1], &p[1])
-	g.f.Copy(&r[2], &p[2])
+	g.f.copy(&r[0], &p[0])
+	g.f.neg(&r[1], &p[1])
+	g.f.copy(&r[2], &p[2])
 	return r
 }
 

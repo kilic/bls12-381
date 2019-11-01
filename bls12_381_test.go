@@ -11,9 +11,11 @@ import (
 var n int
 
 func TestMain(m *testing.M) {
-	iter := flag.Int("iter", 10, "# of iterationss")
+	iter := flag.Int("iter", 10, "# of iterations")
+	bmi2 := flag.Bool("nobmi2", false, "to enfoce non bmi2 arch")
 	flag.Parse()
 	n = *iter
+	enforceNonBMI2 = *bmi2
 	m.Run()
 }
 

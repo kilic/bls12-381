@@ -8,7 +8,7 @@ import (
 )
 
 func TestG2(t *testing.T) {
-	g2 := NewG2(NewFp2(NewFp()))
+	g2 := NewG2(newFp2(newFp()))
 	one := g2.fromRawUnchecked(bytes_(48,
 		"0x13e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e",
 		"0x024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb8",
@@ -124,7 +124,7 @@ func TestZKCryptoVectors_G2UncompressedValid(t *testing.T) {
 		if !g.Equal(p1, p2) {
 			t.Fatalf("\nwant: %s\nhave: %s\n", p1, p2)
 		}
-		g.Add(p1, p1, &G2One)
+		g.Add(p1, p1, &g2One)
 	}
 }
 
@@ -144,12 +144,12 @@ func TestZKCryptoVectors_G2CompressedValid(t *testing.T) {
 		if !g.Equal(p1, p2) {
 			t.Fatalf("\nwant: %s\nhave: %s\n", p1, p2)
 		}
-		g.Add(p1, p1, &G2One)
+		g.Add(p1, p1, &g2One)
 	}
 }
 
 func BenchmarkG2Add(t *testing.B) {
-	g2 := NewG2(NewFp2(NewFp()))
+	g2 := NewG2(newFp2(newFp()))
 	one := g2.fromRawUnchecked(bytes_(48,
 		"0x13e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e",
 		"0x024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb8",
@@ -171,7 +171,7 @@ func BenchmarkG2Add(t *testing.B) {
 }
 
 func BenchmarkG2Mul(t *testing.B) {
-	g2 := NewG2(NewFp2(NewFp()))
+	g2 := NewG2(newFp2(newFp()))
 	one := g2.fromRawUnchecked(bytes_(48,
 		"0x13e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e",
 		"0x024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb8",

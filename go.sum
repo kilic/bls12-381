@@ -1,5 +1,7 @@
 github.com/prysmaticlabs/prysm v0.0.0-20191007130904-9254ebf3ba5a h1:rN/DcmQuWJTH6hJyjqVLq5Eo7YAtYS4KqEPCqUTtkLU=
 github.com/prysmaticlabs/prysm v0.0.0-20191007130904-9254ebf3ba5a/go.mod h1:kjzJhe13tmXQBdaO5DRLntr1qtMgl1boIocbR4dP3O4=
+golang.org/x/sys v0.0.0-20191025090151-53bf42e6b339 h1:zSqWKgm/o7HAnlAzBQ+aetp9fpuyytsXnKA8eiLHYQM=
+golang.org/x/sys v0.0.0-20191025090151-53bf42e6b339/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v2 v2.2.4 h1:/eiJrUcujPVeJ3xlSWaiNi3uSVmDGBK1pDHUHAnao1I=

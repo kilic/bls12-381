@@ -32,10 +32,9 @@ func Verify(msg [32]byte, domain [8]byte, signature *Signature, publicKey *Publi
 }
 
 func pairingCheck(e *bls.BLSPairingEngine, msgHash, signature *Signature, publicKey *PublicKey) bool {
-	target := &bls.Fe12{}
-	e.Pair(target,
+	return e.PairingCheck(
 		[]bls.PointG1{
-			bls.G1NegativeOne,
+			*e.G1.NegativeOne(),
 			*publicKey,
 		},
 		[]bls.PointG2{
@@ -43,7 +42,6 @@ func pairingCheck(e *bls.BLSPairingEngine, msgHash, signature *Signature, public
 			*msgHash,
 		},
 	)
-	return e.Fp12.Equal(&bls.Fp12One, target)
 }
 
 func VerifyAggregateCommon(msg [32]byte, domain [8]byte, publicKeys []*PublicKey, signature *Signature) bool {
@@ -71,15 +69,13 @@ func VerifyAggregate(msg [][32]byte, domain [8]byte, publicKeys []*PublicKey, si
 	points := make([]bls.PointG1, size+1)
 	twistPoints := make([]bls.PointG2, size+1)
 	e := bls.NewBLSPairingEngine()
-	e.G1.Copy(&points[0], &bls.G1NegativeOne)
+	e.G1.Copy(&points[0], e.G1.NegativeOne())
 	e.G2.Copy(&twistPoints[0], signature)
 	for i := 0; i < size; i++ {
 		e.G1.Copy(&points[i+1], publicKeys[i])
 		e.G2.Copy(&twistPoints[i+1], hashWithDomain(e.G2, msg[i], domain))
 	}
-	target := &bls.Fe12{}
-	e.Pair(target, points, twistPoints)
-	return e.Fp12.Equal(&bls.Fp12One, target)
+	return e.PairingCheck(points, twistPoints)
 }
 
 func AggregatePublicKey(p1 *PublicKey, p2 *PublicKey) *PublicKey {

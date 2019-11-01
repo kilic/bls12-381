@@ -8,14 +8,16 @@ import (
 	"math/bits"
 )
 
-type Fe /***		***/ [6]uint64
-type lfe /**		***/ [12]uint64
-type Fe2 /**		***/ [2]Fe
-type lfe2 /*		***/ [2]lfe
-type Fe6 /**		***/ [3]Fe2
-type lfe6 /*		***/ [3]lfe2
+type fe /***			***/ [6]uint64
+type fe2 /**			***/ [2]fe
+type fe6 /**			***/ [3]fe2
+type fe12 /**			***/ [2]fe6
+type lfe /**			***/ [12]uint64
+type lfe2 /*			***/ [2]lfe
+type lfe6 /*			***/ [3]lfe2
+type lfe12 /*			***/ [2]lfe6
 
-func (fe *Fe) Bytes() []byte {
+func (fe *fe) Bytes() []byte {
 	out := make([]byte, 48)
 	var a int
 	for i := 0; i < 6; i++ {
@@ -32,7 +34,7 @@ func (fe *Fe) Bytes() []byte {
 	return out
 }
 
-func (fe *Fe) FromBytes(in []byte) *Fe {
+func (fe *fe) FromBytes(in []byte) *fe {
 	size := 48
 	l := len(in)
 	if l >= size {
@@ -51,11 +53,11 @@ func (fe *Fe) FromBytes(in []byte) *Fe {
 	return fe
 }
 
-func (fe *Fe) SetBig(a *big.Int) *Fe {
+func (fe *fe) SetBig(a *big.Int) *fe {
 	return fe.FromBytes(a.Bytes())
 }
 
-func (fe *Fe) SetUint(a uint64) *Fe {
+func (fe *fe) SetUint(a uint64) *fe {
 	fe[0] = a
 	fe[1] = 0
 	fe[2] = 0
@@ -65,7 +67,7 @@ func (fe *Fe) SetUint(a uint64) *Fe {
 	return fe
 }
 
-func (fe *Fe) SetString(s string) (*Fe, error) {
+func (fe *fe) SetString(s string) (*fe, error) {
 	if s[:2] == "0x" {
 		s = s[2:]
 	}
@@ -76,7 +78,7 @@ func (fe *Fe) SetString(s string) (*Fe, error) {
 	return fe.FromBytes(bytes), nil
 }
 
-func (fe *Fe) Set(fe2 *Fe) *Fe {
+func (fe *fe) Set(fe2 *fe) *fe {
 	fe[0] = fe2[0]
 	fe[1] = fe2[1]
 	fe[2] = fe2[2]
@@ -86,36 +88,36 @@ func (fe *Fe) Set(fe2 *Fe) *Fe {
 	return fe
 }
 
-func (fe *Fe) Big() *big.Int {
+func (fe *fe) Big() *big.Int {
 	return new(big.Int).SetBytes(fe.Bytes())
 }
 
-func (fe Fe) String() (s string) {
+func (fe fe) String() (s string) {
 	for i := 5; i >= 0; i-- {
 		s = fmt.Sprintf("%s%16.16x", s, fe[i])
 	}
 	return "0x" + s
 }
 
-func (fe *Fe) IsOdd() bool {
+func (fe *fe) IsOdd() bool {
 	var mask uint64 = 1
 	return fe[0]&mask != 0
 }
 
-func (fe *Fe) IsEven() bool {
+func (fe *fe) IsEven() bool {
 	var mask uint64 = 1
 	return fe[0]&mask == 0
 }
 
-func (fe *Fe) IsZero() bool {
+func (fe *fe) IsZero() bool {
 	return 0 == fe[0] && 0 == fe[1] && 0 == fe[2] && 0 == fe[3] && 0 == fe[4] && 0 == fe[5]
 }
 
-func (fe *Fe) IsOne() bool {
+func (fe *fe) IsOne() bool {
 	return 1 == fe[0] && 0 == fe[1] && 0 == fe[2] && 0 == fe[3] && 0 == fe[4] && 0 == fe[5]
 }
 
-func (fe *Fe) Cmp(fe2 *Fe) int64 {
+func (fe *fe) Cmp(fe2 *fe) int64 {
 	if fe[5] > fe2[5] {
 		return 1
 	} else if fe[5] < fe2[5] {
@@ -149,11 +151,11 @@ func (fe *Fe) Cmp(fe2 *Fe) int64 {
 	return 0
 }
 
-func (fe *Fe) Equals(fe2 *Fe) bool {
+func (fe *fe) Equals(fe2 *fe) bool {
 	return fe2[0] == fe[0] && fe2[1] == fe[1] && fe2[2] == fe[2] && fe2[3] == fe[3] && fe2[4] == fe[4] && fe2[5] == fe[5]
 }
 
-func (fe *Fe) div2(e uint64) {
+func (fe *fe) div2(e uint64) {
 	fe[0] = fe[0]>>1 | fe[1]<<63
 	fe[1] = fe[1]>>1 | fe[2]<<63
 	fe[2] = fe[2]>>1 | fe[3]<<63
@@ -162,7 +164,7 @@ func (fe *Fe) div2(e uint64) {
 	fe[5] = fe[5]>>1 | e<<63
 }
 
-func (fe *Fe) mul2() uint64 {
+func (fe *fe) mul2() uint64 {
 	e := fe[5] >> 63
 	fe[5] = fe[5]<<1 | fe[4]>>63
 	fe[4] = fe[4]<<1 | fe[3]>>63
@@ -173,14 +175,14 @@ func (fe *Fe) mul2() uint64 {
 	return e
 }
 
-func (fe *Fe) bit(i int) bool {
+func (fe *fe) bit(i int) bool {
 	k := i >> 6
 	i = i - k<<6
 	b := (fe[k] >> uint(i)) & 1
 	return b != 0
 }
 
-func (fe *Fe) bitLen() int {
+func (fe *fe) bitLen() int {
 	for i := len(fe) - 1; i >= 0; i-- {
 		if len := bits.Len64(fe[i]); len != 0 {
 			return len + 64*i
@@ -189,7 +191,7 @@ func (fe *Fe) bitLen() int {
 	return 0
 }
 
-func (f *Fe) rand(max *Fe, r io.Reader) error {
+func (f *fe) rand(max *fe, r io.Reader) error {
 	bitLen := bits.Len64(max[5]) + (6-1)*64
 	k := (bitLen + 7) / 8
 	b := uint(bitLen % 8)
@@ -269,7 +271,7 @@ func (fe *lfe) Set(fe2 *lfe) {
 	fe[11] = fe2[11]
 }
 
-func (fe *lfe) SetSingle(fe2 *Fe) {
+func (fe *lfe) SetSingle(fe2 *fe) {
 	fe[0] = fe2[0]
 	fe[1] = fe2[1]
 	fe[2] = fe2[2]
@@ -284,7 +286,12 @@ func (fe *lfe) SetSingle(fe2 *Fe) {
 	fe[11] = 0
 }
 
-func (fe Fe2) String() (s string) {
+func (fe *lfe) Equals(fe2 *lfe) bool {
+	return fe2[0] == fe[0] && fe2[1] == fe[1] && fe2[2] == fe[2] && fe2[3] == fe[3] && fe2[4] == fe[4] && fe2[5] == fe[5] &&
+		fe2[6] == fe[6] && fe2[7] == fe[7] && fe2[8] == fe[8] && fe2[9] == fe[9] && fe2[10] == fe[10] && fe2[11] == fe[11]
+}
+
+func (fe fe2) String() (s string) {
 	return fe[0].String() + "\n" + fe[1].String()
 }
 
@@ -292,7 +299,7 @@ func (fe lfe2) String() (s string) {
 	return fe[0].String() + "\n" + fe[1].String()
 }
 
-func (fe Fe6) String() (s string) {
+func (fe fe6) String() (s string) {
 	return fe[0].String() + "\n" + fe[1].String() + "\n" + fe[2].String()
 }
 
@@ -300,6 +307,6 @@ func (fe lfe6) String() (s string) {
 	return fe[0].String() + "\n" + fe[1].String() + "\n" + fe[2].String()
 }
 
-func (fe Fe12) String() (s string) {
+func (fe fe12) String() (s string) {
 	return fe[0].String() + "\n" + fe[1].String()
 }
