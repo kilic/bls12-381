@@ -20,6 +20,10 @@ on _2.7 GHz i5_
 BenchmarkPairing  1145435 ns/op
 ```
 
-#### Authors
+#### About
+
+This library is ETH2.0 compatible and supported by [Prysmatic Labs](https://prysmaticlabs.com)
+
+##### Authors
 
 Sait İmamoğlu, Onur Kılıç
