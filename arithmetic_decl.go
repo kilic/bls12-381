@@ -1,10 +1,6 @@
 package bls
 
 //go:noescape
-func xxx1(c, a *fe)
-func xxx2(c, a *fe)
-
-//go:noescape
 func add6(c, a, b *fe)
 
 //go:noescape
