@@ -1086,7 +1086,7 @@ TEXT ·montmul_assign_bmi2(SB), NOSPLIT, $16-16
 
 	MOVQ 32(SI), DX
 	XORQ R9, R9
-	//0
+	
 	MULXQ (DI), AX, BX
 	ADOXQ AX, R11
 	ADCXQ BX, R12

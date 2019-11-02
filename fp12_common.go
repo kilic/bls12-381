@@ -194,12 +194,6 @@ func (fp *fp12) frobeniusMap(c, a *fe12, power uint) {
 	}
 }
 
-// func (fp *fp6) mulByBaseField(c, a *fe6, b *fe2) {
-// 	fp.f.mul(&c[0], &a[0], b)
-// 	fp.f.mul(&c[1], &a[1], b)
-// 	fp.f.mul(&c[2], &a[2], b)
-// }
-
 func (fp *fp12) frobeniusMapAssign(a *fe12, power uint) {
 
 	fp.f.frobeniusMapAssign(&a[0], power)

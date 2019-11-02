@@ -118,20 +118,3 @@ func BenchmarkFinalExp(t *testing.B) {
 		}
 	})
 }
-
-func BenchmarkNewInstence(t *testing.B) {
-	var e *BLSPairingEngine
-	t.Run("1", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			e = NewBLSPairingEngine()
-		}
-	})
-	_ = e
-	// t.Run("2", func(t *testing.B) {
-	// 	t.ResetTimer()
-	// 	for i := 0; i < t.N; i++ {
-	// 		e.finalExp2(&a)
-	// 	}
-	// })
-}
