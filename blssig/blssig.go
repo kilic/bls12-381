@@ -8,7 +8,6 @@ import (
 	"math/big"
 
 	bls "github.com/kilic/bls12-381"
-	"github.com/prysmaticlabs/prysm/shared/bytesutil"
 )
 
 type PointG1 = bls.PointG1
@@ -111,8 +110,9 @@ func AggregateSignatures(keys []*Signature) *Signature {
 }
 
 func SecretKeyFromBytes(priv []byte) (SecretKey, error) {
-	b := bytesutil.ToBytes32(priv)
-	k := new(big.Int).SetBytes(b[:])
+	var y [32]byte
+	copy(y[:], priv)
+	k := new(big.Int).SetBytes(y[:])
 	if curveOrder.Cmp(k) < 0 {
 		return nil, errors.New("invalid private key")
 	}
