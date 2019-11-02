@@ -1,4 +1,4 @@
-// +build !lazy
+// +build nolazy
 
 package bls
 
