@@ -92,33 +92,6 @@ func (fp *fp12) conjugate(c, a *fe12) {
 	fp.f.neg(&c[1], &a[1])
 }
 
-func (fp *fp12) fp4Square2(c0, c1, a0, a1 *fe2) {
-	t := fp.t2
-	fp2 := fp.f.f
-	fp2.add(t[0], a0, a1)
-	fp2.mul(t[8], a0, a1)
-	fp2.mulByNonResidue(t[1], a1)
-	fp2.addAssign(t[1], a0)
-	fp2.mulByNonResidue(t[7], t[8])
-	fp2.mulAssign(t[0], t[1])
-	fp2.subAssign(t[0], t[8])
-	fp2.sub(c0, t[0], t[7])
-	fp2.double(c1, t[8])
-}
-
-func (fp *fp12) fp4Square(c0, c1, a0, a1 *fe2) {
-	t := fp.t2
-	fp2 := fp.f.f
-	fp2.square(t[0], a0)
-	fp2.square(t[1], a1)
-	fp2.mulByNonResidue(t[2], t[1])
-	fp2.add(c0, t[2], t[0])
-	fp2.add(t[2], a0, a1)
-	fp2.squareAssign(t[2])
-	fp2.subAssign(t[2], t[0])
-	fp2.sub(c1, t[2], t[1])
-}
-
 func (fp *fp12) square(c, a *fe12) {
 	t := fp.t
 	fp.f.add(t[0], &a[0], &a[1])

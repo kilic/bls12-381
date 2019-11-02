@@ -51,3 +51,16 @@ func (fp *fp12) mulAssign(a, b *fe12) {
 	fp.f.copy(&a[0], t[3])
 	fp.f.sub(&a[1], t[1], t[0])
 }
+
+func (fp *fp12) fp4Square(c0, c1, a0, a1 *fe2) {
+	t := fp.t2
+	fp2 := fp.f.f
+	fp2.square(t[0], a0)
+	fp2.square(t[1], a1)
+	fp2.mulByNonResidue(t[2], t[1])
+	fp2.add(c0, t[2], t[0])
+	fp2.add(t[2], a0, a1)
+	fp2.squareAssign(t[2])
+	fp2.subAssign(t[2], t[0])
+	fp2.sub(c1, t[2], t[1])
+}
