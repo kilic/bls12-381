@@ -138,16 +138,36 @@ func (fp *fp6) frobeniusMap(c, a *fe6, power uint) {
 	fp.f.frobeniousMap(&c[0], &a[0], power)
 	fp.f.frobeniousMap(&c[1], &a[1], power)
 	fp.f.frobeniousMap(&c[2], &a[2], power)
-	fp.f.mul(&c[1], &c[1], &frobeniusCoeffs61[power%6])
-	fp.f.mul(&c[2], &c[2], &frobeniusCoeffs62[power%6])
+	switch power % 6 {
+	case 0:
+		return
+	case 3:
+		fp.f.f.neg(&c[0][0], &a[1][1])
+		fp.f.f.copy(&c[1][1], &a[1][0])
+		fp.f.neg(&a[2], &a[2])
+	default:
+		fp.f.mul(&c[1], &c[1], &frobeniusCoeffs61[power%6])
+		fp.f.mul(&c[2], &c[2], &frobeniusCoeffs62[power%6])
+	}
 }
 
 func (fp *fp6) frobeniusMapAssign(a *fe6, power uint) {
 	fp.f.frobeniousMapAssign(&a[0], power)
 	fp.f.frobeniousMapAssign(&a[1], power)
 	fp.f.frobeniousMapAssign(&a[2], power)
-	fp.f.mulAssign(&a[1], &frobeniusCoeffs61[power%6])
-	fp.f.mulAssign(&a[2], &frobeniusCoeffs62[power%6])
+	t := fp.t
+	switch power % 6 {
+	case 0:
+		return
+	case 3:
+		fp.f.f.neg(&t[0][0], &a[1][1])
+		fp.f.f.copy(&a[1][1], &a[1][0])
+		fp.f.f.copy(&a[1][0], &t[0][0])
+		fp.f.neg(&a[2], &a[2])
+	default:
+		fp.f.mulAssign(&a[1], &frobeniusCoeffs61[power%6])
+		fp.f.mulAssign(&a[2], &frobeniusCoeffs62[power%6])
+	}
 }
 
 func (fp *fp6) exp(c, a *fe6, e *big.Int) {

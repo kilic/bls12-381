@@ -189,11 +189,18 @@ func (fp *fp2) div(c, a, b *fe2) {
 
 func (fp *fp2) frobeniousMap(c, a *fe2, power uint) {
 	fp.f.copy(&c[0], &a[0])
-	fp.f.mul(&c[1], &a[1], &frobeniusCoeffs2[power%2])
+	if power%2 == 1 {
+		fp.f.neg(&c[1], &a[1])
+		return
+	}
+	fp.f.copy(&c[1], &a[1])
 }
 
 func (fp *fp2) frobeniousMapAssign(a *fe2, power uint) {
-	fp.f.mul(&a[1], &a[1], &frobeniusCoeffs2[power%2])
+	if power%2 == 1 {
+		fp.f.neg(&a[1], &a[1])
+		return
+	}
 }
 
 func (fp *fp2) sqrt(c, a *fe2) bool {
