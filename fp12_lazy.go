@@ -67,11 +67,12 @@ func (fp *fp12) fp4Square(c0, c1, a0, a1 *fe2) {
 	lt := fp.f.lt
 	fp2.lsquare(lt[0], a0)
 	fp2.lsquare(lt[1], a1)
-	fp2.mulByNonResidue12(lt[1])
-	fp2.ladd12(lt[1], lt[1], lt[0])
-	fp2.reduce(c0, lt[1])
+	fp2.mulByNonResidue12unsafe(lt[2], lt[1])
+	fp2.add12(lt[2], lt[2], lt[0])
+	fp2.reduce(c0, lt[2])
 	fp2.add(t[2], a0, a1)
-	fp2.squareAssign(t[2])
-	fp2.subAssign(t[2], t[0])
-	fp2.sub(c1, t[2], t[1])
+	fp2.lsquare(lt[2], t[2])
+	fp2.subAssign12(lt[2], lt[0])
+	fp2.subAssign12(lt[2], lt[1])
+	fp2.reduce(c1, lt[2])
 }
