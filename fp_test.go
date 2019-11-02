@@ -920,34 +920,3 @@ func BenchmarkFp12(t *testing.B) {
 		}
 	})
 }
-
-func BenchmarkXXX(t *testing.B) {
-	var a, b, c fe12
-	var field = newFp12(nil)
-	field.randElement(&a, rand.Reader)
-	field.randElement(&b, rand.Reader)
-	t.Run("1", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.mul(&c, &a, &b)
-		}
-	})
-	t.Run("2", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.mulAssign(&a, &b)
-		}
-	})
-	t.Run("1", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.mul(&c, &a, &b)
-		}
-	})
-	t.Run("1", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.mulAssign(&a, &b)
-		}
-	})
-}
