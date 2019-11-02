@@ -327,8 +327,8 @@ func TestFpOne(t *testing.T) {
 	})
 }
 func TestFpTwo(t *testing.T) {
-	field := newFp2(nil)
-	t.Run("encoding & decoding", func(t *testing.T) {
+	t.Run("Encoding & Decoding", func(t *testing.T) {
+		field := newFp2(nil)
 		in := make([]byte, 96)
 		for i := 0; i < 96; i++ {
 			in[i] = 1
@@ -341,7 +341,8 @@ func TestFpTwo(t *testing.T) {
 			t.Errorf("bad encoding\n")
 		}
 	})
-	t.Run("multiplication", func(t *testing.T) {
+	t.Run("Multiplication", func(t *testing.T) {
+		field := newFp2(nil)
 		var a, b, c, u, v, w *fe2
 		for j := 0; j < n; j++ {
 			u = &fe2{}
@@ -379,6 +380,7 @@ func TestFpTwo(t *testing.T) {
 		}
 	})
 	t.Run("Exponentiation", func(t *testing.T) {
+		field := newFp2(nil)
 		var a, u, v *fe2
 		for j := 0; j < n; j++ {
 			u = &fe2{}
@@ -412,6 +414,7 @@ func TestFpTwo(t *testing.T) {
 		}
 	})
 	t.Run("Inversion", func(t *testing.T) {
+		field := newFp2(nil)
 		var a, u *fe2
 		for j := 0; j < n; j++ {
 			u = &fe2{}
@@ -424,6 +427,7 @@ func TestFpTwo(t *testing.T) {
 		}
 	})
 	t.Run("Sqrt", func(t *testing.T) {
+		field := newFp2(nil)
 		r := &fe2{}
 		if field.sqrt(r, nonResidue2) {
 			t.Fatalf("bad sqrt 1")
@@ -444,8 +448,8 @@ func TestFpTwo(t *testing.T) {
 }
 
 func TestFpSix(t *testing.T) {
-	field := newFp6(nil)
 	t.Run("Encoding & Decoding", func(t *testing.T) {
+		field := newFp6(nil)
 		in := make([]byte, 288)
 		for i := 0; i < 288; i++ {
 			in[i] = 1
@@ -459,6 +463,7 @@ func TestFpSix(t *testing.T) {
 		}
 	})
 	t.Run("Multiplication", func(t *testing.T) {
+		field := newFp6(nil)
 		var a, b, c, u, v, w *fe6
 		for j := 0; j < n; j++ {
 			u = &fe6{}
@@ -490,6 +495,7 @@ func TestFpSix(t *testing.T) {
 		}
 	})
 	t.Run("Exponentiation", func(t *testing.T) {
+		field := newFp6(nil)
 		var a, u, v *fe6
 		for j := 0; j < n; j++ {
 			u = &fe6{}
@@ -523,6 +529,7 @@ func TestFpSix(t *testing.T) {
 		}
 	})
 	t.Run("Inversion", func(t *testing.T) {
+		field := newFp6(nil)
 		var a, u *fe6
 		for j := 0; j < n; j++ {
 			u = &fe6{}
@@ -535,6 +542,7 @@ func TestFpSix(t *testing.T) {
 		}
 	})
 	t.Run("MulBy01", func(t *testing.T) {
+		field := newFp6(nil)
 		fq2 := field.f
 		var a, b, u *fe6
 		c := &fe6{}
@@ -552,6 +560,8 @@ func TestFpSix(t *testing.T) {
 		_ = c
 	})
 	t.Run("MulBy1", func(t *testing.T) {
+		field := newFp6(nil)
+
 		fq2 := field.f
 		var a, b, u *fe6
 		for j := 0; j < n; j++ {
