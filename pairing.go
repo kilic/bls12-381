@@ -210,40 +210,6 @@ func (e *BLSPairingEngine) finalExp(f *fe12) {
 	fp12.mul(f, &t[3], &t[4])
 }
 
-func (e *BLSPairingEngine) finalExp2(f *fe12) {
-	fp12 := e.fp12
-	t := e.t12x
-	fp12.frobeniusMap(t[0], f, 6)
-	fp12.inverse(t[1], f)
-	fp12.mul(t[2], t[0], t[1])
-	fp12.copy(t[1], t[2])
-	fp12.frobeniusMapAssign(t[2], 2)
-	fp12.mulAssign(t[2], t[1])
-	fp12.cyclotomicSquare(t[1], t[2])
-	fp12.conjugate(t[1], t[1])
-	e.exp(t[3], t[2])
-	fp12.cyclotomicSquare(t[4], t[3])
-	fp12.mul(t[5], t[1], t[3])
-	e.exp(t[1], t[5])
-	e.exp(t[0], t[1])
-	e.exp(t[6], t[0])
-	fp12.mulAssign(t[6], t[4])
-	e.exp(t[4], t[6])
-	fp12.conjugate(t[5], t[5])
-	fp12.mulAssign(t[4], t[5])
-	fp12.mulAssign(t[4], t[2])
-	fp12.conjugate(t[5], t[2])
-	fp12.mulAssign(t[1], t[2])
-	fp12.frobeniusMapAssign(t[1], 3)
-	fp12.mulAssign(t[6], t[5])
-	fp12.frobeniusMapAssign(t[6], 1)
-	fp12.mulAssign(t[3], t[0])
-	fp12.frobeniusMapAssign(t[3], 2)
-	fp12.mulAssign(t[3], t[1])
-	fp12.mulAssign(t[3], t[6])
-	fp12.mul(f, t[3], t[4])
-}
-
 func (e *BLSPairingEngine) pair(f *fe12, points []PointG1, twistPoints []PointG2) {
 	e.millerLoop(f, points, twistPoints)
 	e.finalExp(f)
