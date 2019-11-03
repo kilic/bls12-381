@@ -4,9 +4,6 @@ package bls
 func add6(c, a, b *fe)
 
 //go:noescape
-func add6old(c, a, b *fe)
-
-//go:noescape
 func add_assign_6(a, b *fe)
 
 //go:noescape
@@ -47,9 +44,6 @@ func sub6(c, a, b *fe)
 
 //go:noescape
 func sub_assign_6(a, b *fe)
-
-//go:noescape
-func sub6old(c, a, b *fe)
 
 //go:noescape
 func lsub6(c, a, b *fe)
