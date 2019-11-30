@@ -9,14 +9,10 @@ import (
 func TestPairing(t *testing.T) {
 	e := NewBLSPairingEngine()
 	t.Run("Single Expected", func(t *testing.T) {
-		G := &PointG1{}
-		H := &PointG2{}
-		e.G1.Copy(G, &g1One)
-		e.G2.Copy(H, &g2One)
-		points := []PointG1{*G}
-		twistPoints := []PointG2{*H}
-		f1 := &fe12{}
-		e.pair(f1, points, twistPoints)
+		G, H := new(PointG1), new(PointG2)
+		e.G1.Copy(G, e.G1.One())
+		e.G2.Copy(H, e.G2.One())
+		f1 := e.Pair(G, H)
 		f2 := &fe12{}
 		if err := e.fp12.newElementFromBytes(
 			f2,
@@ -42,12 +38,47 @@ func TestPairing(t *testing.T) {
 	})
 }
 
+func TestBilinearity(t *testing.T) {
+	e := NewBLSPairingEngine()
+	a, _ := rand.Int(rand.Reader, big.NewInt(100))
+	b, _ := rand.Int(rand.Reader, big.NewInt(100))
+	c := new(big.Int).Mul(a, b)
+	G, H := new(PointG1), new(PointG2)
+	e.G1.MulScalar(G, e.G1.One(), a)
+	e.G2.MulScalar(H, e.G2.One(), b)
+
+	var f1, f2 *fe12
+	// e(a*G1, b*G2) = e(G1, G2)^c
+	t.Run("Bilinearity-1", func(t *testing.T) {
+		f1 = e.Pair(G, H)
+		f2 = e.Pair(e.G1.One(), e.G2.One())
+		e.fp12.exp(f2, f2, c)
+		if !e.fp12.equal(f1, f2) {
+			t.Errorf("bad pairing")
+		}
+	})
+	// e(a*G1, b*G2) = e(c*G1, G2)
+	t.Run("Bilinearity-2", func(t *testing.T) {
+		G = e.G1.MulScalar(G, e.G1.One(), c)
+		f2 = e.Pair(G, e.G2.One())
+		if !e.fp12.equal(f1, f2) {
+			t.Errorf("bad pairing")
+		}
+	})
+	// e(a*G1, b*G2) = e(G1, c*G2)
+	t.Run("Bilinearity-3", func(t *testing.T) {
+		H = e.G2.MulScalar(H, e.G2.One(), c)
+		f2 = e.Pair(e.G1.One(), H)
+		if !e.fp12.equal(f1, f2) {
+			t.Errorf("bad pairing")
+		}
+	})
+}
 func TestPairingMulti(t *testing.T) {
 	e := NewBLSPairingEngine()
 	G := &PointG1{}
 	H := &PointG2{}
-	e.G1.Copy(G, &g1One)
-	e.G2.Copy(H, &g2One)
+
 	g1RandPoint := func() (*PointG1, *big.Int) {
 		s, err := rand.Int(rand.Reader, q)
 		if err != nil {
@@ -70,7 +101,6 @@ func TestPairingMulti(t *testing.T) {
 	points := make([]PointG1, pairSize)
 	twistPoints := make([]PointG2, pairSize)
 	acc := new(big.Int)
-	var f0, f1 fe12
 	for i := 0; i < pairSize; i++ {
 		aG, a := g1RandPoint()
 		bH, b := g2RandPoint()
@@ -78,10 +108,10 @@ func TestPairingMulti(t *testing.T) {
 		e.G2.Copy(&twistPoints[i], bH)
 		acc.Add(acc, new(big.Int).Mul(a, b))
 	}
-	e.pair(&f0, points, twistPoints)
-	e.pair(&f1, []PointG1{*G}, []PointG2{*H})
-	e.fp12.exp(&f1, &f1, acc)
-	if !e.fp12.equal(&f0, &f1) {
+	f0 := e.MultiPair(points, twistPoints)
+	f1 := e.Pair(G, H)
+	e.fp12.exp(f1, f1, acc)
+	if !e.fp12.equal(f0, f1) {
 		t.Fatalf("bad pairing")
 	}
 }
@@ -92,12 +122,9 @@ func BenchmarkPairing(t *testing.B) {
 	H := &PointG2{}
 	e.G1.Copy(G, &g1One)
 	e.G2.Copy(H, &g2One)
-	points := []PointG1{*G}
-	twistPoints := []PointG2{*H}
-	f1 := &fe12{}
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
-		e.pair(f1, points, twistPoints)
+		e.Pair(G, H)
 	}
 }
 

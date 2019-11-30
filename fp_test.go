@@ -916,13 +916,6 @@ func BenchmarkFp12(t *testing.B) {
 			field.exp(&c, &a, e)
 		}
 	})
-	t.Run("Cyclotomic Exponentiation", func(t *testing.B) {
-		e := new(big.Int).SetBytes(modulus.Bytes())
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.cyclotomicExp(&c, &a, e)
-		}
-	})
 	t.Run("Copy", func(t *testing.B) {
 		t.ResetTimer()
 		for i := 0; i < t.N; i++ {

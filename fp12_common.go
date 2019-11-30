@@ -155,18 +155,7 @@ func (fp *fp12) exp(c, a *fe12, e *big.Int) {
 	fp.copy(c, z)
 }
 
-func (fp *fp12) cyclotomicExp(c, a *fe12, e *big.Int) {
-	z := fp.t12
-	fp.copy(z, &fp12One)
-	for i := e.BitLen() - 1; i >= 0; i-- {
-		fp.cyclotomicSquare(z, z)
-		if e.Bit(i) == 1 {
-			fp.mul(z, z, a)
-		}
-	}
-	fp.copy(c, z)
-}
-
+// sparse multiplication
 func (fp *fp12) mulBy014Assign(a *fe12, c0, c1, c4 *fe2) {
 	t := fp.t
 	o := fp.t2[0]

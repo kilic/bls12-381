@@ -247,8 +247,5 @@ var frobeniusCoeffs12 = [12]fe2{
 	},
 }
 
-/*
-	x
-*/
-
-var x, _ = new(big.Int).SetString("d201000000010000", 16)
+// exp z is negative
+var z, _ = new(big.Int).SetString("d201000000010000", 16)
