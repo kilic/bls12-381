@@ -123,61 +123,6 @@ TEXT ·add6(SB), NOSPLIT, $0-24
 /*	 | end													*/
 
 
-// single-precision addition w/ modular reduction
-// c = (a + b) % p
-TEXT ·add6old(SB), NOSPLIT, $0-24
-	// |
-	MOVQ a+8(FP), DI
-	MOVQ b+16(FP), SI
-
-	// |
-	MOVQ (DI), R8
-	MOVQ 8(DI), R9
-	MOVQ 16(DI), R10
-	MOVQ 24(DI), R11
-	MOVQ 32(DI), R12
-	MOVQ 40(DI), R13
-
-	// |
-	ADDQ (SI), R8
-	ADCQ 8(SI), R9
-	ADCQ 16(SI), R10
-	ADCQ 24(SI), R11
-	ADCQ 32(SI), R12
-	ADCQ 40(SI), R13
-
-	// |
-	MOVQ R8, R14
-	MOVQ R9, R15
-	MOVQ R10, CX
-	MOVQ R11, DX
-	MOVQ R12, SI
-	MOVQ R13, BX
-	SUBQ ·modulus+0(SB), R14
-	SBBQ ·modulus+8(SB), R15
-	SBBQ ·modulus+16(SB), CX
-	SBBQ ·modulus+24(SB), DX
-	SBBQ ·modulus+32(SB), SI
-	SBBQ ·modulus+40(SB), BX
-	CMOVQCC R14, R8
-	CMOVQCC R15, R9
-	CMOVQCC CX, R10
-	CMOVQCC DX, R11
-	CMOVQCC SI, R12
-	CMOVQCC BX, R13
-
-	// |
-	MOVQ c+0(FP), DI
-	MOVQ R8, (DI)
-	MOVQ R9, 8(DI)
-	MOVQ R10, 16(DI)
-	MOVQ R11, 24(DI)
-	MOVQ R12, 32(DI)
-	MOVQ R13, 40(DI)
-	RET
-/*	 | end													*/
-
-
 // single-precision addition w/o reduction check
 // c = (a + b)
 TEXT ·ladd6(SB), NOSPLIT, $0-24
@@ -562,60 +507,6 @@ TEXT ·sub_assign_6(SB), NOSPLIT, $0-16
 
 	// |
 	MOVQ a+0(FP), DI
-	MOVQ R8, (DI)
-	MOVQ R9, 8(DI)
-	MOVQ R10, 16(DI)
-	MOVQ R11, 24(DI)
-	MOVQ R12, 32(DI)
-	MOVQ R13, 40(DI)
-	RET
-/*	 | end													*/
-
-
-// single-precision subtraction w/ modular reduction
-// c = (a - b) % p
-TEXT ·sub6old(SB), NOSPLIT, $0-24
-	// |
-	MOVQ a+8(FP), DI
-	MOVQ b+16(FP), SI
-	XORQ AX, AX
-
-	// |
-	MOVQ (DI), R8
-	MOVQ 8(DI), R9
-	MOVQ 16(DI), R10
-	MOVQ 24(DI), R11
-	MOVQ 32(DI), R12
-	MOVQ 40(DI), R13
-	SUBQ (SI), R8
-	SBBQ 8(SI), R9
-	SBBQ 16(SI), R10
-	SBBQ 24(SI), R11
-	SBBQ 32(SI), R12
-	SBBQ 40(SI), R13
-
-	// |
-	MOVQ ·modulus+0(SB), R14
-	MOVQ ·modulus+8(SB), R15
-	MOVQ ·modulus+16(SB), CX
-	MOVQ ·modulus+24(SB), DX
-	MOVQ ·modulus+32(SB), SI
-	MOVQ ·modulus+40(SB), BX
-	CMOVQCC AX, R14
-	CMOVQCC AX, R15
-	CMOVQCC AX, CX
-	CMOVQCC AX, DX
-	CMOVQCC AX, SI
-	CMOVQCC AX, BX
-	ADDQ R14, R8
-	ADCQ R15, R9
-	ADCQ CX, R10
-	ADCQ DX, R11
-	ADCQ SI, R12
-	ADCQ BX, R13
-
-	// |
-	MOVQ c+0(FP), DI
 	MOVQ R8, (DI)
 	MOVQ R9, 8(DI)
 	MOVQ R10, 16(DI)

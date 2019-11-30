@@ -132,16 +132,8 @@ func BenchmarkFinalExp(t *testing.B) {
 	e := NewBLSPairingEngine()
 	a := fe12{}
 	e.fp12.randElement(&a, rand.Reader)
-	t.Run("1", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			e.finalExp(&a)
-		}
-	})
-	t.Run("2", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			e.finalExp2(&a)
-		}
-	})
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		e.finalExp(&a)
+	}
 }
