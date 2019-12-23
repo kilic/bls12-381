@@ -1,3 +1,8 @@
+[![CircleCI](https://circleci.com/gh/drand/bls12-381.svg?style=svg)](https://circleci.com/gh/drand/bls12-381)
+
+**This is a fork implementing a kyber/dedis wrapper for this library (among
+other things)**
+
 High speed bls12-381 implementation in go.
 
 _wip_. _Do not use in production_.
