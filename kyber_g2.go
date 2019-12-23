@@ -117,7 +117,7 @@ func (k *KyberG2) UnmarshalFrom(r io.Reader) (int, error) {
 }
 
 func (k *KyberG2) MarshalSize() int {
-	return 48
+	return 96
 }
 
 func (k *KyberG2) String() string {

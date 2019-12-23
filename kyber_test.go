@@ -227,6 +227,7 @@ func testGroup(t *testing.T, g kyber.Group, rand cipher.Stream) []kyber.Point {
 		if _, err := ptmp.UnmarshalFrom(buf); err != nil {
 			t.Errorf("decoding of point fails: " + err.Error())
 		}
+
 		if !ptmp.Equal(p) {
 			t.Errorf("decoding produces different point than encoded")
 		}
@@ -252,3 +253,11 @@ func GroupTest(t *testing.T, g kyber.Group) {
 func TestKyberG1(t *testing.T) {
 	GroupTest(t, NewGroupG1())
 }
+
+func TestKyberG2(t *testing.T) {
+	GroupTest(t, NewGroupG2())
+}
+
+//func TestKyberGT(t *testing.T) {
+//GroupTest(t, NewGroupGT())
+//}
