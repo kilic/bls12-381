@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/group/mod"
+	"golang.org/x/crypto/blake2b"
 )
 
 type KyberGT struct {
@@ -32,7 +32,11 @@ func (k *KyberGT) Null() kyber.Point {
 }
 
 func (k *KyberGT) Base() kyber.Point {
-	k.f = newFp12(nil).one()
+	var baseReader, _ = blake2b.NewXOF(0, []byte("Quand il y a à manger pour huit, il y en a bien pour dix."))
+	_, err := newFp12(nil).randElement(k.f, baseReader)
+	if err != nil {
+		panic(err)
+	}
 	return k
 }
 
@@ -52,30 +56,34 @@ func (k *KyberGT) Clone() kyber.Point {
 }
 
 func (k *KyberGT) Add(a, b kyber.Point) kyber.Point {
-	aa := a.(*KyberGT)
-	bb := b.(*KyberGT)
-	newFp12(nil).add(k.f, aa.f, bb.f)
-	return k
+	/* aa := a.(*KyberGT)*/
+	//bb := b.(*KyberGT)
+	//newFp12(nil).mul(k.f, aa.f, bb.f)
+	/*return k*/
+	panic("bls12-381: GT is not a full kyber.Point implementation")
 }
 
 func (k *KyberGT) Sub(a, b kyber.Point) kyber.Point {
-	aa := a.(*KyberGT)
-	bb := b.(*KyberGT)
-	newFp12(nil).sub(k.f, aa.f, bb.f)
-	return k
+	//return k.Add(k.Neg(k), b)
+	panic("bls12-381: GT is not a full kyber.Point implementation")
 }
+
 func (k *KyberGT) Neg(q kyber.Point) kyber.Point {
-	x := q.(*KyberGT)
-	newFp12(nil).neg(k.f, x.f)
-	return k
+	/*x := q.(*KyberGT)*/
+	//newFp12(nil).neg(k.f, x.f)
+	/*return k*/
+	panic("bls12-381: GT is not a full kyber.Point implementation")
 }
 
 func (k *KyberGT) Mul(s kyber.Scalar, q kyber.Point) kyber.Point {
-	if q == nil {
-		q = newEmptyGT().Base()
-	}
-	newFp12(nil).exp(k.f, q.(*KyberGT).f, &s.(*mod.Int).V)
-	return k
+	panic("bls12-381: GT is not a full kyber.Point implementation")
+	/*if q == nil {*/
+	//q = newEmptyGT().Base()
+	//}
+	//scalar := &s.(*mod.Int).V
+	//newFp12(nil).exp(k.f, q.(*KyberGT).f, scalar)
+	//fmt.Printf("Kyber.GT.f.mul(-bitlen %d- %v, %v)): %v\n", scalar.BitLen(), scalar, q.(*KyberGT).f, k.f)
+	/*return k*/
 }
 
 func (k *KyberGT) MarshalBinary() ([]byte, error) {

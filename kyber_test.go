@@ -3,8 +3,10 @@ package bls
 import (
 	"bytes"
 	"crypto/cipher"
+	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/util/random"
 )
@@ -33,13 +35,13 @@ func testGroup(t *testing.T, g kyber.Group, rand cipher.Stream) []kyber.Point {
 	s1 := g.Scalar().Pick(rand)
 	s2 := g.Scalar().Pick(rand)
 	if s1.Equal(szero) {
-		t.Errorf("first secret is scalar zero %v", s1)
+		t.Fatalf("first secret is scalar zero %v", s1)
 	}
 	if s2.Equal(szero) {
-		t.Errorf("second secret is scalar zero %v", s2)
+		t.Fatalf("second secret is scalar zero %v", s2)
 	}
 	if s1.Equal(s2) {
-		t.Errorf("not getting unique secrets: picked %s twice", s1)
+		t.Fatalf("not getting unique secrets: picked %s twice", s1)
 	}
 
 	gen := g.Point().Base()
@@ -49,12 +51,12 @@ func testGroup(t *testing.T, g kyber.Group, rand cipher.Stream) []kyber.Point {
 	p1 := g.Point().Add(gen, gen)
 	p2 := g.Point().Mul(stmp.SetInt64(2), nil)
 	if !p1.Equal(p2) {
-		t.Errorf("multiply by two doesn't work: %v == %v (+) %[2]v != %[2]v (x) 2 == %v", p1, gen, p2)
+		t.Fatalf("multiply by two doesn't work: %v == %v (+) %[2]v != %[2]v (x) 2 == %v", p1, gen, p2)
 	}
 	p1.Add(p1, p1)
 	p2.Mul(stmp.SetInt64(4), nil)
 	if !p1.Equal(p2) {
-		t.Errorf("multiply by four doesn't work: %v (+) %[1]v != %v (x) 4 == %v",
+		t.Fatalf("multiply by four doesn't work: %v (+) %[1]v != %v (x) 4 == %v",
 			g.Point().Add(gen, gen), gen, p2)
 	}
 	points = append(points, p1)
@@ -71,16 +73,23 @@ func testGroup(t *testing.T, g kyber.Group, rand cipher.Stream) []kyber.Point {
 	}
 
 	// Verify additive and multiplicative identities of the generator.
+	fmt.Println("---------------------- BEGINNING -------------------------")
+	fmt.Println("Inverse of base")
+	f := ptmp.Base().(*KyberGT).f
+	newFp12(nil).inverse(f, f)
+	fmt.Printf("\n-Inverse: %v\n", f)
+	fmt.Println("Multiply by -1")
 	ptmp.Mul(stmp.SetInt64(-1), nil).Add(ptmp, gen)
+	fmt.Printf(" \n\nChecking equality additive identity\nptmp: %v \n\n zero %v\n", ptmp, pzero)
 	if !ptmp.Equal(pzero) {
-		t.Errorf("generator additive identity doesn't work: %v (x) -1 (+) %v != %v the group point identity",
-			ptmp.Mul(stmp.SetInt64(-1), nil), gen, pzero)
+		t.Fatalf("generator additive identity doesn't work: (scalar -1 %v) %v (x) -1 (+) %v = %v != %v the group point identity",
+			stmp.SetInt64(-1), ptmp.Mul(stmp.SetInt64(-1), nil), gen, ptmp.Mul(stmp.SetInt64(-1), nil).Add(ptmp, gen), pzero)
 	}
 	// secret.Inv works only in prime-order groups
 	if primeOrder {
 		ptmp.Mul(stmp.SetInt64(2), nil).Mul(stmp.Inv(stmp), ptmp)
 		if !ptmp.Equal(gen) {
-			t.Errorf("generator multiplicative identity doesn't work:\n%v (x) %v = %v\n%[3]v (x) %v = %v",
+			t.Fatalf("generator multiplicative identity doesn't work:\n%v (x) %v = %v\n%[3]v (x) %v = %v",
 				ptmp.Base().String(), stmp.SetInt64(2).String(),
 				ptmp.Mul(stmp.SetInt64(2), nil).String(),
 				stmp.Inv(stmp).String(),
@@ -91,14 +100,14 @@ func testGroup(t *testing.T, g kyber.Group, rand cipher.Stream) []kyber.Point {
 	p1.Mul(s1, gen)
 	p2.Mul(s2, gen)
 	if p1.Equal(p2) {
-		t.Errorf("encryption isn't producing unique points: %v (x) %v == %v (x) %[2]v == %[4]v", s1, gen, s2, p1)
+		t.Fatalf("encryption isn't producing unique points: %v (x) %v == %v (x) %[2]v == %[4]v", s1, gen, s2, p1)
 	}
 	points = append(points, p1)
 
 	dh1 := g.Point().Mul(s2, p1)
 	dh2 := g.Point().Mul(s1, p2)
 	if !dh1.Equal(dh2) {
-		t.Errorf("Diffie-Hellman didn't work: %v == %v (x) %v != %v (x) %v == %v", dh1, s2, p1, s1, p2, dh2)
+		t.Fatalf("Diffie-Hellman didn't work: %v == %v (x) %v != %v (x) %v == %v", dh1, s2, p1, s1, p2, dh2)
 	}
 	points = append(points, dh1)
 	//t.Logf("shared secret = %v", dh1)
@@ -107,17 +116,17 @@ func testGroup(t *testing.T, g kyber.Group, rand cipher.Stream) []kyber.Point {
 	if primeOrder {
 		ptmp.Mul(g.Scalar().Inv(s2), dh1)
 		if !ptmp.Equal(p1) {
-			t.Errorf("Scalar inverse didn't work: %v != (-)%v (x) %v == %v", p1, s2, dh1, ptmp)
+			t.Fatalf("Scalar inverse didn't work: %v != (-)%v (x) %v == %v", p1, s2, dh1, ptmp)
 		}
 	}
 
 	// Zero and One identity secrets
 	//println("dh1^0 = ",ptmp.Mul(dh1, szero).String())
 	if !ptmp.Mul(szero, dh1).Equal(pzero) {
-		t.Errorf("Encryption with secret=0 didn't work: %v (x) %v == %v != %v", szero, dh1, ptmp, pzero)
+		t.Fatalf("Encryption with secret=0 didn't work: %v (x) %v == %v != %v", szero, dh1, ptmp, pzero)
 	}
 	if !ptmp.Mul(sone, dh1).Equal(dh1) {
-		t.Errorf("Encryption with secret=1 didn't work: %v (x) %v == %v != %[2]v", sone, dh1, ptmp)
+		t.Fatalf("Encryption with secret=1 didn't work: %v (x) %v == %v != %[2]v", sone, dh1, ptmp)
 	}
 
 	// Additive homomorphic identities
@@ -125,44 +134,44 @@ func testGroup(t *testing.T, g kyber.Group, rand cipher.Stream) []kyber.Point {
 	stmp.Add(s1, s2)
 	pt2 := g.Point().Mul(stmp, gen)
 	if !pt2.Equal(ptmp) {
-		t.Errorf("Additive homomorphism doesn't work: %v + %v == %v, %[3]v (x) %v == %v != %v == %v (+) %v",
+		t.Fatalf("Additive homomorphism doesn't work: %v + %v == %v, %[3]v (x) %v == %v != %v == %v (+) %v",
 			s1, s2, stmp, gen, pt2, ptmp, p1, p2)
 	}
 	ptmp.Sub(p1, p2)
 	stmp.Sub(s1, s2)
 	pt2.Mul(stmp, gen)
 	if !pt2.Equal(ptmp) {
-		t.Errorf("Additive homomorphism doesn't work: %v - %v == %v, %[3]v (x) %v == %v != %v == %v (-) %v",
+		t.Fatalf("Additive homomorphism doesn't work: %v - %v == %v, %[3]v (x) %v == %v != %v == %v (-) %v",
 			s1, s2, stmp, gen, pt2, ptmp, p1, p2)
 	}
 	st2 := g.Scalar().Neg(s2)
 	st2.Add(s1, st2)
 	if !stmp.Equal(st2) {
-		t.Errorf("Scalar.Neg doesn't work: -%v == %v, %[2]v + %v == %v != %v",
+		t.Fatalf("Scalar.Neg doesn't work: -%v == %v, %[2]v + %v == %v != %v",
 			s2, g.Scalar().Neg(s2), s1, st2, stmp)
 	}
 	pt2.Neg(p2).Add(pt2, p1)
 	if !pt2.Equal(ptmp) {
-		t.Errorf("Point.Neg doesn't work: (-)%v == %v, %[2]v (+) %v == %v != %v",
+		t.Fatalf("Point.Neg doesn't work: (-)%v == %v, %[2]v (+) %v == %v != %v",
 			p2, g.Point().Neg(p2), p1, pt2, ptmp)
 	}
 
 	// Multiplicative homomorphic identities
 	stmp.Mul(s1, s2)
 	if !ptmp.Mul(stmp, gen).Equal(dh1) {
-		t.Errorf("Multiplicative homomorphism doesn't work: %v * %v == %v, %[2]v (x) %v == %v != %v",
+		t.Fatalf("Multiplicative homomorphism doesn't work: %v * %v == %v, %[2]v (x) %v == %v != %v",
 			s1, s2, stmp, gen, ptmp, dh1)
 	}
 	if primeOrder {
 		st2.Inv(s2)
 		st2.Mul(st2, stmp)
 		if !st2.Equal(s1) {
-			t.Errorf("Scalar division doesn't work: %v^-1 * %v == %v * %[2]v == %[4]v != %v",
+			t.Fatalf("Scalar division doesn't work: %v^-1 * %v == %v * %[2]v == %[4]v != %v",
 				s2, stmp, g.Scalar().Inv(s2), st2, s1)
 		}
 		st2.Div(stmp, s2)
 		if !st2.Equal(s1) {
-			t.Errorf("Scalar division doesn't work: %v / %v == %v != %v",
+			t.Fatalf("Scalar division doesn't work: %v / %v == %v != %v",
 				stmp, s2, st2, s1)
 		}
 	}
@@ -184,20 +193,20 @@ func testGroup(t *testing.T, g kyber.Group, rand cipher.Stream) []kyber.Point {
 		// TODO fork kyber and make that an interface
 		rgen := pick(rand)
 		if rgen.Equal(last) {
-			t.Errorf("Pick() not producing unique points: got %v twice", rgen)
+			t.Fatalf("Pick() not producing unique points: got %v twice", rgen)
 		}
 		last = rgen
 
 		ptmp.Mul(stmp.SetInt64(-1), rgen).Add(ptmp, rgen)
 		if !ptmp.Equal(pzero) {
-			t.Errorf("random generator fails additive identity: %v (x) %v == %v, %v (+) %[3]v == %[5]v != %v",
+			t.Fatalf("random generator fails additive identity: %v (x) %v == %v, %v (+) %[3]v == %[5]v != %v",
 				g.Scalar().SetInt64(-1), rgen, g.Point().Mul(g.Scalar().SetInt64(-1), rgen),
 				rgen, g.Point().Mul(g.Scalar().SetInt64(-1), rgen), pzero)
 		}
 		if primeOrder {
 			ptmp.Mul(stmp.SetInt64(2), rgen).Mul(stmp.Inv(stmp), ptmp)
 			if !ptmp.Equal(rgen) {
-				t.Errorf("random generator fails multiplicative identity: %v (x) (2 (x) %v) == %v != %[2]v",
+				t.Fatalf("random generator fails multiplicative identity: %v (x) (2 (x) %v) == %v != %[2]v",
 					stmp, rgen, ptmp)
 			}
 		}
@@ -210,26 +219,26 @@ func testGroup(t *testing.T, g kyber.Group, rand cipher.Stream) []kyber.Point {
 		buf.Reset()
 		s := g.Scalar().Pick(rand)
 		if _, err := s.MarshalTo(buf); err != nil {
-			t.Errorf("encoding of secret fails: " + err.Error())
+			t.Fatalf("encoding of secret fails: " + err.Error())
 		}
 		if _, err := stmp.UnmarshalFrom(buf); err != nil {
-			t.Errorf("decoding of secret fails: " + err.Error())
+			t.Fatalf("decoding of secret fails: " + err.Error())
 		}
 		if !stmp.Equal(s) {
-			t.Errorf("decoding produces different secret than encoded")
+			t.Fatalf("decoding produces different secret than encoded")
 		}
 
 		buf.Reset()
 		p := pick(rand)
 		if _, err := p.MarshalTo(buf); err != nil {
-			t.Errorf("encoding of point fails: " + err.Error())
+			t.Fatalf("encoding of point fails: " + err.Error())
 		}
 		if _, err := ptmp.UnmarshalFrom(buf); err != nil {
-			t.Errorf("decoding of point fails: " + err.Error())
+			t.Fatalf("decoding of point fails: " + err.Error())
 		}
 
 		if !ptmp.Equal(p) {
-			t.Errorf("decoding produces different point than encoded")
+			t.Fatalf("decoding produces different point than encoded")
 		}
 	}
 
@@ -239,7 +248,7 @@ func testGroup(t *testing.T, g kyber.Group, rand cipher.Stream) []kyber.Point {
 	repzero := g.Point()
 	err := repzero.UnmarshalBinary(b)
 	if err != nil {
-		t.Errorf("Could not unmarshall binary %v: %v", b, err)
+		t.Fatalf("Could not unmarshall binary %v: %v", b, err)
 	}
 
 	return points
@@ -258,6 +267,17 @@ func TestKyberG2(t *testing.T) {
 	GroupTest(t, NewGroupG2())
 }
 
-//func TestKyberGT(t *testing.T) {
-//GroupTest(t, NewGroupGT())
-//}
+func TestKyberPairing(t *testing.T) {
+	s := NewBLS12381Suite()
+	a := s.G1().Scalar().Pick(s.RandomStream())
+	b := s.G2().Scalar().Pick(s.RandomStream())
+	aG := s.G1().Point().Mul(a, nil)
+	bH := s.G2().Point().Mul(b, nil)
+	ab := s.G1().Scalar().Mul(a, b)
+	abG := s.G1().Point().Mul(ab, nil)
+	// e(aG, bG) = e(G,H)^(ab)
+	p1 := s.Pair(aG, bH)
+	// e((ab)G,H) = e(G,H)^(ab)
+	p2 := s.Pair(abG, s.G2().Point().Base())
+	require.True(t, p1.Equal(p2))
+}
