@@ -3,7 +3,6 @@ package bls
 import (
 	"bytes"
 	"crypto/cipher"
-	"fmt"
 	"testing"
 
 	"github.com/drand/kyber"
@@ -74,7 +73,7 @@ func testGroup(t *testing.T, g kyber.Group, rand cipher.Stream) []kyber.Point {
 	}
 
 	// Verify additive and multiplicative identities of the generator.
-	fmt.Println("---------------------- BEGINNING -------------------------")
+	// TODO: Check GT exp
 	/*fmt.Println("Inverse of base")*/
 	//f := ptmp.Base().(*KyberGT).f
 	//newFp12(nil).inverse(f, f)

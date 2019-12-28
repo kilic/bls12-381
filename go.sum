@@ -2,6 +2,8 @@ github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/drand/kyber v1.0.1-0.20191228181613-c01e8efb8ad3 h1:Tt3Lq80yXcXkXQZys8qlEwjicg1I3yKH3bLW94Vi8rA=
 github.com/drand/kyber v1.0.1-0.20191228181613-c01e8efb8ad3/go.mod h1:UpXoA0Upd1N9l4TvRPHr1qAUBBERj6JQ/mnKI3BPEmw=
+github.com/drand/kyber v1.0.1-0.20191228213002-84ec45b44e14 h1:KHWUauLmYHJaz/guudyXFj7A5A1W7ZWjyCrRsSQ80Hc=
+github.com/drand/kyber v1.0.1-0.20191228213002-84ec45b44e14/go.mod h1:UpXoA0Upd1N9l4TvRPHr1qAUBBERj6JQ/mnKI3BPEmw=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
