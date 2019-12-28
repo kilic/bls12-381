@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"io"
 
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/group/mod"
+	"github.com/drand/kyber"
+	"github.com/drand/kyber/group/mod"
 )
 
 // KyberG1 is a kyber.Point holding a G1 point on BLS12-381 curve

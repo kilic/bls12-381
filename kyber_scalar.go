@@ -3,8 +3,8 @@ package bls
 import (
 	"math/big"
 
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/group/mod"
+	"github.com/drand/kyber"
+	"github.com/drand/kyber/group/mod"
 )
 
 var curveOrder, _ = new(big.Int).SetString("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16)
