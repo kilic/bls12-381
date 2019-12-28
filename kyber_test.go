@@ -6,20 +6,21 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/drand/kyber"
+	"github.com/drand/kyber/sign/bls"
+	"github.com/drand/kyber/sign/test"
+	"github.com/drand/kyber/util/random"
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/util/random"
 )
 
 // Code extracted from kyber/utils/test
-// TODO: fork kyber and expose API
+// TODO: expose API in forked drand/kyber
 // Apply a generic set of validation tests to a cryptographic Group,
 // using a given source of [pseudo-]randomness.
 //
 // Returns a log of the pseudorandom Points produced in the test,
 // for comparison across alternative implementations
 // that are supposed to be equivalent.
-//
 func testGroup(t *testing.T, g kyber.Group, rand cipher.Stream) []kyber.Point {
 	t.Logf("\nTesting group '%s': %d-byte Point, %d-byte Scalar\n",
 		g.String(), g.PointLen(), g.ScalarLen())
@@ -283,4 +284,10 @@ func TestKyberPairing(t *testing.T) {
 	require.True(t, p1.Equal(p2))
 	pRandom := s.Pair(aG, s.G2().Point().Pick(s.RandomStream()))
 	require.False(t, p1.Equal(pRandom))
+}
+
+func TestKyberBLSSchemeG2Sig(t *testing.T) {
+	suite := NewBLS12381Suite()
+	scheme := bls.NewSchemeOnG2(suite)
+	test.SchemeTesting(t, scheme)
 }

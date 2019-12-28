@@ -6,8 +6,8 @@ import (
 	"encoding/hex"
 	"io"
 
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/group/mod"
+	"github.com/drand/kyber"
+	"github.com/drand/kyber/group/mod"
 )
 
 var domainG2 = [8]byte{2, 2, 2, 2, 2, 2, 2, 2}
@@ -40,7 +40,7 @@ func (k *KyberG2) Base() kyber.Point {
 func (k *KyberG2) Pick(rand cipher.Stream) kyber.Point {
 	var dst, src [32]byte
 	rand.XORKeyStream(dst[:], src[:])
-	return k.hash(dst[:])
+	return k.Hash(dst[:])
 }
 
 func (k *KyberG2) Set(q kyber.Point) kyber.Point {
@@ -130,9 +130,9 @@ func (k *KyberG2) String() string {
 	return "bls12-381.G1: " + hex.EncodeToString(b)
 }
 
-func (k *KyberG2) hash(m []byte) kyber.Point {
+func (k *KyberG2) Hash(m []byte) kyber.Point {
 	if len(m) != 32 {
-		panic("G2.Hash() can not accept slices of size different than 32bytes")
+		m = sha256Hash(m)
 	}
 	var s [32]byte
 	copy(s[:], m)

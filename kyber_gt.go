@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"io"
 
-	"go.dedis.ch/kyber/v3"
+	"github.com/drand/kyber"
 	"golang.org/x/crypto/blake2b"
 )
 
