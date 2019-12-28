@@ -2,12 +2,15 @@ package bls
 
 import (
 	"crypto/cipher"
+	"crypto/sha256"
 	"encoding/hex"
 	"io"
 
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/group/mod"
 )
+
+var domainG2 = [8]byte{2, 2, 2, 2, 2, 2, 2, 2}
 
 // KyberG2 is a kyber.Point holding a G2 point on BLS12-381 curve
 type KyberG2 struct {
@@ -35,7 +38,9 @@ func (k *KyberG2) Base() kyber.Point {
 }
 
 func (k *KyberG2) Pick(rand cipher.Stream) kyber.Point {
-	panic("bls12-381: unsupported operation")
+	var dst, src [32]byte
+	rand.XORKeyStream(dst[:], src[:])
+	return k.hash(dst[:])
 }
 
 func (k *KyberG2) Set(q kyber.Point) kyber.Point {
@@ -126,5 +131,33 @@ func (k *KyberG2) String() string {
 }
 
 func (k *KyberG2) hash(m []byte) kyber.Point {
-	panic("bls12-381: Hash() not implemented for G1")
+	if len(m) != 32 {
+		panic("G2.Hash() can not accept slices of size different than 32bytes")
+	}
+	var s [32]byte
+	copy(s[:], m)
+	pg2 := hashWithDomain(NewG2(nil), s, domainG2)
+	k.p = pg2
+	return k
+}
+
+func hashWithDomain(g2 *G2, msg [32]byte, domain [8]byte) *PointG2 {
+	xReBytes := [41]byte{}
+	xImBytes := [41]byte{}
+	xBytes := make([]byte, 96)
+	copy(xReBytes[:32], msg[:])
+	copy(xReBytes[32:40], domain[:])
+	xReBytes[40] = 0x01
+	copy(xImBytes[:32], msg[:])
+	copy(xImBytes[32:40], domain[:])
+	xImBytes[40] = 0x02
+	copy(xBytes[16:48], sha256Hash(xImBytes[:]))
+	copy(xBytes[64:], sha256Hash(xReBytes[:]))
+	return g2.MapToPoint(xBytes)
+}
+
+func sha256Hash(in []byte) []byte {
+	h := sha256.New()
+	h.Write(in)
+	return h.Sum(nil)
 }

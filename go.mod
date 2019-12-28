@@ -1,6 +1,6 @@
-module github.com/kilic/bls12-381
+module github.com/drand/bls12-381
 
-go 1.12
+go 1.13
 
 require (
 	github.com/stretchr/testify v1.3.0

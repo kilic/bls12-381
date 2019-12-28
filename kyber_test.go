@@ -74,13 +74,13 @@ func testGroup(t *testing.T, g kyber.Group, rand cipher.Stream) []kyber.Point {
 
 	// Verify additive and multiplicative identities of the generator.
 	fmt.Println("---------------------- BEGINNING -------------------------")
-	fmt.Println("Inverse of base")
-	f := ptmp.Base().(*KyberGT).f
-	newFp12(nil).inverse(f, f)
-	fmt.Printf("\n-Inverse: %v\n", f)
-	fmt.Println("Multiply by -1")
+	/*fmt.Println("Inverse of base")*/
+	//f := ptmp.Base().(*KyberGT).f
+	//newFp12(nil).inverse(f, f)
+	//fmt.Printf("\n-Inverse: %v\n", f)
+	//fmt.Println("Multiply by -1")
 	ptmp.Mul(stmp.SetInt64(-1), nil).Add(ptmp, gen)
-	fmt.Printf(" \n\nChecking equality additive identity\nptmp: %v \n\n zero %v\n", ptmp, pzero)
+	/*fmt.Printf(" \n\nChecking equality additive identity\nptmp: %v \n\n zero %v\n", ptmp, pzero)*/
 	if !ptmp.Equal(pzero) {
 		t.Fatalf("generator additive identity doesn't work: (scalar -1 %v) %v (x) -1 (+) %v = %v != %v the group point identity",
 			stmp.SetInt64(-1), ptmp.Mul(stmp.SetInt64(-1), nil), gen, ptmp.Mul(stmp.SetInt64(-1), nil).Add(ptmp, gen), pzero)
@@ -179,6 +179,7 @@ func testGroup(t *testing.T, g kyber.Group, rand cipher.Stream) []kyber.Point {
 	pick := func(rand cipher.Stream) (p kyber.Point) {
 		defer func() {
 			if err := recover(); err != nil {
+				// TODO implement Pick for G1 and GT
 				p = g.Point().Mul(g.Scalar().Pick(rand), nil)
 				return
 			}
@@ -280,4 +281,6 @@ func TestKyberPairing(t *testing.T) {
 	// e((ab)G,H) = e(G,H)^(ab)
 	p2 := s.Pair(abG, s.G2().Point().Base())
 	require.True(t, p1.Equal(p2))
+	pRandom := s.Pair(aG, s.G2().Point().Pick(s.RandomStream()))
+	require.False(t, p1.Equal(pRandom))
 }
