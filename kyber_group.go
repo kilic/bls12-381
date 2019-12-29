@@ -16,6 +16,7 @@ import (
 type groupBls struct {
 	str      string
 	newPoint func() kyber.Point
+	isPrime  bool
 }
 
 func (g *groupBls) String() string {
@@ -39,13 +40,29 @@ func (g *groupBls) Point() kyber.Point {
 }
 
 func (g *groupBls) IsPrimeOrder() bool {
-	return true
+	return g.isPrime
+}
+
+func (g *groupBls) Hash() hash.Hash {
+	return sha256.New()
+}
+
+// XOF returns a newlly instantiated blake2xb XOF function.
+func (g *groupBls) XOF(seed []byte) kyber.XOF {
+	return blake2xb.New(seed)
+}
+
+// RandomStream returns a cipher.Stream which corresponds to a key stream from
+// crypto/rand.
+func (g *groupBls) RandomStream() cipher.Stream {
+	return random.New()
 }
 
 func NewGroupG1() kyber.Group {
 	return &groupBls{
 		str:      "bls12-381.G1",
 		newPoint: func() kyber.Point { return nullKyberG1() },
+		isPrime:  true,
 	}
 }
 
@@ -53,6 +70,7 @@ func NewGroupG2() kyber.Group {
 	return &groupBls{
 		str:      "bls12-381.G2",
 		newPoint: func() kyber.Point { return nullKyberG2() },
+		isPrime:  false,
 	}
 }
 
@@ -60,6 +78,7 @@ func NewGroupGT() kyber.Group {
 	return &groupBls{
 		str:      "bls12-381.GT",
 		newPoint: func() kyber.Point { return newEmptyGT() },
+		isPrime:  false,
 	}
 }
 
