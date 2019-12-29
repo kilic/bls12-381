@@ -179,11 +179,11 @@ func testGroup(t *testing.T, g kyber.Group, rand cipher.Stream) []kyber.Point {
 
 	pick := func(rand cipher.Stream) (p kyber.Point) {
 		defer func() {
-			if err := recover(); err != nil {
-				// TODO implement Pick for G1 and GT
-				p = g.Point().Mul(g.Scalar().Pick(rand), nil)
-				return
-			}
+			/*if err := recover(); err != nil {*/
+			//// TODO implement Pick for GT
+			//p = g.Point().Mul(g.Scalar().Pick(rand), nil)
+			//return
+			/*}*/
 		}()
 		p = g.Point().Pick(rand)
 		return

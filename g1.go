@@ -394,6 +394,7 @@ func (g *G1) MapToPoint(in []byte) *PointG1 {
 				fp.copy(y, negY)
 			}
 			p := &PointG1{*x, *y, fpOne}
+			g.MulByCofactor(p, p)
 			return p
 		}
 		fp.add(x, x, &fpOne)
@@ -415,5 +416,14 @@ func hashWithDomainG1(g1 *G1, msg [32]byte, domain [8]byte) *PointG1 {
 	// beginning under random oracle model
 	// - removed the first 32 byte section belonging to the image of the
 	// xImBytes from hashWithDomain on G2
-	return g1.MapToPoint(xInput[:])
+	p := g1.MapToPoint(xInput[:])
+	if !g1.IsOnCurve(p) {
+		fmt.Println("point is not on curve")
+		panic("point is not on curve")
+	}
+	if !g1.isTorsionFree(p) {
+		fmt.Println("point is not on correct subgroup")
+		panic("point is not on correct subgroup")
+	}
+	return p
 }

@@ -37,6 +37,7 @@ func (k *KyberG1) Base() kyber.Point {
 }
 
 func (k *KyberG1) Pick(rand cipher.Stream) kyber.Point {
+	//panic("not implemented")
 	var dst, src [32]byte
 	rand.XORKeyStream(dst[:], src[:])
 	return k.Hash(dst[:])
