@@ -404,6 +404,21 @@ func (g *G2) MapToPoint(in []byte) *PointG2 {
 	}
 }
 
+func hashWithDomainG2(g2 *G2, msg [32]byte, domain [8]byte) *PointG2 {
+	xReBytes := [41]byte{}
+	xImBytes := [41]byte{}
+	xBytes := make([]byte, 96)
+	copy(xReBytes[:32], msg[:])
+	copy(xReBytes[32:40], domain[:])
+	xReBytes[40] = 0x01
+	copy(xImBytes[:32], msg[:])
+	copy(xImBytes[32:40], domain[:])
+	xImBytes[40] = 0x02
+	copy(xBytes[16:48], sha256Hash(xImBytes[:]))
+	copy(xBytes[64:], sha256Hash(xReBytes[:]))
+	return g2.MapToPoint(xBytes)
+}
+
 // func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG2, error) {
 // 	if len(points) != len(powers) {
 // 		return nil, fmt.Errorf("point and scalar vectors should be in same length")

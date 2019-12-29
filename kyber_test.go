@@ -7,6 +7,7 @@ import (
 
 	"github.com/drand/kyber"
 	"github.com/drand/kyber/sign/bls"
+	"github.com/drand/kyber/sign/tbls"
 	"github.com/drand/kyber/sign/test"
 	"github.com/drand/kyber/util/random"
 	"github.com/stretchr/testify/require"
@@ -268,7 +269,7 @@ func TestKyberG2(t *testing.T) {
 	GroupTest(t, NewGroupG2())
 }
 
-func TestKyberPairing(t *testing.T) {
+func TestKyberPairingG2(t *testing.T) {
 	s := NewBLS12381Suite()
 	a := s.G1().Scalar().Pick(s.RandomStream())
 	b := s.G2().Scalar().Pick(s.RandomStream())
@@ -283,10 +284,30 @@ func TestKyberPairing(t *testing.T) {
 	require.True(t, p1.Equal(p2))
 	pRandom := s.Pair(aG, s.G2().Point().Pick(s.RandomStream()))
 	require.False(t, p1.Equal(pRandom))
+	pRandom = s.Pair(s.G1().Point().Pick(s.RandomStream()), bH)
+	require.False(t, p1.Equal(pRandom))
 }
 
-func TestKyberBLSSchemeG2Sig(t *testing.T) {
+func TestKyberBLSG2(t *testing.T) {
 	suite := NewBLS12381Suite()
 	scheme := bls.NewSchemeOnG2(suite)
 	test.SchemeTesting(t, scheme)
+}
+
+func TestKyberBLSG1(t *testing.T) {
+	suite := NewBLS12381Suite()
+	scheme := bls.NewSchemeOnG2(suite)
+	test.SchemeTesting(t, scheme)
+}
+
+func TestKyberThresholdG2(t *testing.T) {
+	suite := NewBLS12381Suite()
+	tscheme := tbls.NewThresholdSchemeOnG2(suite)
+	test.ThresholdTest(t, suite.G1(), tscheme)
+}
+
+func TestKyberThresholdG1(t *testing.T) {
+	suite := NewBLS12381Suite()
+	tscheme := tbls.NewThresholdSchemeOnG2(suite)
+	test.ThresholdTest(t, suite.G1(), tscheme)
 }

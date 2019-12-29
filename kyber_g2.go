@@ -136,24 +136,9 @@ func (k *KyberG2) Hash(m []byte) kyber.Point {
 	}
 	var s [32]byte
 	copy(s[:], m)
-	pg2 := hashWithDomain(NewG2(nil), s, domainG2)
+	pg2 := hashWithDomainG2(NewG2(nil), s, domainG2)
 	k.p = pg2
 	return k
-}
-
-func hashWithDomain(g2 *G2, msg [32]byte, domain [8]byte) *PointG2 {
-	xReBytes := [41]byte{}
-	xImBytes := [41]byte{}
-	xBytes := make([]byte, 96)
-	copy(xReBytes[:32], msg[:])
-	copy(xReBytes[32:40], domain[:])
-	xReBytes[40] = 0x01
-	copy(xImBytes[:32], msg[:])
-	copy(xImBytes[32:40], domain[:])
-	xImBytes[40] = 0x02
-	copy(xBytes[16:48], sha256Hash(xImBytes[:]))
-	copy(xBytes[64:], sha256Hash(xReBytes[:]))
-	return g2.MapToPoint(xBytes)
 }
 
 func sha256Hash(in []byte) []byte {

@@ -9,6 +9,8 @@ import (
 	"github.com/drand/kyber/group/mod"
 )
 
+var domainG1 = [8]byte{1, 1, 1, 1, 1, 1, 1, 1}
+
 // KyberG1 is a kyber.Point holding a G1 point on BLS12-381 curve
 type KyberG1 struct {
 	p *PointG1
@@ -35,7 +37,9 @@ func (k *KyberG1) Base() kyber.Point {
 }
 
 func (k *KyberG1) Pick(rand cipher.Stream) kyber.Point {
-	panic("bls12-381: unsupported operation")
+	var dst, src [32]byte
+	rand.XORKeyStream(dst[:], src[:])
+	return k.Hash(dst[:])
 }
 
 func (k *KyberG1) Set(q kyber.Point) kyber.Point {
@@ -125,6 +129,14 @@ func (k *KyberG1) String() string {
 	return "bls12-381.G1: " + hex.EncodeToString(b)
 }
 
-func (k *KyberG1) hash(m []byte) kyber.Point {
-	panic("bls12-381: Hash() not implemented for G1")
+func (k *KyberG1) Hash(m []byte) kyber.Point {
+	if len(m) != 32 {
+		m = sha256Hash(m)
+	}
+	var s [32]byte
+	copy(s[:], m)
+	pg1 := hashWithDomainG1(NewG1(nil), s, domainG2)
+	k.p = pg1
+	return k
+
 }

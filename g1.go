@@ -368,46 +368,52 @@ func (g *G1) MulByCofactor(c, p *PointG1) {
 	g.MulScalar(c, p, cofactorG1)
 }
 
-// func (g *G1) MultiExp(r *PointG1, points []*PointG1, powers []*big.Int) (*PointG1, error) {
-// 	if len(points) != len(powers) {
-// 		return nil, fmt.Errorf("point and scalar vectors should be in same length")
-// 	}
-// 	var c uint = 3
-// 	if len(powers) > 32 {
-// 		c = uint(math.Ceil(math.Log10(float64(len(powers)))))
-// 	}
-// 	bucket_size, numBits := (1<<c)-1, q.BitLen()
-// 	windows := make([]PointG1, numBits/int(c)+1)
-// 	bucket := make([]PointG1, bucket_size)
-// 	acc, sum, zero := g.Zero(), g.Zero(), g.Zero()
-// 	s := new(big.Int)
-// 	for i, m := 0, 0; i <= numBits; i, m = i+int(c), m+1 {
-// 		for i := 0; i < bucket_size; i++ {
-// 			g.Copy(&bucket[i], zero)
-// 		}
-// 		for j := 0; j < len(powers); j++ {
-// 			s = powers[j]
-// 			index := s.Uint64() & uint64(bucket_size)
-// 			if index != 0 {
-// 				g.Add(&bucket[index-1], &bucket[index-1], points[j])
-// 			}
-// 			s.Rsh(s, c)
-// 		}
-// 		g.Copy(acc, zero)
-// 		g.Copy(sum, zero)
-// 		for k := bucket_size - 1; k >= 0; k-- {
-// 			g.Add(sum, sum, &bucket[k])
-// 			g.Add(acc, acc, sum)
-// 		}
-// 		g.Copy(&windows[m], acc)
-// 	}
-// 	g.Copy(acc, zero)
-// 	for i := len(windows) - 1; i >= 0; i-- {
-// 		for j := 0; j < int(c); j++ {
-// 			g.Double(acc, acc)
-// 		}
-// 		g.Add(acc, acc, &windows[i])
-// 	}
-// 	g.Copy(r, acc)
-// 	return r, nil
-// }
+func (g *G1) MapToPoint(in []byte) *PointG1 {
+	x, y := &fe{}, &fe{}
+	fp := g.f
+	err := fp.newElementFromBytes(x, in)
+	if err != nil {
+		panic(err)
+	}
+	for {
+		fp.square(y, x)
+		fp.mul(y, y, x)
+		fp.add(y, y, b)
+		if ok := fp.sqrt(y, y); ok {
+			// favour negative y
+			negYn, negY, yn := &fe{}, &fe{}, &fe{}
+			// yn = yn * 1 ?
+			fp.demont(yn, y)
+			// negY = - y
+			fp.neg(negY, y)
+			// negYn = - (yn * 1)
+			fp.neg(negYn, yn)
+			if yn.Cmp(negYn) > 0 {
+				fp.copy(y, y)
+			} else {
+				fp.copy(y, negY)
+			}
+			p := &PointG1{*x, *y, fpOne}
+			return p
+		}
+		fp.add(x, x, &fpOne)
+	}
+}
+
+// XXX Custom made hashing function derived from hashWithDomain for G2; it does
+// NOT follow any standard
+// TODO: make that follow the standard
+func hashWithDomainG1(g1 *G1, msg [32]byte, domain [8]byte) *PointG1 {
+	xReBytes := [41]byte{}
+	xInput := [48]byte{}
+	copy(xReBytes[:32], msg[:])
+	copy(xReBytes[32:40], domain[:])
+	xReBytes[40] = 0x01
+	copy(xInput[7:], sha256Hash(xReBytes[:]))
+	// Simplification:
+	// - there is no need to keep an extra 16 bytes unused at the
+	// beginning under random oracle model
+	// - removed the first 32 byte section belonging to the image of the
+	// xImBytes from hashWithDomain on G2
+	return g1.MapToPoint(xInput[:])
+}
