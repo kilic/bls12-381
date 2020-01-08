@@ -10,7 +10,7 @@ import (
 	"github.com/drand/kyber/group/mod"
 )
 
-var domainG2 = [8]byte{2, 2, 2, 2, 2, 2, 2, 2}
+var domainG2 = [8]byte{1, 9, 6, 9, 9, 6, 9, 2}
 
 // KyberG2 is a kyber.Point holding a G2 point on BLS12-381 curve
 type KyberG2 struct {
