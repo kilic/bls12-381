@@ -2,6 +2,10 @@ github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/drand/kyber v1.0.1-0.20191229124149-558f79cb7274 h1:vQoNZVEVjmreNlK3rumFuGZIUbg+hLYC7hr5RdfKxug=
 github.com/drand/kyber v1.0.1-0.20191229124149-558f79cb7274/go.mod h1:UpXoA0Upd1N9l4TvRPHr1qAUBBERj6JQ/mnKI3BPEmw=
+github.com/drand/kyber v1.0.1-0.20200110221846-594491c44455 h1:A4Uy2oHll+PxGhEPMojC/5BYiwxPHXr+5T2ACxupLfk=
+github.com/drand/kyber v1.0.1-0.20200110221846-594491c44455/go.mod h1:OlgytGDQ20Ze+Ylp9Ywg1Dya9ME/1Q7+TnZsOO+ArdY=
+github.com/drand/kyber v1.0.1-0.20200110225416-8de27ed8c0e2 h1:nbFLFPYXh/vpWg3KeVlnDm5kfbIAPRXNpWNbvJvKMKY=
+github.com/drand/kyber v1.0.1-0.20200110225416-8de27ed8c0e2/go.mod h1:UpXoA0Upd1N9l4TvRPHr1qAUBBERj6JQ/mnKI3BPEmw=
 github.com/kilic/bls12-381 v0.0.0-20191103193557-038659eaa189 h1:WRnsL0VkrblaNFSVDzLg022qn84Vr7M+DR3OeKwhdb0=
 github.com/kilic/bls12-381 v0.0.0-20191103193557-038659eaa189/go.mod h1:INznczsRc7ASFbWFUI9GnIvpi9s2FhenKE+24rdTmBQ=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
