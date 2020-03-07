@@ -12,10 +12,6 @@ type fe /***			***/ [6]uint64
 type fe2 /**			***/ [2]fe
 type fe6 /**			***/ [3]fe2
 type fe12 /**			***/ [2]fe6
-type lfe /**			***/ [12]uint64
-type lfe2 /*			***/ [2]lfe
-type lfe6 /*			***/ [3]lfe2
-type lfe12 /*			***/ [2]lfe6
 
 func (fe *fe) Bytes() []byte {
 	out := make([]byte, 48)
@@ -211,102 +207,4 @@ func (f *fe) rand(max *fe, r io.Reader) error {
 		}
 	}
 	return nil
-}
-
-func (fe *lfe) Bytes() []byte {
-	out := make([]byte, 96)
-	var a int
-	for i := 0; i < 12; i++ {
-		a = 96 - i*8
-		out[a-1] = byte(fe[i])
-		out[a-2] = byte(fe[i] >> 8)
-		out[a-3] = byte(fe[i] >> 16)
-		out[a-4] = byte(fe[i] >> 24)
-		out[a-5] = byte(fe[i] >> 32)
-		out[a-6] = byte(fe[i] >> 40)
-		out[a-7] = byte(fe[i] >> 48)
-		out[a-8] = byte(fe[i] >> 56)
-	}
-	return out
-}
-
-func (fe *lfe) FromBytes(in []byte) *lfe {
-	size := 96
-	l := len(in)
-	if l >= size {
-		l = size
-	}
-	padded := make([]byte, size)
-	copy(padded[size-l:], in[:])
-	var a int
-	for i := 0; i < 12; i++ {
-		a = size - i*8
-		fe[i] = uint64(padded[a-1]) | uint64(padded[a-2])<<8 |
-			uint64(padded[a-3])<<16 | uint64(padded[a-4])<<24 |
-			uint64(padded[a-5])<<32 | uint64(padded[a-6])<<40 |
-			uint64(padded[a-7])<<48 | uint64(padded[a-8])<<56
-	}
-	return fe
-}
-
-func (fe lfe) String() (s string) {
-	for i := 12; i >= 0; i-- {
-		s = fmt.Sprintf("%s%16.16x", s, fe[i])
-	}
-	return "0x" + s
-}
-
-func (fe *lfe) Set(fe2 *lfe) {
-	fe[0] = fe2[0]
-	fe[1] = fe2[1]
-	fe[2] = fe2[2]
-	fe[3] = fe2[3]
-	fe[4] = fe2[4]
-	fe[5] = fe2[5]
-	fe[6] = fe2[6]
-	fe[7] = fe2[7]
-	fe[8] = fe2[8]
-	fe[9] = fe2[9]
-	fe[10] = fe2[10]
-	fe[11] = fe2[11]
-}
-
-func (fe *lfe) SetSingle(fe2 *fe) {
-	fe[0] = fe2[0]
-	fe[1] = fe2[1]
-	fe[2] = fe2[2]
-	fe[3] = fe2[3]
-	fe[4] = fe2[4]
-	fe[5] = fe2[5]
-	fe[6] = 0
-	fe[7] = 0
-	fe[8] = 0
-	fe[9] = 0
-	fe[10] = 0
-	fe[11] = 0
-}
-
-func (fe *lfe) Equals(fe2 *lfe) bool {
-	return fe2[0] == fe[0] && fe2[1] == fe[1] && fe2[2] == fe[2] && fe2[3] == fe[3] && fe2[4] == fe[4] && fe2[5] == fe[5] &&
-		fe2[6] == fe[6] && fe2[7] == fe[7] && fe2[8] == fe[8] && fe2[9] == fe[9] && fe2[10] == fe[10] && fe2[11] == fe[11]
-}
-
-func (fe fe2) String() (s string) {
-	return fe[0].String() + "\n" + fe[1].String()
-}
-
-func (fe lfe2) String() (s string) {
-	return fe[0].String() + "\n" + fe[1].String()
-}
-
-func (fe fe6) String() (s string) {
-	return fe[0].String() + "\n" + fe[1].String() + "\n" + fe[2].String()
-}
-
-func (fe lfe6) String() (s string) {
-	return fe[0].String() + "\n" + fe[1].String() + "\n" + fe[2].String()
-}
-
-func (fe fe12) String() (s string) {
-	return fe[0].String() + "\n" + fe[1].String()
 }
