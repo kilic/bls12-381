@@ -80,19 +80,19 @@ func (f *fp) fromString(in string) (*fe, error) {
 
 func (f *fp) toBytes(e *fe) []byte {
 	e2 := new(fe)
-	f.demont(e2, e)
+	f.fromMont(e2, e)
 	return e2.Bytes()
 }
 
 func (f *fp) toBig(e *fe) *big.Int {
 	e2 := new(fe)
-	f.demont(e2, e)
+	f.fromMont(e2, e)
 	return e2.Big()
 }
 
 func (f *fp) toString(e *fe) (s string) {
 	e2 := new(fe)
-	f.demont(e2, e)
+	f.fromMont(e2, e)
 	return e2.String()
 }
 
@@ -127,6 +127,10 @@ func (f *fp) equal(a, b *fe) bool {
 
 func (f *fp) isZero(a *fe) bool {
 	return a.IsZero()
+}
+
+func (f *fp) isOne(a *fe) bool {
+	return a.Equals(f.one())
 }
 
 func (f *fp) add(c, a, b *fe) {
@@ -173,11 +177,11 @@ func (f *fp) neg(c, a *fe) {
 	}
 }
 
-func (f *fp) mont(c, a *fe) {
+func (f *fp) toMont(c, a *fe) {
 	f.mul(c, a, r2)
 }
 
-func (f *fp) demont(c, a *fe) {
+func (f *fp) fromMont(c, a *fe) {
 	f.mul(c, a, &fe{1})
 }
 
