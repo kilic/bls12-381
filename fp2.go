@@ -54,10 +54,6 @@ func (fp *fp2) mont(c *fe2, a *fe2) {
 	fp.f.mont(&c[1], &a[1])
 }
 
-func (fp *fp2) newElement() *fe2 {
-	return &fe2{}
-}
-
 func (fp2 *fp2) fromBytes(in []byte) (*fe2, error) {
 	fp := fp2.f
 	if len(in) != 96 {
@@ -74,14 +70,21 @@ func (fp2 *fp2) fromBytes(in []byte) (*fe2, error) {
 	return &fe2{*c0, *c1}, nil
 }
 
-func (fp *fp2) randElement(a *fe2, r io.Reader) (*fe2, error) {
-	if _, err := fp.f.randElement(&a[0], r); err != nil {
+func (fp2 *fp2) rand(r io.Reader) (*fe2, error) {
+	fp := fp2.f
+	a0, err := fp.rand(r)
+	if err != nil {
 		return nil, err
 	}
-	if _, err := fp.f.randElement(&a[1], r); err != nil {
+	a1, err := fp.rand(r)
+	if err != nil {
 		return nil, err
 	}
-	return a, nil
+	return &fe2{*a0, *a1}, nil
+}
+
+func (fp *fp2) new() *fe2 {
+	return fp.zero()
 }
 
 func (fp *fp2) zero() *fe2 {

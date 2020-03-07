@@ -112,7 +112,8 @@ func (f *fp) copy(dst *fe, src *fe) *fe {
 	return dst.Set(src)
 }
 
-func (f *fp) randElement(fe *fe, r io.Reader) (*fe, error) {
+func (f *fp) rand(r io.Reader) (*fe, error) {
+	fe := new(fe)
 	bi, err := rand.Int(r, modulus.Big())
 	if err != nil {
 		return nil, err
