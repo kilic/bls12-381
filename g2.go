@@ -17,26 +17,29 @@ func (p *PointG2) Set(p2 *PointG2) *PointG2 {
 	return p
 }
 
-type G2 struct {
-	f *fp2
+type tempG2 struct {
 	t [9]*fe2
 }
 
+type G2 struct {
+	f *fp2
+	tempG2
+}
+
 func NewG2(f *fp2) *G2 {
+	if f == nil {
+		f = newFp2(nil)
+	}
+	t := newTempG2()
+	return &G2{f, t}
+}
+
+func newTempG2() tempG2 {
 	t := [9]*fe2{}
 	for i := 0; i < 9; i++ {
-		t[i] = f.zero()
+		t[i] = &fe2{}
 	}
-	if f == nil {
-		return &G2{
-			f: newFp2(nil),
-			t: t,
-		}
-	}
-	return &G2{
-		f: f,
-		t: t,
-	}
+	return tempG2{t}
 }
 
 func (g *G2) FromUncompressed(uncompressed []byte) (*PointG2, error) {
@@ -125,8 +128,7 @@ func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 	}
 	// select lexicographically, should be in normalized form
 	negYn, negY, yn := &fe2{}, &fe2{}, &fe2{}
-	g.f.f.demont(&yn[0], &y[0])
-	g.f.f.demont(&yn[1], &y[1])
+	g.f.fromMont(yn, y)
 	g.f.neg(negY, y)
 	g.f.neg(negYn, yn)
 	if (yn[1].Cmp(&negYn[1]) > 0 != a) || (yn[1].IsZero() && yn[0].Cmp(&negYn[0]) > 0 != a) {
@@ -148,9 +150,7 @@ func (g *G2) ToCompressed(p *PointG2) []byte {
 	} else {
 		copy(out[:], g.f.toBytes(&p[0]))
 		y, negY := &fe2{}, &fe2{}
-		g.f.copy(y, &p[1])
-		g.f.f.demont(&y[0], &y[0])
-		g.f.f.demont(&y[1], &y[1])
+		g.f.fromMont(y, &p[1])
 		g.f.neg(negY, y)
 		if (y[1].Cmp(&negY[1]) > 0) || (y[1].IsZero() && y[1].Cmp(&negY[1]) > 0) {
 			out[0] |= 1 << 5
@@ -235,7 +235,7 @@ func (g *G2) IsOnCurve(p *PointG2) bool {
 }
 
 func (g *G2) IsAffine(p *PointG2) bool {
-	return g.f.equal(&p[2], &fp2One)
+	return g.f.equal(&p[2], g.f.one())
 }
 
 func (g *G2) Affine(p *PointG2) {
@@ -373,12 +373,12 @@ func (g *G2) MulByCofactor(c, p *PointG2) {
 
 func (g *G2) MapToPoint(in []byte) (*PointG2, error) {
 	fp2 := g.f
-	fp := fp2.f
 	x, err := fp2.fromBytes(in)
 	if err != nil {
 		return nil, err
 	}
 	y := &fe2{}
+	one := fp2.one()
 	for {
 		fp2.square(y, x)
 		fp2.mul(y, y, x)
@@ -386,8 +386,7 @@ func (g *G2) MapToPoint(in []byte) (*PointG2, error) {
 		if ok := fp2.sqrt(y, y); ok {
 			// favour negative y
 			negYn, negY, yn := &fe2{}, &fe2{}, &fe2{}
-			fp.demont(&yn[0], &y[0])
-			fp.demont(&yn[1], &y[1])
+			fp2.fromMont(yn, y)
 			fp2.neg(negY, y)
 			fp2.neg(negYn, yn)
 			if yn[1].Cmp(&negYn[1]) > 0 || (yn[1].IsZero() && yn[0].Cmp(&negYn[0]) > 0) {
@@ -395,11 +394,11 @@ func (g *G2) MapToPoint(in []byte) (*PointG2, error) {
 			} else {
 				fp2.copy(y, negY)
 			}
-			p := &PointG2{*x, *y, fp2One}
+			p := &PointG2{*x, *y, *one}
 			g.MulByCofactor(p, p)
 			return p, nil
 		}
-		fp2.add(x, x, &fp2One)
+		fp2.add(x, x, one)
 	}
 }
 

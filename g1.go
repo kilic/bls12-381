@@ -14,23 +14,29 @@ func (p *PointG1) Set(p2 *PointG1) *PointG1 {
 	return p
 }
 
-type G1 struct {
-	f *fp
+type tempG1 struct {
 	t [9]*fe
 }
 
+type G1 struct {
+	f *fp
+	tempG1
+}
+
 func NewG1(f *fp) *G1 {
-	t := [9]*fe{}
-	for i := 0; i < 9; i++ {
-		t[i] = f.zero()
-	}
 	if f == nil {
 		f = newFp()
 	}
-	return &G1{
-		f: f,
-		t: t,
+	t := newTempG1()
+	return &G1{f, t}
+}
+
+func newTempG1() tempG1 {
+	t := [9]*fe{}
+	for i := 0; i < 9; i++ {
+		t[i] = &fe{}
 	}
+	return tempG1{t}
 }
 
 func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
@@ -118,7 +124,7 @@ func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 	}
 	// select lexicographically, should be in normalized form
 	negY, negYn, yn := &fe{}, &fe{}, &fe{}
-	g.f.demont(yn, y)
+	g.f.fromMont(yn, y)
 	g.f.neg(negY, y)
 	g.f.neg(negYn, yn)
 	if yn.Cmp(negYn) > -1 != a {
@@ -141,7 +147,7 @@ func (g *G1) ToCompressed(p *PointG1) []byte {
 		copy(out[:], g.f.toBytes(&p[0]))
 		y, negY := &fe{}, &fe{}
 		g.f.copy(y, &p[1])
-		g.f.demont(y, y)
+		g.f.fromMont(y, y)
 		g.f.neg(negY, y)
 		if y.Cmp(negY) > 0 {
 			out[0] |= 1 << 5
