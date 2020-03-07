@@ -32,19 +32,20 @@ func newFp() *fp {
 	}
 }
 
-func (f *fp) newElementFromBytes(fe *fe, in []byte) error {
+func (f *fp) fromBytes(in []byte) (*fe, error) {
+	fe := &fe{}
 	if len(in) != 48 {
-		return fmt.Errorf("input string should be equal 48 bytes")
+		return nil, fmt.Errorf("input string should be equal 48 bytes")
 	}
 	fe.FromBytes(in)
 	if !f.valid(fe) {
-		return fmt.Errorf("invalid input string")
+		return nil, fmt.Errorf("invalid input string")
 	}
 	f.mul(fe, fe, r2)
-	return nil
+	return fe, nil
 }
 
-func (f *fp) newElementFromUint(in uint64) (*fe, error) {
+func (f *fp) fromUInt64(in uint64) (*fe, error) {
 	fe := &fe{in}
 	if in == 0 {
 		return fe, nil
@@ -56,7 +57,7 @@ func (f *fp) newElementFromUint(in uint64) (*fe, error) {
 	return fe, nil
 }
 
-func (f *fp) newElementFromBig(in *big.Int) (*fe, error) {
+func (f *fp) fromBig(in *big.Int) (*fe, error) {
 	fe := new(fe).SetBig(in)
 	if !f.valid(fe) {
 		return nil, fmt.Errorf("invalid input string")
@@ -65,7 +66,7 @@ func (f *fp) newElementFromBig(in *big.Int) (*fe, error) {
 	return fe, nil
 }
 
-func (f *fp) newElementFromString(in string) (*fe, error) {
+func (f *fp) fromString(in string) (*fe, error) {
 	fe, err := new(fe).SetString(in)
 	if err != nil {
 		return nil, err

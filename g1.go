@@ -54,17 +54,16 @@ func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 		return g.Zero(), nil
 	}
 	in[0] &= 0x1f
-	x, y := &fe{}, &fe{}
-	if err := g.f.newElementFromBytes(x, in[:48]); err != nil {
+	x, err := g.f.fromBytes(in[:48])
+	if err != nil {
 		return nil, err
 	}
-	if err := g.f.newElementFromBytes(y, in[48:]); err != nil {
+	y, err := g.f.fromBytes(in[48:])
+	if err != nil {
 		return nil, err
 	}
-	p := &PointG1{}
-	g.f.copy(&p[0], x)
-	g.f.copy(&p[1], y)
-	g.f.copy(&p[2], &fpOne)
+	z := g.f.one()
+	p := &PointG1{*x, *y, *z}
 	if !g.IsOnCurve(p) {
 		return nil, fmt.Errorf("point is not on curve")
 	}
@@ -105,8 +104,8 @@ func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 	}
 	a := in[0]&(1<<5) != 0
 	in[0] &= 0x1f
-	x := &fe{}
-	if err := g.f.newElementFromBytes(x, in[:]); err != nil {
+	x, err := g.f.fromBytes(in[:])
+	if err != nil {
 		return nil, err
 	}
 	// solve curve equation
@@ -125,10 +124,8 @@ func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 	if yn.Cmp(negYn) > -1 != a {
 		g.f.copy(y, negY)
 	}
-	p := &PointG1{}
-	g.f.copy(&p[0], x)
-	g.f.copy(&p[1], y)
-	g.f.copy(&p[2], &fpOne)
+	z := g.f.one()
+	p := &PointG1{*x, *y, *z}
 	if !g.isTorsionFree(p) {
 		return nil, fmt.Errorf("point is not on correct subgroup")
 	}
@@ -154,16 +151,17 @@ func (g *G1) ToCompressed(p *PointG1) []byte {
 	return out
 }
 
-func (g *G1) fromRawUnchecked(in []byte) *PointG1 {
-	p := &PointG1{}
-	if err := g.f.newElementFromBytes(&p[0], in[:48]); err != nil {
+func (g *G1) fromRawUnchecked(in []byte) (*PointG1, error) {
+	p0, err := g.f.fromBytes(in[:48])
+	if err != nil {
+		return nil, err
+	}
+	p1, err := g.f.fromBytes(in[48:])
+	if err != nil {
 		panic(err)
 	}
-	if err := g.f.newElementFromBytes(&p[1], in[48:]); err != nil {
-		panic(err)
-	}
-	g.f.copy(&p[2], &fpOne)
-	return p
+	p2 := g.f.one()
+	return &PointG1{*p0, *p1, *p2}, nil
 }
 
 func (g *G1) isTorsionFree(p *PointG1) bool {

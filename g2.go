@@ -60,17 +60,16 @@ func (g *G2) FromUncompressed(uncompressed []byte) (*PointG2, error) {
 		return g.Zero(), nil
 	}
 	in[0] &= 0x1f
-	x, y := &fe2{}, &fe2{}
-	if err := g.f.newElementFromBytes(x, in[:96]); err != nil {
+	x, err := g.f.fromBytes(in[:96])
+	if err != nil {
 		return nil, err
 	}
-	if err := g.f.newElementFromBytes(y, in[96:]); err != nil {
+	y, err := g.f.fromBytes(in[96:])
+	if err != nil {
 		return nil, err
 	}
-	p := &PointG2{}
-	g.f.copy(&p[0], x)
-	g.f.copy(&p[1], y)
-	g.f.copy(&p[2], &fp2One)
+	z := g.f.one()
+	p := &PointG2{*x, *y, *z}
 	if !g.IsOnCurve(p) {
 		return nil, fmt.Errorf("point is not on curve")
 	}
@@ -112,7 +111,8 @@ func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 	a := in[0]&(1<<5) != 0
 	in[0] &= 0x1f
 	x := &fe2{}
-	if err := g.f.newElementFromBytes(x, in[:]); err != nil {
+	x, err := g.f.fromBytes(in[:])
+	if err != nil {
 		return nil, err
 	}
 	// solve curve equation
@@ -132,10 +132,8 @@ func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 	if (yn[1].Cmp(&negYn[1]) > 0 != a) || (yn[1].IsZero() && yn[0].Cmp(&negYn[0]) > 0 != a) {
 		g.f.copy(y, negY)
 	}
-	p := &PointG2{}
-	g.f.copy(&p[0], x)
-	g.f.copy(&p[1], y)
-	g.f.copy(&p[2], &fp2One)
+	z := g.f.one()
+	p := &PointG2{*x, *y, *z}
 	if !g.isTorsionFree(p) {
 		return nil, fmt.Errorf("point is not on correct subgroup")
 	}
@@ -162,16 +160,17 @@ func (g *G2) ToCompressed(p *PointG2) []byte {
 	return out
 }
 
-func (g *G2) fromRawUnchecked(in []byte) *PointG2 {
-	p := &PointG2{}
-	if err := g.f.newElementFromBytes(&p[0], in[:96]); err != nil {
+func (g *G2) fromRawUnchecked(in []byte) (*PointG2, error) {
+	p0, err := g.f.fromBytes(in[:96])
+	if err != nil {
+		return nil, err
+	}
+	p1, err := g.f.fromBytes(in[96:])
+	if err != nil {
 		panic(err)
 	}
-	if err := g.f.newElementFromBytes(&p[1], in[96:]); err != nil {
-		panic(err)
-	}
-	g.f.copy(&p[2], &fp2One)
-	return p
+	p2 := g.f.one()
+	return &PointG2{*p0, *p1, *p2}, nil
 }
 
 func (g *G2) isTorsionFree(p *PointG2) bool {
@@ -372,14 +371,14 @@ func (g *G2) MulByCofactor(c, p *PointG2) {
 	g.MulScalar(c, p, cofactorG2)
 }
 
-func (g *G2) MapToPoint(in []byte) *PointG2 {
-	x, y := &fe2{}, &fe2{}
+func (g *G2) MapToPoint(in []byte) (*PointG2, error) {
 	fp2 := g.f
 	fp := fp2.f
-	err := fp2.newElementFromBytes(x, in)
+	x, err := fp2.fromBytes(in)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
+	y := &fe2{}
 	for {
 		fp2.square(y, x)
 		fp2.mul(y, y, x)
@@ -398,7 +397,7 @@ func (g *G2) MapToPoint(in []byte) *PointG2 {
 			}
 			p := &PointG2{*x, *y, fp2One}
 			g.MulByCofactor(p, p)
-			return p
+			return p, nil
 		}
 		fp2.add(x, x, &fp2One)
 	}

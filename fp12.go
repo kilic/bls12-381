@@ -76,17 +76,20 @@ func (fp *fp12) newElement() *fe12 {
 	return &fe12{}
 }
 
-func (fp *fp12) newElementFromBytes(f *fe12, b []byte) error {
+func (fp12 *fp12) fromBytes(b []byte) (*fe12, error) {
 	if len(b) < 576 {
-		return fmt.Errorf("input string should be larger than 576 bytes")
+		return nil, fmt.Errorf("input string should be larger than 576 bytes")
 	}
-	if err := fp.f.newElementFromBytes(&f[1], b[:288]); err != nil {
-		return err
+	fp6 := fp12.f
+	v0, err := fp6.fromBytes(b[:288])
+	if err != nil {
+		return nil, err
 	}
-	if err := fp.f.newElementFromBytes(&f[0], b[288:]); err != nil {
-		return err
+	v1, err := fp6.fromBytes(b[288:])
+	if err != nil {
+		return nil, err
 	}
-	return nil
+	return &fe12{*v0, *v1}, nil
 }
 
 func (fp *fp12) randElement(a *fe12, r io.Reader) (*fe12, error) {
