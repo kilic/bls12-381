@@ -8,7 +8,6 @@ type BLSPairingEngine struct {
 	fp   *fp
 	t2   [10]*fe2
 	t12  [9]fe12
-	t12x [9]*fe12
 }
 
 func NewBLSPairingEngine() *BLSPairingEngine {
@@ -19,12 +18,8 @@ func NewBLSPairingEngine() *BLSPairingEngine {
 	g1 := NewG1(fp)
 	g2 := NewG2(fp2)
 	t2 := [10]*fe2{}
-	t12x := [9]*fe12{}
 	for i := 0; i < len(t2); i++ {
 		t2[i] = &fe2{}
-	}
-	for i := 0; i < len(t12x); i++ {
-		t12x[i] = &fe12{}
 	}
 	t12 := [9]fe12{}
 	return &BLSPairingEngine{
@@ -33,7 +28,6 @@ func NewBLSPairingEngine() *BLSPairingEngine {
 		fp12: fp12,
 		t2:   t2,
 		t12:  t12,
-		t12x: t12x,
 		G1:   g1,
 		G2:   g2,
 	}

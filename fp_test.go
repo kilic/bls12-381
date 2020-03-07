@@ -276,33 +276,20 @@ func TestFpOne(t *testing.T) {
 	t.Run("Inversion", func(t *testing.T) {
 		var a, u, v *fe
 		field := newFp()
-		one := &fe{1}
 		for j := 0; j < n; j++ {
 			u = &fe{}
 			v = &fe{}
 			a, _ = field.randElement(&fe{}, rand.Reader)
-			field.invMontUp(u, a)
+			field.inverse(u, a)
 			field.mul(u, u, a)
 			if !field.equal(u, field.one()) {
 				t.Fatalf("bad inversion, expected to equal r1")
 			}
-			field.mont(u, a)
-			field.invMontDown(v, u)
-			field.mul(v, v, u)
-			if !field.equal(v, one) {
-				t.Fatalf("bad inversion, expected to equal 1")
-			}
 			p := new(big.Int).SetBytes(modulus.Bytes())
 			field.exp(u, a, p.Sub(p, big.NewInt(2)))
-			field.invMontUp(v, a)
+			field.inverse(v, a)
 			if !field.equal(v, u) {
 				t.Fatalf("bad inversion 1")
-			}
-			field.invEEA(u, a)
-			field.mul(u, u, a)
-			field.mul(u, u, r2)
-			if !field.equal(u, one) {
-				t.Fatalf("bad inversion 2")
 			}
 		}
 	})
