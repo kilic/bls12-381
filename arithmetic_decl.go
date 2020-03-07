@@ -37,22 +37,10 @@ func lsub_assign_nc_6(a, b *fe)
 func neg(c, a *fe)
 
 //go:noescape
-func mul_nobmi2(c *lfe, a, b *fe)
-
-//go:noescape
-func mont_nobmi2(c *fe, a *lfe)
-
-//go:noescape
 func montmul_nobmi2(c, a, b *fe)
 
 //go:noescape
 func montmul_assign_nobmi2(a, b *fe)
-
-//go:noescape
-func mul_bmi2(c *lfe, a, b *fe)
-
-//go:noescape
-func mont_bmi2(c *fe, a *lfe)
 
 //go:noescape
 func montmul_bmi2(c, a, b *fe)
