@@ -1,3 +1,0 @@
-input: {privkey: '0x328388aff0d4a5b7dc9205abd374e7e98f3cd9f3418edb4eafda5fb16473d216',
-  message: '0xabababababababababababababababababababababababababababababababab', domain: '0x0000000000000001'}
-output: '0xb39abf9ff130893707f719783379d8f2dd1cec386ce96d006b86606c3e593d9cf206b0e081ae3ea81eecb26284bc37f2183c5329146667f0ea3480132875d013ade52e4d4f20e4ad6ba340cf4860107367859720ebcdb4128f4890f08a76a42d'
