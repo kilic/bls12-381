@@ -201,6 +201,11 @@ func (f *fp) exp(c, a *fe, e *big.Int) {
 }
 
 func (f *fp) inverse(inv, e *fe) {
+	zero := &fe{0}
+	if f.equal(e, zero) {
+		f.copy(inv, zero)
+		return
+	}
 	u := new(fe).Set(&modulus)
 	v := new(fe).Set(e)
 	s := &fe{1}
@@ -209,7 +214,7 @@ func (f *fp) inverse(inv, e *fe) {
 	var z uint64
 	var found = false
 	// Phase 1
-	for i := 0; i < 384*2; i++ {
+	for i := 0; i < 768; i++ {
 		if v.IsZero() {
 			found = true
 			break
@@ -233,20 +238,29 @@ func (f *fp) inverse(inv, e *fe) {
 		}
 		k += 1
 	}
-	if found && k > 384 {
-		if r.Cmp(&modulus) != -1 || z > 0 {
-			lsub_assign_nc_6(r, &modulus)
-		}
-		u.Set(&modulus)
-		lsub_assign_nc_6(u, r)
-		// Phase 2
-		for i := k; i < 384*2; i++ {
-			double6(u, u)
-		}
-		inv.Set(u)
-	} else {
-		inv.Set(&fe{0})
+
+	if !found {
+		f.copy(inv, zero)
+		return
 	}
+
+	if k < 381 || k > 381+384 {
+		f.copy(inv, zero)
+		return
+	}
+
+	if r.Cmp(&modulus) != -1 || z > 0 {
+		lsub_assign_nc_6(r, &modulus)
+	}
+	u.Set(&modulus)
+	lsub_assign_nc_6(u, r)
+
+	// Phase 2
+	for i := k; i < 384*2; i++ {
+		double6(u, u)
+	}
+	inv.Set(u)
+	return
 }
 
 func (f *fp) sqrt(c, a *fe) (hasRoot bool) {
