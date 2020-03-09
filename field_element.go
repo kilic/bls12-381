@@ -3,9 +3,7 @@ package bls
 import (
 	"encoding/hex"
 	"fmt"
-	"io"
 	"math/big"
-	"math/bits"
 )
 
 type fe /***			***/ [6]uint64
@@ -84,6 +82,21 @@ func (fe *fe) Set(fe2 *fe) *fe {
 	return fe
 }
 
+func (fe *fe) SetZero() *fe {
+	fe[0] = 0
+	fe[1] = 0
+	fe[2] = 0
+	fe[3] = 0
+	fe[4] = 0
+	fe[5] = 0
+	return fe
+}
+
+func (fe *fe) SetOne() *fe {
+	fe.Set(r1)
+	return fe
+}
+
 func (fe *fe) Big() *big.Int {
 	return new(big.Int).SetBytes(fe.Bytes())
 }
@@ -106,7 +119,7 @@ func (fe *fe) IsEven() bool {
 }
 
 func (fe *fe) IsZero() bool {
-	return 0 == fe[0] && 0 == fe[1] && 0 == fe[2] && 0 == fe[3] && 0 == fe[4] && 0 == fe[5]
+	return (fe[5] | fe[4] | fe[3] | fe[2] | fe[1] | fe[0]) == 0
 }
 
 func (fe *fe) IsOne() bool {
@@ -169,42 +182,4 @@ func (fe *fe) mul2() uint64 {
 	fe[1] = fe[1]<<1 | fe[0]>>63
 	fe[0] = fe[0] << 1
 	return e
-}
-
-func (fe *fe) bit(i int) bool {
-	k := i >> 6
-	i = i - k<<6
-	b := (fe[k] >> uint(i)) & 1
-	return b != 0
-}
-
-func (fe *fe) bitLen() int {
-	for i := len(fe) - 1; i >= 0; i-- {
-		if len := bits.Len64(fe[i]); len != 0 {
-			return len + 64*i
-		}
-	}
-	return 0
-}
-
-func (f *fe) rand(max *fe, r io.Reader) error {
-	bitLen := bits.Len64(max[5]) + (6-1)*64
-	k := (bitLen + 7) / 8
-	b := uint(bitLen % 8)
-	if b == 0 {
-		b = 8
-	}
-	bytes := make([]byte, k)
-	for {
-		_, err := io.ReadFull(r, bytes)
-		if err != nil {
-			return err
-		}
-		bytes[0] &= uint8(int(1<<b) - 1)
-		f.FromBytes(bytes)
-		if f.Cmp(max) < 0 {
-			break
-		}
-	}
-	return nil
 }
