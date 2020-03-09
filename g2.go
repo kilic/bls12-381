@@ -113,7 +113,6 @@ func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 	}
 	a := in[0]&(1<<5) != 0
 	in[0] &= 0x1f
-	x := &fe2{}
 	x, err := g.f.fromBytes(in[:])
 	if err != nil {
 		return nil, err
@@ -179,6 +178,10 @@ func (g *G2) isTorsionFree(p *PointG2) bool {
 	return g.IsZero(tmp)
 }
 
+func (g *G2) New() *PointG2 {
+	return g.Zero()
+}
+
 func (g *G2) Zero() *PointG2 {
 	return &PointG2{
 		*g.f.zero(),
@@ -238,9 +241,9 @@ func (g *G2) IsAffine(p *PointG2) bool {
 	return g.f.equal(&p[2], g.f.one())
 }
 
-func (g *G2) Affine(p *PointG2) {
+func (g *G2) Affine(p *PointG2) *PointG2 {
 	if g.IsZero(p) {
-		return
+		return p
 	}
 	if !g.IsAffine(p) {
 		t := g.t
@@ -251,6 +254,7 @@ func (g *G2) Affine(p *PointG2) {
 		g.f.mul(&p[1], &p[1], t[0])
 		g.f.copy(&p[2], g.f.one())
 	}
+	return p
 }
 
 func (g *G2) Add(r, p1, p2 *PointG2) *PointG2 {

@@ -157,6 +157,10 @@ func (g *G1) ToCompressed(p *PointG1) []byte {
 	return out
 }
 
+func (g *G1) New() *PointG1 {
+	return g.Zero()
+}
+
 func (g *G1) fromRawUnchecked(in []byte) (*PointG1, error) {
 	p0, err := g.f.fromBytes(in[:48])
 	if err != nil {
@@ -239,9 +243,9 @@ func (g *G1) IsAffine(p *PointG1) bool {
 	return g.f.equal(&p[2], &fpOne)
 }
 
-func (g *G1) Affine(p *PointG1) {
+func (g *G1) Affine(p *PointG1) *PointG1 {
 	if g.IsZero(p) {
-		return
+		return p
 	}
 	if !g.IsAffine(p) {
 		t := g.t
@@ -252,6 +256,7 @@ func (g *G1) Affine(p *PointG1) {
 		g.f.mul(&p[1], &p[1], t[0])
 		g.f.copy(&p[2], g.f.one())
 	}
+	return p
 }
 
 func (g *G1) Add(r, p1, p2 *PointG1) *PointG1 {
