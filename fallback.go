@@ -4,6 +4,10 @@ package bls
 
 import "math/bits"
 
+func setup() {
+
+}
+
 func add(z, x, y *fe) {
 	var carry uint64
 

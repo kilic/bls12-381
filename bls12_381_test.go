@@ -9,13 +9,15 @@ import (
 )
 
 var fuz int
+var forceNonADXArch bool
 
 func TestMain(m *testing.M) {
 	_fuz := flag.Int("fuzz", 10, "# of iterations")
-	bmi2 := flag.Bool("nobmi2", false, "to enfoce non bmi2 arch")
+	adx := flag.Bool("noadx", false, "to enfoce non adx arch")
 	flag.Parse()
+	forceNonADXArch = *adx
 	fuz = *_fuz
-	enforceNonBMI2 = *bmi2
+	setup()
 	m.Run()
 }
 

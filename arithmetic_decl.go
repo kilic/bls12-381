@@ -2,8 +2,19 @@
 
 package bls
 
+import (
+	"golang.org/x/sys/cpu"
+)
+
 var mul func(c, a, b *fe) = mulADX
 var mulAssign func(a, b *fe) = mulAssignADX
+
+func setup() {
+	if !(cpu.X86.HasADX && cpu.X86.HasBMI2) || forceNonADXArch {
+		mul = mulNoADX
+		mulAssign = mulAssignNoADX
+	}
+}
 
 func square(c, a *fe) {
 	mul(c, a, a)
