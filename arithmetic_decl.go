@@ -1,49 +1,63 @@
+// +build amd64, !generic
+
 package bls
 
-//go:noescape
-func add6(c, a, b *fe)
+var mul func(c, a, b *fe) = mulADX
+var mulAssign func(a, b *fe) = mulAssignADX
+
+func square(c, a *fe) {
+	mul(c, a, a)
+}
+
+func neg(c, a *fe) {
+	if a.IsZero() {
+		c.Set(a)
+	} else {
+		_neg(c, a)
+	}
+}
 
 //go:noescape
-func add_assign_6(a, b *fe)
+func add(c, a, b *fe)
 
 //go:noescape
-func ladd6(c, a, b *fe)
+func addAssign(a, b *fe)
 
 //go:noescape
-func ladd_assign_6(a, b *fe)
+func ladd(c, a, b *fe)
 
 //go:noescape
-func double6(c, a *fe)
+func laddAssign(a, b *fe)
 
 //go:noescape
-func double_assign_6(a *fe)
+func double(c, a *fe)
 
 //go:noescape
-func ldouble6(c, a *fe)
+func doubleAssign(a *fe)
 
 //go:noescape
-func sub6(c, a, b *fe)
+func ldouble(c, a *fe)
 
 //go:noescape
-func sub_assign_6(a, b *fe)
+func sub(c, a, b *fe)
 
 //go:noescape
-func lsub6(c, a, b *fe)
+func subAssign(a, b *fe)
 
 //go:noescape
-func lsub_assign_nc_6(a, b *fe)
+func lsubAssign(a, b *fe)
 
 //go:noescape
-func neg(c, a *fe)
+func _neg(c, a *fe)
 
 //go:noescape
-func montmul_nobmi2(c, a, b *fe)
+func mulNoADX(c, a, b *fe)
 
 //go:noescape
-func montmul_assign_nobmi2(a, b *fe)
+func mulAssignNoADX(a, b *fe)
 
 //go:noescape
-func montmul_bmi2(c, a, b *fe)
+func mulADX(c, a, b *fe)
 
 //go:noescape
-func montmul_assign_bmi2(a, b *fe)
+func mulAssignADX(a, b *fe)

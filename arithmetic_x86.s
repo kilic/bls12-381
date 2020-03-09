@@ -1,9 +1,10 @@
-#include "textflag.h"
+// +build amd64, !generic
 
+#include "textflag.h"
 
 // single-precision addition w/ modular reduction
 // a' = (a + b) % p
-TEXT ·add_assign_6(SB), NOSPLIT, $0-16
+TEXT ·addAssign(SB), NOSPLIT, $0-16
 	// |
 	MOVQ a+0(FP), DI
 	MOVQ b+8(FP), SI
@@ -59,12 +60,12 @@ TEXT ·add_assign_6(SB), NOSPLIT, $0-16
 	MOVQ R13, 40(DI)
 	RET
 
-/*	 | end add6alt									*/
+/*	 | end											*/
 
 
 // single-precision addition w/ modular reduction
 // c = (a + b) % p
-TEXT ·add6(SB), NOSPLIT, $0-24
+TEXT ·add(SB), NOSPLIT, $0-24
 	// |
 	MOVQ a+8(FP), DI
 	MOVQ b+16(FP), SI
@@ -125,7 +126,7 @@ TEXT ·add6(SB), NOSPLIT, $0-24
 
 // single-precision addition w/o reduction check
 // c = (a + b)
-TEXT ·ladd6(SB), NOSPLIT, $0-24
+TEXT ·ladd(SB), NOSPLIT, $0-24
 	// |
 	MOVQ a+8(FP), DI
 	MOVQ b+16(FP), SI
@@ -160,7 +161,7 @@ TEXT ·ladd6(SB), NOSPLIT, $0-24
 
 // single-precision addition w/o check
 // a' = a + b
-TEXT ·ladd_assign_6(SB), NOSPLIT, $0-16
+TEXT ·laddAssign(SB), NOSPLIT, $0-16
 	// |
 	MOVQ a+0(FP), DI
 	MOVQ b+8(FP), SI
@@ -195,7 +196,7 @@ TEXT ·ladd_assign_6(SB), NOSPLIT, $0-16
 
 // single-precision subtraction with modular reduction
 // c = (a - b) % p
-TEXT ·sub6(SB), NOSPLIT, $0-24
+TEXT ·sub(SB), NOSPLIT, $0-24
 	// |
 	MOVQ a+8(FP), DI
 	MOVQ b+16(FP), SI
@@ -249,7 +250,7 @@ TEXT ·sub6(SB), NOSPLIT, $0-24
 
 // single-precision subtraction with modular reduction
 // a' = (a - b) % p
-TEXT ·sub_assign_6(SB), NOSPLIT, $0-16
+TEXT ·subAssign(SB), NOSPLIT, $0-16
 	// |
 	MOVQ a+0(FP), DI
 	MOVQ b+8(FP), SI
@@ -301,56 +302,9 @@ TEXT ·sub_assign_6(SB), NOSPLIT, $0-16
 /*	 | end													*/
 
 
-// single-precision subtraction plus modulus
-// c = (a - b) + p
-TEXT ·lsub6(SB), NOSPLIT, $0-24
-	// |
-	MOVQ a+8(FP), DI
-	MOVQ b+16(FP), SI
-
-	// |
-	MOVQ (DI), R8
-	MOVQ 8(DI), R9
-	MOVQ 16(DI), R10
-	MOVQ 24(DI), R11
-	MOVQ 32(DI), R12
-	MOVQ 40(DI), R13
-	SUBQ (SI), R8
-	SBBQ 8(SI), R9
-	SBBQ 16(SI), R10
-	SBBQ 24(SI), R11
-	SBBQ 32(SI), R12
-	SBBQ 40(SI), R13
-
-	// |
-	MOVQ $0xb9feffffffffaaab, R14
-	MOVQ $0x1eabfffeb153ffff, R15
-	MOVQ $0x6730d2a0f6b0f624, CX
-	MOVQ $0x64774b84f38512bf, DX
-	MOVQ $0x4b1ba7b6434bacd7, SI
-	MOVQ $0x1a0111ea397fe69a, BX
-	ADDQ R14, R8
-	ADCQ R15, R9
-	ADCQ CX, R10
-	ADCQ DX, R11
-	ADCQ SI, R12
-	ADCQ BX, R13
-
-	// |
-	MOVQ c+0(FP), DI
-	MOVQ R8, (DI)
-	MOVQ R9, 8(DI)
-	MOVQ R10, 16(DI)
-	MOVQ R11, 24(DI)
-	MOVQ R12, 32(DI)
-	MOVQ R13, 40(DI)
-	RET
-/*	 | end													*/
-
-
-// single-precision subtraction plus modulus
+// single-precision subtraction no modular red check
 // a' = (a - b)
-TEXT ·lsub_assign_nc_6(SB), NOSPLIT, $0-16
+TEXT ·lsubAssign(SB), NOSPLIT, $0-16
 	// |
 	MOVQ a+0(FP), DI
 	MOVQ b+8(FP), SI
@@ -382,7 +336,7 @@ TEXT ·lsub_assign_nc_6(SB), NOSPLIT, $0-16
 
 // single-precision doubling
 // c = (2 * a) % p
-TEXT ·double6(SB), NOSPLIT, $0-16
+TEXT ·double(SB), NOSPLIT, $0-16
 	// |
 	MOVQ a+8(FP), DI
 
@@ -439,7 +393,7 @@ TEXT ·double6(SB), NOSPLIT, $0-16
 
 // single-precision doubling
 // a' = (2 * a) % p
-TEXT ·double_assign_6(SB), NOSPLIT, $0-8
+TEXT ·doubleAssign(SB), NOSPLIT, $0-8
 	// |
 	MOVQ a+0(FP), DI
 
@@ -494,7 +448,7 @@ TEXT ·double_assign_6(SB), NOSPLIT, $0-8
 
 // single-precision doubling w/o carry check
 // c = 2 * a
-TEXT ·ldouble6(SB), NOSPLIT, $0-16
+TEXT ·ldouble(SB), NOSPLIT, $0-16
 	// |
 	MOVQ a+8(FP), DI
 
@@ -526,7 +480,7 @@ TEXT ·ldouble6(SB), NOSPLIT, $0-16
 /*	 | end													*/
 
 
-TEXT ·neg(SB), NOSPLIT, $0-16
+TEXT ·_neg(SB), NOSPLIT, $0-16
 	// |
 	MOVQ a+8(FP), DI
 
@@ -556,7 +510,7 @@ TEXT ·neg(SB), NOSPLIT, $0-16
 /*	 | end													*/
 
 
-TEXT ·montmul_nobmi2(SB), NOSPLIT, $16-24
+TEXT ·mulNoADX(SB), NOSPLIT, $16-24
 
 /*	 | inputs							 					*/
 
@@ -1411,7 +1365,7 @@ TEXT ·montmul_nobmi2(SB), NOSPLIT, $16-24
 /*	 | end													*/
 
 
-TEXT ·montmul_assign_nobmi2(SB), NOSPLIT, $16-16
+TEXT ·mulAssignNoADX(SB), NOSPLIT, $16-16
 
 /*	 | inputs							 					*/
 
@@ -2265,3 +2219,934 @@ TEXT ·montmul_assign_nobmi2(SB), NOSPLIT, $16-16
 
 /*	 | end													*/
 
+
+TEXT ·mulADX(SB), NOSPLIT, $16-24
+
+/*	 | inputs							 			*/
+
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+
+/*	 | multiplication phase 		*/
+
+	// | w = a * b
+	// | a = (a0, a1, a2, a3, a4, a5)
+	// | b = (b0, b1, b2, b3, b4, b5)
+	// | w = (w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11)
+
+/*	 | i = 0									 	*/
+
+	MOVQ (SI), DX
+	XORQ AX, AX
+
+	MULXQ (DI), AX, R8
+	MOVQ AX, CX
+
+	MULXQ 8(DI), AX, R9
+	ADCXQ AX, R8
+
+	MULXQ 16(DI), AX, R10
+	ADCXQ AX, R9
+
+	MULXQ 24(DI), AX, R11
+	ADCXQ AX, R10
+
+	MULXQ 32(DI), AX, R12
+	ADCXQ AX, R11
+
+	MULXQ 40(DI), AX, R13
+	ADCXQ AX, R12
+	ADCQ $0, R13
+
+/*	 | i = 1									 	*/
+
+	MOVQ 8(SI), DX
+	XORQ R14, R14
+
+	MULXQ (DI), AX, BX
+	ADOXQ AX, R8
+	ADCXQ BX, R9
+	MOVQ R8, (SP)
+
+	MULXQ 8(DI), AX, BX
+	ADOXQ AX, R9
+	ADCXQ BX, R10
+
+	MULXQ 16(DI), AX, BX
+	ADOXQ AX, R10
+	ADCXQ BX, R11
+
+	MULXQ 24(DI), AX, BX
+	ADOXQ AX, R11
+	ADCXQ BX, R12
+
+	MULXQ 32(DI), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ 40(DI), AX, BX
+	ADOXQ AX, R13
+	ADOXQ R14, R14
+	ADCXQ BX, R14
+
+/*	 | i = 2									 	*/
+
+	MOVQ 16(SI), DX
+	XORQ R15, R15
+
+	MULXQ (DI), AX, BX
+	ADOXQ AX, R9
+	ADCXQ BX, R10
+	MOVQ R9, 8(SP)
+
+	MULXQ 8(DI), AX, BX
+	ADOXQ AX, R10
+	ADCXQ BX, R11
+
+	MULXQ 16(DI), AX, BX
+	ADOXQ AX, R11
+	ADCXQ BX, R12
+
+	MULXQ 24(DI), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ 32(DI), AX, BX
+	ADOXQ AX, R13
+	ADCXQ BX, R14
+
+	MULXQ 40(DI), AX, BX
+	ADOXQ AX, R14
+	ADOXQ R15, R15
+	ADCXQ BX, R15
+
+/*	 | i = 3									 	*/
+
+	MOVQ 24(SI), DX
+	XORQ R8, R8
+
+	MULXQ (DI), AX, BX
+	ADOXQ AX, R10
+	ADCXQ BX, R11
+
+	MULXQ 8(DI), AX, BX
+	ADOXQ AX, R11
+	ADCXQ BX, R12
+
+	MULXQ 16(DI), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ 24(DI), AX, BX
+	ADOXQ AX, R13
+	ADCXQ BX, R14
+
+	MULXQ 32(DI), AX, BX
+	ADOXQ AX, R14
+	ADCXQ BX, R15
+
+	MULXQ 40(DI), AX, BX
+	ADOXQ AX, R15
+	ADOXQ R8, R8
+	ADCXQ BX, R8
+
+/*	 | i = 4									 	*/
+
+	MOVQ 32(SI), DX
+	XORQ R9, R9
+
+	MULXQ (DI), AX, BX
+	ADOXQ AX, R11
+	ADCXQ BX, R12
+
+	MULXQ 8(DI), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ 16(DI), AX, BX
+	ADOXQ AX, R13
+	ADCXQ BX, R14
+
+	MULXQ 24(DI), AX, BX
+	ADOXQ AX, R14
+	ADCXQ BX, R15
+
+	MULXQ 32(DI), AX, BX
+	ADOXQ AX, R15
+	ADCXQ BX, R8
+
+	MULXQ 40(DI), AX, BX
+	ADOXQ AX, R8
+	ADOXQ R9, R9
+	ADCXQ BX, R9
+
+/*	 | i = 5									 	*/
+
+	MOVQ 40(SI), DX
+	XORQ SI, SI
+
+	MULXQ (DI), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ 8(DI), AX, BX
+	ADOXQ AX, R13
+	ADCXQ BX, R14
+
+	MULXQ 16(DI), AX, BX
+	ADOXQ AX, R14
+	ADCXQ BX, R15
+
+	MULXQ 24(DI), AX, BX
+	ADOXQ AX, R15
+	ADCXQ BX, R8
+
+	MULXQ 32(DI), AX, BX
+	ADOXQ AX, R8
+	ADCXQ BX, R9
+
+	MULXQ 40(DI), AX, BX
+	ADOXQ AX, R9
+	ADOXQ BX, SI
+
+	// |  w0,  w1,  w2,   w3,  w4,  w5,
+	// | 	CX,   0,   8,  R10, R11, R12,
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,   R9,  SI,
+
+	// | 
+/*	 | montgomerry reduction		*/
+	// | c = w % p
+
+	MOVQ (SP), DI
+	MOVQ 8(SP), BX
+	MOVQ R9, (SP)
+	MOVQ SI, 8(SP)
+
+	// |  w0,  w1,  w2,   w3,  w4,  w5,
+	// | 	CX,  DI,  BX,  R10, R11, R12,
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,    0,   8,
+
+/*	 | i = 0										*/
+
+	MOVQ ·inp+0(SB), DX
+	MULXQ CX, DX, R9
+
+	XORQ SI, SI
+	MULXQ ·modulus+0(SB), AX, R9
+	ADOXQ AX, CX
+	ADCXQ R9, DI
+
+	MULXQ ·modulus+8(SB), AX, R9
+	ADOXQ AX, DI
+	ADCXQ R9, BX
+
+	MULXQ ·modulus+16(SB), AX, R9
+	ADOXQ AX, BX
+	ADCXQ R9, R10
+
+	MULXQ ·modulus+24(SB), AX, R9
+	ADOXQ AX, R10
+	ADCXQ R9, R11
+
+	MULXQ ·modulus+32(SB), AX, R9
+	ADOXQ AX, R11
+	ADCXQ R9, R12
+
+	MULXQ ·modulus+40(SB), AX, R9
+	ADOXQ AX, R12
+	ADCXQ R9, R13
+	ADOXQ SI, R13
+	ADCXQ SI, SI
+
+/*	 | i = 1										*/
+
+	// |  w0,  w1,  w2,   w3,  w4,  w5,
+	// |  CX,  DI,  BX,  R10, R11, R12,
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,    0,   8,
+
+	XORQ CX, CX
+	MOVQ DI, DX
+	MULXQ ·inp+0(SB), DX, R9
+
+	MULXQ ·modulus+0(SB), AX, R9
+	ADOXQ AX, DI
+	ADCXQ R9, BX
+
+	MULXQ ·modulus+8(SB), AX, R9
+	ADOXQ AX, BX
+	ADCXQ R9, R10
+
+	MULXQ ·modulus+16(SB), AX, R9
+	ADOXQ AX, R10
+	ADCXQ R9, R11
+
+	MULXQ ·modulus+24(SB), AX, R9
+	ADOXQ AX, R11
+	ADCXQ R9, R12
+
+	MULXQ ·modulus+32(SB), AX, R9
+	ADOXQ AX, R12
+	ADCXQ R9, R13
+
+	MULXQ ·modulus+40(SB), AX, R9
+	ADOXQ AX, R13
+	ADCXQ R9, R14
+	ADOXQ SI, R14
+	ADCXQ CX, CX
+
+/*	 | i = 2										*/
+
+	// |  w0,  w1,  w2,   w3,  w4,  w5,
+	// | 	CX,  DI,  BX,  R10, R11, R12,
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,    0,   8,
+
+	XORQ DI, DI
+	MOVQ BX, DX
+	MULXQ ·inp+0(SB), DX, R9
+
+	MULXQ ·modulus+0(SB), AX, R9
+	ADOXQ AX, BX
+	ADCXQ R9, R10
+
+	MULXQ ·modulus+8(SB), AX, R9
+	ADOXQ AX, R10
+	ADCXQ R9, R11
+
+	MULXQ ·modulus+16(SB), AX, R9
+	ADOXQ AX, R11
+	ADCXQ R9, R12
+
+	MULXQ ·modulus+24(SB), AX, R9
+	ADOXQ AX, R12
+	ADCXQ R9, R13
+
+	MULXQ ·modulus+32(SB), AX, R9
+	ADOXQ AX, R13
+	ADCXQ R9, R14
+
+	MULXQ ·modulus+40(SB), AX, R9
+	ADOXQ AX, R14
+	ADCXQ R9, R15
+	ADOXQ CX, R15
+	ADCXQ DI, DI
+
+/*	 | i = 3										*/
+
+	// |  w0,  w1,  w2,   w3,  w4,  w5,
+	// | 	CX,  DI,  BX,  R10, R11, R12,
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,    0,   8,
+
+	XORQ CX, CX
+	MOVQ R10, DX
+	MULXQ ·inp+0(SB), DX, BX
+
+	MULXQ ·modulus+0(SB), AX, BX
+	ADOXQ AX, R10
+	ADCXQ BX, R11
+
+	MULXQ ·modulus+8(SB), AX, BX
+	ADOXQ AX, R11
+	ADCXQ BX, R12
+
+	MULXQ ·modulus+16(SB), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ ·modulus+24(SB), AX, BX
+	ADOXQ AX, R13
+	ADCXQ BX, R14
+
+	MULXQ ·modulus+32(SB), AX, BX
+	ADOXQ AX, R14
+	ADCXQ BX, R15
+
+	MULXQ ·modulus+40(SB), AX, BX
+	ADOXQ AX, R15
+	ADCXQ BX, R8
+	ADOXQ DI, R8
+	ADCXQ CX, CX
+
+/*	 | i = 4										*/
+
+	MOVQ (SP), R9
+
+	// |  w0,  w1,  w2,   w3,  w4,  w5,
+	// | 	 -,   -,   -,   -,  R11, R12,
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,   R9,   8,
+
+	XORQ DI, DI
+	MOVQ R11, DX
+	MULXQ ·inp+0(SB), DX, BX
+
+	MULXQ ·modulus+0(SB), AX, BX
+	ADOXQ AX, R11
+	ADCXQ BX, R12
+
+	MULXQ ·modulus+8(SB), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ ·modulus+16(SB), AX, BX
+	ADOXQ AX, R13
+	ADCXQ BX, R14
+
+	MULXQ ·modulus+24(SB), AX, BX
+	ADOXQ AX, R14
+	ADCXQ BX, R15
+
+	MULXQ ·modulus+32(SB), AX, BX
+	ADOXQ AX, R15
+	ADCXQ BX, R8
+
+	MULXQ ·modulus+40(SB), AX, BX
+	ADOXQ AX, R8
+	ADCXQ BX, R9
+	ADOXQ CX, R9
+	ADCXQ DI, DI
+
+/*	 | i = 5										*/
+
+	MOVQ 8(SP), R10
+
+	// |  w0,  w1,  w2,   w3,  w4,  w5,
+	// | 	 -,   -,   -,   -,    -, R12,
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,   R9, R10,
+
+	XORQ AX, AX
+	MOVQ R12, DX
+	MULXQ ·inp+0(SB), DX, BX
+
+	MULXQ ·modulus+0(SB), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ ·modulus+8(SB), AX, BX
+	ADOXQ AX, R13
+	ADCXQ BX, R14
+
+	MULXQ ·modulus+16(SB), AX, BX
+	ADOXQ AX, R14
+	ADCXQ BX, R15
+
+	MULXQ ·modulus+24(SB), AX, BX
+	ADOXQ AX, R15
+	ADCXQ BX, R8
+
+	MULXQ ·modulus+32(SB), AX, BX
+	ADOXQ AX, R8
+	ADCXQ BX, R9
+
+	MULXQ ·modulus+40(SB), AX, BX
+	ADOXQ AX, R9
+	ADCXQ BX, R10
+	ADOXQ DI, R10
+
+/*	 | reduction					 			*/
+
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,   R9, R10,
+
+	MOVQ R13, AX
+	MOVQ R14, BX
+	MOVQ R15, CX
+	MOVQ R8, DX
+	MOVQ R9, R11
+	MOVQ R10, R12
+	SUBQ ·modulus+0(SB), AX
+	SBBQ ·modulus+8(SB), BX
+	SBBQ ·modulus+16(SB), CX
+	SBBQ ·modulus+24(SB), DX
+	SBBQ ·modulus+32(SB), R11
+	SBBQ ·modulus+40(SB), R12
+	CMOVQCC AX, R13
+	CMOVQCC BX, R14
+	CMOVQCC CX, R15
+	CMOVQCC DX, R8
+	CMOVQCC R11, R9
+	CMOVQCC R12, R10
+
+/*	 | out								 			*/
+
+	MOVQ c+0(FP), SI
+	MOVQ R13, (SI)
+	MOVQ R14, 8(SI)
+	MOVQ R15, 16(SI)
+	MOVQ R8, 24(SI)
+	MOVQ R9, 32(SI)
+	MOVQ R10, 40(SI)
+	RET
+
+/*	 | end											*/
+
+
+TEXT ·mulAssignADX(SB), NOSPLIT, $16-16
+
+/*	 | inputs							 		*/
+
+	MOVQ a+0(FP), DI
+	MOVQ b+8(FP), SI
+
+/*	 | multiplication phase 	*/
+
+	// | w = a * b
+	// | a = (a0, a1, a2, a3, a4, a5)
+	// | b = (b0, b1, b2, b3, b4, b5)
+	// | w = (w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11)
+
+	/*	 | i0									 */
+
+	MOVQ (SI), DX
+	XORQ AX, AX
+
+	MULXQ (DI), AX, R8
+	MOVQ AX, CX
+
+	MULXQ 8(DI), AX, R9
+	ADCXQ AX, R8
+
+	MULXQ 16(DI), AX, R10
+	ADCXQ AX, R9
+
+	MULXQ 24(DI), AX, R11
+	ADCXQ AX, R10
+
+	MULXQ 32(DI), AX, R12
+	ADCXQ AX, R11
+
+	MULXQ 40(DI), AX, R13
+	ADCXQ AX, R12
+	ADCQ $0, R13
+
+/*	 | i = 1							 		*/
+
+	MOVQ 8(SI), DX
+	XORQ R14, R14
+
+	MULXQ (DI), AX, BX
+	ADOXQ AX, R8
+	ADCXQ BX, R9
+	MOVQ R8, (SP)
+
+	MULXQ 8(DI), AX, BX
+	ADOXQ AX, R9
+	ADCXQ BX, R10
+
+	MULXQ 16(DI), AX, BX
+	ADOXQ AX, R10
+	ADCXQ BX, R11
+
+	MULXQ 24(DI), AX, BX
+	ADOXQ AX, R11
+	ADCXQ BX, R12
+
+	MULXQ 32(DI), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ 40(DI), AX, BX
+	ADOXQ AX, R13
+	ADOXQ R14, R14
+	ADCXQ BX, R14
+
+/*	 | i = 2							 		*/
+
+	MOVQ 16(SI), DX
+	XORQ R15, R15
+
+	MULXQ (DI), AX, BX
+	ADOXQ AX, R9
+	ADCXQ BX, R10
+	MOVQ R9, 8(SP)
+
+	MULXQ 8(DI), AX, BX
+	ADOXQ AX, R10
+	ADCXQ BX, R11
+
+	MULXQ 16(DI), AX, BX
+	ADOXQ AX, R11
+	ADCXQ BX, R12
+
+	MULXQ 24(DI), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ 32(DI), AX, BX
+	ADOXQ AX, R13
+	ADCXQ BX, R14
+
+	MULXQ 40(DI), AX, BX
+	ADOXQ AX, R14
+	ADOXQ R15, R15
+	ADCXQ BX, R15
+
+/*	 | i = 3							 		*/
+
+	MOVQ 24(SI), DX
+	XORQ R8, R8
+
+	MULXQ (DI), AX, BX
+	ADOXQ AX, R10
+	ADCXQ BX, R11
+
+	MULXQ 8(DI), AX, BX
+	ADOXQ AX, R11
+	ADCXQ BX, R12
+
+	MULXQ 16(DI), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ 24(DI), AX, BX
+	ADOXQ AX, R13
+	ADCXQ BX, R14
+
+	MULXQ 32(DI), AX, BX
+	ADOXQ AX, R14
+	ADCXQ BX, R15
+
+	MULXQ 40(DI), AX, BX
+	ADOXQ AX, R15
+	ADOXQ R8, R8
+	ADCXQ BX, R8
+
+/*	 | i = 4							 		*/
+
+	MOVQ 32(SI), DX
+	XORQ R9, R9
+	
+	MULXQ (DI), AX, BX
+	ADOXQ AX, R11
+	ADCXQ BX, R12
+
+	MULXQ 8(DI), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ 16(DI), AX, BX
+	ADOXQ AX, R13
+	ADCXQ BX, R14
+
+	MULXQ 24(DI), AX, BX
+	ADOXQ AX, R14
+	ADCXQ BX, R15
+
+	MULXQ 32(DI), AX, BX
+	ADOXQ AX, R15
+	ADCXQ BX, R8
+
+	MULXQ 40(DI), AX, BX
+	ADOXQ AX, R8
+	ADOXQ R9, R9
+	ADCXQ BX, R9
+
+/*	 | i = 5							 		*/
+
+	MOVQ 40(SI), DX
+	XORQ SI, SI
+
+	MULXQ (DI), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ 8(DI), AX, BX
+	ADOXQ AX, R13
+	ADCXQ BX, R14
+
+	MULXQ 16(DI), AX, BX
+	ADOXQ AX, R14
+	ADCXQ BX, R15
+
+	MULXQ 24(DI), AX, BX
+	ADOXQ AX, R15
+	ADCXQ BX, R8
+
+	MULXQ 32(DI), AX, BX
+	ADOXQ AX, R8
+	ADCXQ BX, R9
+
+	MULXQ 40(DI), AX, BX
+	ADOXQ AX, R9
+	ADOXQ BX, SI
+
+	// |  w0,  w1,  w2,   w3,  w4,  w5,
+	// | 	CX,   0,   8,  R10, R11, R12,
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,   R9,  SI,
+
+	// | 
+/*	 | montgomerry reduction	*/
+	// | c = w % p
+
+	MOVQ (SP), DI
+	MOVQ 8(SP), BX
+	MOVQ R9, (SP)
+	MOVQ SI, 8(SP)
+
+	// |  w0,  w1,  w2,   w3,  w4,  w5,
+	// | 	CX,  DI,  BX,  R10, R11, R12,
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,    0,   8,
+
+/*	 | i = 0									*/
+
+	MOVQ ·inp+0(SB), DX
+	MULXQ CX, DX, R9
+
+	XORQ SI, SI
+	MULXQ ·modulus+0(SB), AX, R9
+	ADOXQ AX, CX
+	ADCXQ R9, DI
+
+	MULXQ ·modulus+8(SB), AX, R9
+	ADOXQ AX, DI
+	ADCXQ R9, BX
+
+	MULXQ ·modulus+16(SB), AX, R9
+	ADOXQ AX, BX
+	ADCXQ R9, R10
+
+	MULXQ ·modulus+24(SB), AX, R9
+	ADOXQ AX, R10
+	ADCXQ R9, R11
+
+	MULXQ ·modulus+32(SB), AX, R9
+	ADOXQ AX, R11
+	ADCXQ R9, R12
+
+	MULXQ ·modulus+40(SB), AX, R9
+	ADOXQ AX, R12
+	ADCXQ R9, R13
+	ADOXQ SI, R13
+	ADCXQ SI, SI
+
+/*	 | i = 1									*/
+
+	// |  w0,  w1,  w2,   w3,  w4,  w5,
+	// | 	CX,  DI,  BX,  R10, R11, R12,
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,    0,   8,
+
+	XORQ CX, CX
+	MOVQ DI, DX
+	MULXQ ·inp+0(SB), DX, R9
+
+	MULXQ ·modulus+0(SB), AX, R9
+	ADOXQ AX, DI
+	ADCXQ R9, BX
+
+	MULXQ ·modulus+8(SB), AX, R9
+	ADOXQ AX, BX
+	ADCXQ R9, R10
+
+	MULXQ ·modulus+16(SB), AX, R9
+	ADOXQ AX, R10
+	ADCXQ R9, R11
+
+	MULXQ ·modulus+24(SB), AX, R9
+	ADOXQ AX, R11
+	ADCXQ R9, R12
+
+	MULXQ ·modulus+32(SB), AX, R9
+	ADOXQ AX, R12
+	ADCXQ R9, R13
+
+	MULXQ ·modulus+40(SB), AX, R9
+	ADOXQ AX, R13
+	ADCXQ R9, R14
+	ADOXQ SI, R14
+	ADCXQ CX, CX
+
+/*	 | i = 2									*/
+
+	// |  w0,  w1,  w2,   w3,  w4,  w5,
+	// | 	CX,  DI,  BX,  R10, R11, R12,
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,    0,   8,
+
+	XORQ DI, DI
+	MOVQ BX, DX
+	MULXQ ·inp+0(SB), DX, R9
+
+	MULXQ ·modulus+0(SB), AX, R9
+	ADOXQ AX, BX
+	ADCXQ R9, R10
+
+	MULXQ ·modulus+8(SB), AX, R9
+	ADOXQ AX, R10
+	ADCXQ R9, R11
+
+	MULXQ ·modulus+16(SB), AX, R9
+	ADOXQ AX, R11
+	ADCXQ R9, R12
+
+	MULXQ ·modulus+24(SB), AX, R9
+	ADOXQ AX, R12
+	ADCXQ R9, R13
+
+	MULXQ ·modulus+32(SB), AX, R9
+	ADOXQ AX, R13
+	ADCXQ R9, R14
+
+	MULXQ ·modulus+40(SB), AX, R9
+	ADOXQ AX, R14
+	ADCXQ R9, R15
+	ADOXQ CX, R15
+	ADCXQ DI, DI
+
+/*	 | i = 3									*/
+
+	// |  w0,  w1,  w2,   w3,  w4,  w5,
+	// | 	CX,  DI,  BX,  R10, R11, R12,
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,    0,   8,
+
+	XORQ CX, CX
+	MOVQ R10, DX
+	MULXQ ·inp+0(SB), DX, BX
+
+	MULXQ ·modulus+0(SB), AX, BX
+	ADOXQ AX, R10
+	ADCXQ BX, R11
+
+	MULXQ ·modulus+8(SB), AX, BX
+	ADOXQ AX, R11
+	ADCXQ BX, R12
+
+	MULXQ ·modulus+16(SB), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ ·modulus+24(SB), AX, BX
+	ADOXQ AX, R13
+	ADCXQ BX, R14
+
+	MULXQ ·modulus+32(SB), AX, BX
+	ADOXQ AX, R14
+	ADCXQ BX, R15
+
+	MULXQ ·modulus+40(SB), AX, BX
+	ADOXQ AX, R15
+	ADCXQ BX, R8
+	ADOXQ DI, R8
+	ADCXQ CX, CX
+
+/*	 | i = 4									*/
+
+	MOVQ (SP), R9
+
+	// |  w0,  w1,  w2,   w3,  w4,  w5,
+	// | 	 -,   -,   -,   -,  R11, R12,
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,   R9,   8,
+
+	XORQ DI, DI
+	MOVQ R11, DX
+	MULXQ ·inp+0(SB), DX, BX
+
+	MULXQ ·modulus+0(SB), AX, BX
+	ADOXQ AX, R11
+	ADCXQ BX, R12
+
+	MULXQ ·modulus+8(SB), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ ·modulus+16(SB), AX, BX
+	ADOXQ AX, R13
+	ADCXQ BX, R14
+
+	MULXQ ·modulus+24(SB), AX, BX
+	ADOXQ AX, R14
+	ADCXQ BX, R15
+
+	MULXQ ·modulus+32(SB), AX, BX
+	ADOXQ AX, R15
+	ADCXQ BX, R8
+
+	MULXQ ·modulus+40(SB), AX, BX
+	ADOXQ AX, R8
+	ADCXQ BX, R9
+	ADOXQ CX, R9
+	ADCXQ DI, DI
+
+/*	 | i = 5									*/
+
+	MOVQ 8(SP), R10
+
+	// |  w0,  w1,  w2,   w3,  w4,  w5,
+	// | 	 -,   -,   -,   -,    -, R12,
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,   R9, R10,
+
+	XORQ AX, AX
+	MOVQ R12, DX
+	MULXQ ·inp+0(SB), DX, BX
+
+	MULXQ ·modulus+0(SB), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	MULXQ ·modulus+8(SB), AX, BX
+	ADOXQ AX, R13
+	ADCXQ BX, R14
+
+	MULXQ ·modulus+16(SB), AX, BX
+	ADOXQ AX, R14
+	ADCXQ BX, R15
+
+	MULXQ ·modulus+24(SB), AX, BX
+	ADOXQ AX, R15
+	ADCXQ BX, R8
+
+	MULXQ ·modulus+32(SB), AX, BX
+	ADOXQ AX, R8
+	ADCXQ BX, R9
+
+	MULXQ ·modulus+40(SB), AX, BX
+	ADOXQ AX, R9
+	ADCXQ BX, R10
+	ADOXQ DI, R10
+
+/*	 | reduction					 		*/
+
+	// |  w6,  w7,  w8,  w9,  w10, w11,
+	// | R13, R14, R15,  R8,   R9, R10,
+
+	MOVQ R13, AX
+	MOVQ R14, BX
+	MOVQ R15, CX
+	MOVQ R8, DX
+	MOVQ R9, R11
+	MOVQ R10, R12
+	SUBQ ·modulus+0(SB), AX
+	SBBQ ·modulus+8(SB), BX
+	SBBQ ·modulus+16(SB), CX
+	SBBQ ·modulus+24(SB), DX
+	SBBQ ·modulus+32(SB), R11
+	SBBQ ·modulus+40(SB), R12
+	CMOVQCC AX, R13
+	CMOVQCC BX, R14
+	CMOVQCC CX, R15
+	CMOVQCC DX, R8
+	CMOVQCC R11, R9
+	CMOVQCC R12, R10
+
+/*	 | out								 		*/
+
+	MOVQ a+0(FP), SI
+	MOVQ R13, (SI)
+	MOVQ R14, 8(SI)
+	MOVQ R15, 16(SI)
+	MOVQ R8, 24(SI)
+	MOVQ R9, 32(SI)
+	MOVQ R10, 40(SI)
+	RET
+
+/*	 | end								 		*/
