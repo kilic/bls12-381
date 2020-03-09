@@ -7,108 +7,143 @@ import (
 	"testing"
 )
 
-func TestG2(t *testing.T) {
-	g2 := NewG2(newFp2(newFp()))
-	one := g2.fromRawUnchecked(bytes_(48,
+func (g *G2) one() *PointG2 {
+	one, err := g.fromRawUnchecked(fromHex(48,
 		"0x13e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e",
 		"0x024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb8",
 		"0x0606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be",
 		"0x0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b82801",
 	))
-	randPoint := func() *PointG2 {
-		k, err := rand.Int(rand.Reader, q)
-		if err != nil {
-			panic(err)
-		}
-		return g2.MulScalar(&PointG2{}, one, k)
+	if err != nil {
+		panic(err)
 	}
-	zero := g2.Zero()
-	var t0, t1 PointG2
-	t.Run("Generator", func(t *testing.T) {
-		if !g2.IsOnCurve(one) {
-			t.Fatalf("generator is not on curve")
-		}
-	})
-	t.Run("Serialization", func(t *testing.T) {
-		for i := 0; i < n; i++ {
-			a := randPoint()
-			uncompressed := g2.ToUncompressed(a)
-			b, err := g2.FromUncompressed(uncompressed)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if !g2.Equal(a, b) {
-				t.Fatalf("bad encoding & decoding 1")
-			}
-			compressed := g2.ToCompressed(b)
-			a, err = g2.FromCompressed(compressed)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if !g2.Equal(a, b) {
-				t.Fatalf("bad encoding & decoding 2")
-			}
-
-		}
-	})
-	t.Run("Addition", func(t *testing.T) {
-		for i := 0; i < n; i++ {
-			a, b := randPoint(), randPoint()
-			g2.Add(&t0, a, one)
-			g2.Add(&t0, &t0, b)
-			g2.Add(&t1, one, b)
-			g2.Add(&t1, &t1, a)
-			if !g2.Equal(&t0, &t1) || !g2.IsOnCurve(&t1) || !g2.IsOnCurve(&t0) {
-				t.Fatalf("")
-			}
-			g2.Add(b, a, zero)
-			if !g2.Equal(a, b) || !g2.IsOnCurve(b) {
-				t.Fatalf("")
-			}
-		}
-	})
-	t.Run("Doubling", func(t *testing.T) {
-		for i := 0; i < n; i++ {
-			a := randPoint()
-			g2.Double(&t0, a)
-			g2.Sub(&t0, &t0, a)
-			if !g2.Equal(&t0, a) || !g2.IsOnCurve(&t0) {
-				t.Fatalf("")
-			}
-		}
-	})
-	t.Run("Multiplication", func(t *testing.T) {
-		for i := 0; i < n; i++ {
-			s1, s2, s3 := randScalar(q), randScalar(q), randScalar(q)
-			g2.MulScalar(&t0, one, s1)
-			g2.MulScalar(&t0, &t0, s2)
-			s3.Mul(s1, s2)
-			g2.MulScalar(&t1, one, s3)
-			if !g2.Equal(&t0, &t1) || !g2.IsOnCurve(&t1) || !g2.IsOnCurve(&t0) {
-				t.Errorf("")
-			}
-			a := randPoint()
-			g2.MulScalar(a, a, big.NewInt(0))
-			if !g2.Equal(a, zero) || !g2.IsOnCurve(a) {
-				t.Errorf("")
-			}
-		}
-	})
-	t.Run("Inversion", func(t *testing.T) {
-		for i := 0; i < n; i++ {
-			a, s := randPoint(), randScalar(q)
-			var p PointG2
-			g2.MulScalar(&p, a, new(big.Int).ModInverse(s, q))
-			g2.MulScalar(&p, &p, s)
-			if !g2.Equal(&p, a) || !g2.IsOnCurve(&p) || !g2.IsOnCurve(a) {
-				t.Errorf("")
-				return
-			}
-		}
-	})
+	return one
 }
 
-func TestZKCryptoVectors_G2UncompressedValid(t *testing.T) {
+func (g *G2) rand() *PointG2 {
+	k, err := rand.Int(rand.Reader, q)
+	if err != nil {
+		panic(err)
+	}
+	return g.MulScalar(&PointG2{}, g.one(), k)
+}
+
+func (g *G2) randAffine() *PointG2 {
+	return g.Affine(g.rand())
+}
+
+func (g *G2) new() *PointG2 {
+	return g.Zero()
+}
+
+func TestG2AdditiveProperties(t *testing.T) {
+	g := NewG2(newFp2(newFp()))
+	t0, t1 := g.new(), g.new()
+	zero := g.Zero()
+	for i := 0; i < fuz; i++ {
+		a, b := g.rand(), g.rand()
+		g.Add(t0, a, zero)
+		if !g.Equal(t0, a) {
+			t.Fatalf("a + 0 == a")
+		}
+		g.Add(t0, zero, zero)
+		if !g.Equal(t0, zero) {
+			t.Fatalf("0 + 0 == 0")
+		}
+		g.Sub(t0, a, zero)
+		if !g.Equal(t0, a) {
+			t.Fatalf("a - 0 == a")
+		}
+		g.Sub(t0, zero, zero)
+		if !g.Equal(t0, zero) {
+			t.Fatalf("0 - 0 == 0")
+		}
+		g.Neg(t0, zero)
+		if !g.Equal(t0, zero) {
+			t.Fatalf("- 0 == 0")
+		}
+		g.Sub(t0, zero, a)
+		g.Neg(t0, t0)
+		if !g.Equal(t0, a) {
+			t.Fatalf(" - (0 - a) == a")
+		}
+		g.Double(t0, zero)
+		if !g.Equal(t0, zero) {
+			t.Fatalf("2 * 0 == 0")
+		}
+		g.Double(t0, a)
+		g.Sub(t0, t0, a)
+		if !g.Equal(t0, a) || !g.IsOnCurve(t0) {
+			t.Fatalf(" (2 * a) - a == a")
+		}
+		g.Add(t0, a, b)
+		g.Add(t1, b, a)
+		if !g.Equal(t0, t1) {
+			t.Fatalf("a + b == b + a")
+		}
+		g.Sub(t0, a, b)
+		g.Sub(t1, b, a)
+		g.Neg(t1, t1)
+		if !g.Equal(t0, t1) {
+			t.Fatalf("a - b == - ( b - a )")
+		}
+		c := g.rand()
+		g.Add(t0, a, b)
+		g.Add(t0, t0, c)
+		g.Add(t1, a, c)
+		g.Add(t1, t1, b)
+		if !g.Equal(t0, t1) {
+			t.Fatalf("(a + b) + c == (a + c ) + b")
+		}
+		g.Sub(t0, a, b)
+		g.Sub(t0, t0, c)
+		g.Sub(t1, a, c)
+		g.Sub(t1, t1, b)
+		if !g.Equal(t0, t1) {
+			t.Fatalf("(a - b) - c == (a - c) -b")
+		}
+	}
+}
+
+func TestG2MultiplicativeProperties(t *testing.T) {
+	g := NewG2(newFp2(newFp()))
+	t0, t1 := g.new(), g.new()
+	zero := g.Zero()
+	for i := 0; i < fuz; i++ {
+		a := g.rand()
+		s1, s2, s3 := randScalar(q), randScalar(q), randScalar(q)
+		sone := big.NewInt(1)
+		g.MulScalar(t0, zero, s1)
+		if !g.Equal(t0, zero) {
+			t.Fatalf(" 0 ^ s == 0")
+		}
+		g.MulScalar(t0, a, sone)
+		if !g.Equal(t0, a) {
+			t.Fatalf(" a ^ 1 == a")
+		}
+		g.MulScalar(t0, zero, s1)
+		if !g.Equal(t0, zero) {
+			t.Fatalf(" 0 ^ s == a")
+		}
+		g.MulScalar(t0, a, s1)
+		g.MulScalar(t0, t0, s2)
+		s3.Mul(s1, s2)
+		g.MulScalar(t1, a, s3)
+		if !g.Equal(t0, t1) {
+			t.Errorf(" (a ^ s1) ^ s2 == a ^ (s1 * s2)")
+		}
+		g.MulScalar(t0, a, s1)
+		g.MulScalar(t1, a, s2)
+		g.Add(t0, t0, t1)
+		s3.Add(s1, s2)
+		g.MulScalar(t1, a, s3)
+		if !g.Equal(t0, t1) {
+			t.Errorf(" (a ^ s1) + (a ^ s2) == a ^ (s1 + s2)")
+		}
+	}
+}
+
+func TestZKCryptoVectorsG2UncompressedValid(t *testing.T) {
 	data, err := ioutil.ReadFile("tests/g2_uncompressed_valid_test_vectors.dat")
 	if err != nil {
 		panic(err)
@@ -128,7 +163,7 @@ func TestZKCryptoVectors_G2UncompressedValid(t *testing.T) {
 	}
 }
 
-func TestZKCryptoVectors_G2CompressedValid(t *testing.T) {
+func TestZKCryptoVectorsG2CompressedValid(t *testing.T) {
 	data, err := ioutil.ReadFile("tests/g2_compressed_valid_test_vectors.dat")
 	if err != nil {
 		panic(err)
@@ -150,20 +185,7 @@ func TestZKCryptoVectors_G2CompressedValid(t *testing.T) {
 
 func BenchmarkG2Add(t *testing.B) {
 	g2 := NewG2(newFp2(newFp()))
-	one := g2.fromRawUnchecked(bytes_(48,
-		"0x13e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e",
-		"0x024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb8",
-		"0x0606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be",
-		"0x0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b82801",
-	))
-	randPoint := func() *PointG2 {
-		k, err := rand.Int(rand.Reader, q)
-		if err != nil {
-			panic(err)
-		}
-		return g2.MulScalar(&PointG2{}, one, k)
-	}
-	a, b, c := randPoint(), randPoint(), PointG2{}
+	a, b, c := g2.rand(), g2.rand(), PointG2{}
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
 		g2.Add(&c, a, b)
@@ -172,20 +194,7 @@ func BenchmarkG2Add(t *testing.B) {
 
 func BenchmarkG2Mul(t *testing.B) {
 	g2 := NewG2(newFp2(newFp()))
-	one := g2.fromRawUnchecked(bytes_(48,
-		"0x13e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e",
-		"0x024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb8",
-		"0x0606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be",
-		"0x0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b82801",
-	))
-	randPoint := func() *PointG2 {
-		k, err := rand.Int(rand.Reader, q)
-		if err != nil {
-			panic(err)
-		}
-		return g2.MulScalar(&PointG2{}, one, k)
-	}
-	a, e, c := randPoint(), q, PointG2{}
+	a, e, c := g2.rand(), q, PointG2{}
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
 		g2.MulScalar(&c, a, e)
