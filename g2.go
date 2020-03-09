@@ -28,7 +28,7 @@ type G2 struct {
 
 func NewG2(f *fp2) *G2 {
 	if f == nil {
-		f = newFp2(nil)
+		f = newFp2()
 	}
 	t := newTempG2()
 	return &G2{f, t}

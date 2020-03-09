@@ -37,7 +37,7 @@ func (g *G2) new() *PointG2 {
 }
 
 func TestG2AdditiveProperties(t *testing.T) {
-	g := NewG2(newFp2(newFp()))
+	g := NewG2(newFp2())
 	t0, t1 := g.new(), g.new()
 	zero := g.Zero()
 	for i := 0; i < fuz; i++ {
@@ -106,7 +106,7 @@ func TestG2AdditiveProperties(t *testing.T) {
 }
 
 func TestG2MultiplicativeProperties(t *testing.T) {
-	g := NewG2(newFp2(newFp()))
+	g := NewG2(newFp2())
 	t0, t1 := g.new(), g.new()
 	zero := g.Zero()
 	for i := 0; i < fuz; i++ {
@@ -184,7 +184,7 @@ func TestZKCryptoVectorsG2CompressedValid(t *testing.T) {
 }
 
 func BenchmarkG2Add(t *testing.B) {
-	g2 := NewG2(newFp2(newFp()))
+	g2 := NewG2(newFp2())
 	a, b, c := g2.rand(), g2.rand(), PointG2{}
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
@@ -193,7 +193,7 @@ func BenchmarkG2Add(t *testing.B) {
 }
 
 func BenchmarkG2Mul(t *testing.B) {
-	g2 := NewG2(newFp2(newFp()))
+	g2 := NewG2(newFp2())
 	a, e, c := g2.rand(), q, PointG2{}
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {

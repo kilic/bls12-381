@@ -31,7 +31,7 @@ func (g *G1) randAffine() *PointG1 {
 }
 
 func TestG1Serialization(t *testing.T) {
-	g1 := NewG1(newFp())
+	g1 := NewG1()
 	for i := 0; i < fuz; i++ {
 		a := g1.rand()
 		uncompressed := g1.ToUncompressed(a)
@@ -54,7 +54,7 @@ func TestG1Serialization(t *testing.T) {
 }
 
 func TestG1AdditiveProperties(t *testing.T) {
-	g := NewG1(newFp())
+	g := NewG1()
 	t0, t1 := g.New(), g.New()
 	zero := g.Zero()
 	for i := 0; i < fuz; i++ {
@@ -123,7 +123,7 @@ func TestG1AdditiveProperties(t *testing.T) {
 }
 
 func TestG1MultiplicativeProperties(t *testing.T) {
-	g := NewG1(newFp())
+	g := NewG1()
 	t0, t1 := g.New(), g.New()
 	zero := g.Zero()
 	for i := 0; i < fuz; i++ {
@@ -165,7 +165,7 @@ func TestZKCryptoVectorsG1UncompressedValid(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	g := NewG1(nil)
+	g := NewG1()
 	p1 := g.Zero()
 	for i := 0; i < 1000; i++ {
 		vector := data[i*96 : (i+1)*96]
@@ -185,7 +185,7 @@ func TestZKCryptoVectorsG1CompressedValid(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	g := NewG1(nil)
+	g := NewG1()
 	p1 := g.Zero()
 	for i := 0; i < 1000; i++ {
 		vector := data[i*48 : (i+1)*48]
@@ -201,7 +201,7 @@ func TestZKCryptoVectorsG1CompressedValid(t *testing.T) {
 }
 
 func BenchmarkG1Add(t *testing.B) {
-	g1 := NewG1(newFp())
+	g1 := NewG1()
 	a, b, c := g1.rand(), g1.rand(), PointG1{}
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
@@ -210,7 +210,7 @@ func BenchmarkG1Add(t *testing.B) {
 }
 
 func BenchmarkG1Mul(t *testing.B) {
-	g1 := NewG1(newFp())
+	g1 := NewG1()
 	a, e, c := g1.rand(), q, PointG1{}
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {

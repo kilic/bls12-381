@@ -26,13 +26,9 @@ func newFp6Temp() fp6Temp {
 func newFp6(f *fp2) *fp6 {
 	t := newFp6Temp()
 	if f == nil {
-		return &fp6{newFp2(nil), t}
+		return &fp6{newFp2(), t}
 	}
 	return &fp6{f, t}
-}
-
-func (e *fp6) fp() *fp {
-	return e.fp2.fp
 }
 
 func (e *fp6) fromBytes(b []byte) (*fe6, error) {
@@ -285,7 +281,6 @@ func (e *fp6) mulBy01(c, a *fe6, b0, b1 *fe2) {
 }
 
 func (e *fp6) mulBy1(c, a *fe6, b1 *fe2) {
-	t := e.t
 	fp2, t := e.fp2, e.t
 	fp2.mul(t[0], &a[2], b1)
 	fp2.mul(&c[2], &a[1], b1)
@@ -345,7 +340,7 @@ func (e *fp6) inverse(c, a *fe6) {
 }
 
 func (e *fp6) frobeniusMap(c, a *fe6, power uint) {
-	fp, fp2 := e.fp(), e.fp2
+	fp2 := e.fp2
 	fp2.frobeniousMap(&c[0], &a[0], power)
 	fp2.frobeniousMap(&c[1], &a[1], power)
 	fp2.frobeniousMap(&c[2], &a[2], power)
@@ -353,8 +348,8 @@ func (e *fp6) frobeniusMap(c, a *fe6, power uint) {
 	case 0:
 		return
 	case 3:
-		fp.neg(&c[0][0], &a[1][1])
-		fp.copy(&c[1][1], &a[1][0])
+		neg(&c[0][0], &a[1][1])
+		c[1][1].Set(&a[1][0])
 		fp2.neg(&a[2], &a[2])
 	default:
 		fp2.mul(&c[1], &c[1], &frobeniusCoeffs61[power%6])
@@ -363,7 +358,7 @@ func (e *fp6) frobeniusMap(c, a *fe6, power uint) {
 }
 
 func (e *fp6) frobeniusMapAssign(a *fe6, power uint) {
-	fp, fp2 := e.fp(), e.fp2
+	fp2 := e.fp2
 	fp2.frobeniousMapAssign(&a[0], power)
 	fp2.frobeniousMapAssign(&a[1], power)
 	fp2.frobeniousMapAssign(&a[2], power)
@@ -372,9 +367,9 @@ func (e *fp6) frobeniusMapAssign(a *fe6, power uint) {
 	case 0:
 		return
 	case 3:
-		fp.neg(&t[0][0], &a[1][1])
-		fp.copy(&a[1][1], &a[1][0])
-		fp.copy(&a[1][0], &t[0][0])
+		neg(&t[0][0], &a[1][1])
+		a[1][1].Set(&a[1][0])
+		a[1][0].Set(&t[0][0])
 		fp2.neg(&a[2], &a[2])
 	default:
 		fp2.mulAssign(&a[1], &frobeniusCoeffs61[power%6])

@@ -8,53 +8,52 @@ import (
 )
 
 func TestFpSerialization(t *testing.T) {
-	field := newFp()
-	zero := field.zero()
+	zero := zero()
 	t.Run("zero", func(t *testing.T) {
 		in := make([]byte, 48)
-		fe, err := field.fromBytes(in)
+		fe, err := fromBytes(in)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !field.equal(fe, zero) {
+		if !equal(fe, zero) {
 			t.Fatalf("bad serialization\n")
 		}
-		if !bytes.Equal(in, field.toBytes(fe)) {
+		if !bytes.Equal(in, toBytes(fe)) {
 			t.Fatalf("bad serialization\n")
 		}
 	})
 	t.Run("bytes", func(t *testing.T) {
 		for i := 0; i < fuz; i++ {
-			a, _ := field.rand(rand.Reader)
-			b, err := field.fromBytes(field.toBytes(a))
+			a, _ := newRand(rand.Reader)
+			b, err := fromBytes(toBytes(a))
 			if err != nil {
 				t.Fatal(err)
 			}
-			if !field.equal(a, b) {
+			if !equal(a, b) {
 				t.Fatalf("bad serialization\n")
 			}
 		}
 	})
 	t.Run("string", func(t *testing.T) {
 		for i := 0; i < fuz; i++ {
-			a, _ := field.rand(rand.Reader)
-			b, err := field.fromString(field.toString(a))
+			a, _ := newRand(rand.Reader)
+			b, err := fromString(toString(a))
 			if err != nil {
 				t.Fatal(err)
 			}
-			if !field.equal(a, b) {
+			if !equal(a, b) {
 				t.Fatalf("bad encoding or decoding\n")
 			}
 		}
 	})
 	t.Run("big", func(t *testing.T) {
 		for i := 0; i < fuz; i++ {
-			a, _ := field.rand(rand.Reader)
-			b, err := field.fromBig(field.toBig(a))
+			a, _ := newRand(rand.Reader)
+			b, err := fromBig(toBig(a))
 			if err != nil {
 				t.Fatal(err)
 			}
-			if !field.equal(a, b) {
+			if !equal(a, b) {
 				t.Fatalf("bad encoding or decoding\n")
 			}
 		}
@@ -62,34 +61,33 @@ func TestFpSerialization(t *testing.T) {
 }
 
 func TestFpAdditionCrossAgainstBigInt(t *testing.T) {
-	field := newFp()
 	for i := 0; i < fuz; i++ {
-		a, _ := field.rand(rand.Reader)
-		b, _ := field.rand(rand.Reader)
+		a, _ := newRand(rand.Reader)
+		b, _ := newRand(rand.Reader)
 		c := new(fe)
-		big_a := field.toBig(a)
-		big_b := field.toBig(b)
+		big_a := toBig(a)
+		big_b := toBig(b)
 		big_c := new(big.Int)
-		field.add(c, a, b)
-		out_1 := field.toBytes(c)
+		add(c, a, b)
+		out_1 := toBytes(c)
 		out_2 := padBytes(big_c.Add(big_a, big_b).Mod(big_c, modulus.Big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatalf("cross test against big.Int is not satisfied A")
 		}
-		field.double(c, a)
-		out_1 = field.toBytes(c)
+		double(c, a)
+		out_1 = toBytes(c)
 		out_2 = padBytes(big_c.Add(big_a, big_a).Mod(big_c, modulus.Big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatalf("cross test against big.Int is not satisfied B")
 		}
-		field.sub(c, a, b)
-		out_1 = field.toBytes(c)
+		sub(c, a, b)
+		out_1 = toBytes(c)
 		out_2 = padBytes(big_c.Sub(big_a, big_b).Mod(big_c, modulus.Big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatalf("cross test against big.Int is not satisfied C")
 		}
-		field.neg(c, a)
-		out_1 = field.toBytes(c)
+		neg(c, a)
+		out_1 = toBytes(c)
 		out_2 = padBytes(big_c.Neg(big_a).Mod(big_c, modulus.Big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatalf("cross test against big.Int is not satisfied D")
@@ -99,77 +97,76 @@ func TestFpAdditionCrossAgainstBigInt(t *testing.T) {
 
 func TestFpAdditionProperties(t *testing.T) {
 	for i := 0; i < fuz; i++ {
-		field := newFp()
-		zero := field.zero()
-		a, _ := field.rand(rand.Reader)
-		b, _ := field.rand(rand.Reader)
+
+		zero := zero()
+		a, _ := newRand(rand.Reader)
+		b, _ := newRand(rand.Reader)
 		c_1, c_2 := new(fe), new(fe)
-		field.add(c_1, a, zero)
-		if !field.equal(c_1, a) {
+		add(c_1, a, zero)
+		if !equal(c_1, a) {
 			t.Fatalf("a + 0 == a")
 		}
-		field.sub(c_1, a, zero)
-		if !field.equal(c_1, a) {
+		sub(c_1, a, zero)
+		if !equal(c_1, a) {
 			t.Fatalf("a - 0 == a")
 		}
-		field.double(c_1, zero)
-		if !field.equal(c_1, zero) {
+		double(c_1, zero)
+		if !equal(c_1, zero) {
 			t.Fatalf("2 * 0 == 0")
 		}
-		field.neg(c_1, zero)
-		if !field.equal(c_1, zero) {
+		neg(c_1, zero)
+		if !equal(c_1, zero) {
 			t.Fatalf("-0 == 0")
 		}
-		field.sub(c_1, zero, a)
-		field.neg(c_2, a)
-		if !field.equal(c_1, c_2) {
+		sub(c_1, zero, a)
+		neg(c_2, a)
+		if !equal(c_1, c_2) {
 			t.Fatalf("0-a == -a")
 		}
-		field.double(c_1, a)
-		field.add(c_2, a, a)
-		if !field.equal(c_1, c_2) {
+		double(c_1, a)
+		add(c_2, a, a)
+		if !equal(c_1, c_2) {
 			t.Fatalf("2 * a == a + a")
 		}
-		field.add(c_1, a, b)
-		field.add(c_2, b, a)
-		if !field.equal(c_1, c_2) {
+		add(c_1, a, b)
+		add(c_2, b, a)
+		if !equal(c_1, c_2) {
 			t.Fatalf("a + b = b + a")
 		}
-		field.sub(c_1, a, b)
-		field.sub(c_2, b, a)
-		field.neg(c_2, c_2)
-		if !field.equal(c_1, c_2) {
+		sub(c_1, a, b)
+		sub(c_2, b, a)
+		neg(c_2, c_2)
+		if !equal(c_1, c_2) {
 			t.Fatalf("a - b = - ( b - a )")
 		}
-		c_x, _ := field.rand(rand.Reader)
-		field.add(c_1, a, b)
-		field.add(c_1, c_1, c_x)
-		field.add(c_2, a, c_x)
-		field.add(c_2, c_2, b)
-		if !field.equal(c_1, c_2) {
+		c_x, _ := newRand(rand.Reader)
+		add(c_1, a, b)
+		add(c_1, c_1, c_x)
+		add(c_2, a, c_x)
+		add(c_2, c_2, b)
+		if !equal(c_1, c_2) {
 			t.Fatalf("(a + b) + c == (a + c ) + b")
 		}
-		field.sub(c_1, a, b)
-		field.sub(c_1, c_1, c_x)
-		field.sub(c_2, a, c_x)
-		field.sub(c_2, c_2, b)
-		if !field.equal(c_1, c_2) {
+		sub(c_1, a, b)
+		sub(c_1, c_1, c_x)
+		sub(c_2, a, c_x)
+		sub(c_2, c_2, b)
+		if !equal(c_1, c_2) {
 			t.Fatalf("(a - b) - c == (a - c ) -b")
 		}
 	}
 }
 
 func TestFpMultiplicationCrossAgainstBigInt(t *testing.T) {
-	field := newFp()
 	for i := 0; i < fuz; i++ {
-		a, _ := field.rand(rand.Reader)
-		b, _ := field.rand(rand.Reader)
+		a, _ := newRand(rand.Reader)
+		b, _ := newRand(rand.Reader)
 		c := new(fe)
-		big_a := field.toBig(a)
-		big_b := field.toBig(b)
+		big_a := toBig(a)
+		big_b := toBig(b)
 		big_c := new(big.Int)
-		field.mul(c, a, b)
-		out_1 := field.toBytes(c)
+		mul(c, a, b)
+		out_1 := toBytes(c)
 		out_2 := padBytes(big_c.Mul(big_a, big_b).Mod(big_c, modulus.Big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatalf("cross test against big.Int is not satisfied")
@@ -178,121 +175,117 @@ func TestFpMultiplicationCrossAgainstBigInt(t *testing.T) {
 }
 
 func TestFpMultiplicationProperties(t *testing.T) {
-	field := newFp()
 	for i := 0; i < fuz; i++ {
-		a, _ := field.rand(rand.Reader)
-		b, _ := field.rand(rand.Reader)
-		zero := field.zero()
-		one := field.one()
+		a, _ := newRand(rand.Reader)
+		b, _ := newRand(rand.Reader)
+		zero := zero()
+		one := one()
 		c_1, c_2 := new(fe), new(fe)
-		field.mul(c_1, a, zero)
-		if !field.equal(c_1, zero) {
+		mul(c_1, a, zero)
+		if !equal(c_1, zero) {
 			t.Fatalf("a * 0 == 0")
 		}
-		field.mul(c_1, a, one)
-		if !field.equal(c_1, a) {
+		mul(c_1, a, one)
+		if !equal(c_1, a) {
 			t.Fatalf("a * 1 == a")
 		}
-		field.mul(c_1, a, b)
-		field.mul(c_2, b, a)
-		if !field.equal(c_1, c_2) {
+		mul(c_1, a, b)
+		mul(c_2, b, a)
+		if !equal(c_1, c_2) {
 			t.Fatalf("a * b == b * a")
 		}
-		c_x, _ := field.rand(rand.Reader)
-		field.mul(c_1, a, b)
-		field.mul(c_1, c_1, c_x)
-		field.mul(c_2, c_x, b)
-		field.mul(c_2, c_2, a)
-		if !field.equal(c_1, c_2) {
+		c_x, _ := newRand(rand.Reader)
+		mul(c_1, a, b)
+		mul(c_1, c_1, c_x)
+		mul(c_2, c_x, b)
+		mul(c_2, c_2, a)
+		if !equal(c_1, c_2) {
 			t.Fatalf("(a * b) * c == (a * c) * b")
 		}
 	}
 }
 
 func TestFpExponentiation(t *testing.T) {
-	field := newFp()
 	for i := 0; i < fuz; i++ {
-		a, _ := field.rand(rand.Reader)
+		a, _ := newRand(rand.Reader)
 		u := new(fe)
-		field.exp(u, a, big.NewInt(0))
-		if !field.equal(u, field.one()) {
+		exp(u, a, big.NewInt(0))
+		if !equal(u, one()) {
 			t.Fatalf("a^0 == 1")
 		}
-		field.exp(u, a, big.NewInt(1))
-		if !field.equal(u, a) {
+		exp(u, a, big.NewInt(1))
+		if !equal(u, a) {
 			t.Fatalf("a^1 == a")
 		}
 		v := new(fe)
-		field.mul(u, a, a)
-		field.mul(u, u, u)
-		field.mul(u, u, u)
-		field.exp(v, a, big.NewInt(8))
-		if !field.equal(u, v) {
+		mul(u, a, a)
+		mul(u, u, u)
+		mul(u, u, u)
+		exp(v, a, big.NewInt(8))
+		if !equal(u, v) {
 			t.Fatalf("((a^2)^2)^2 == a^8")
 		}
 		p := modulus.Big()
-		field.exp(u, a, p)
-		if !field.equal(u, a) {
+		exp(u, a, p)
+		if !equal(u, a) {
 			t.Fatalf("a^p == a")
 		}
-		field.exp(u, a, p.Sub(p, big.NewInt(1)))
-		if !field.equal(u, field.one()) {
+		exp(u, a, p.Sub(p, big.NewInt(1)))
+		if !equal(u, one()) {
 			t.Fatalf("a^(p-1) == 1")
 		}
 	}
 }
 
 func TestFpInversion(t *testing.T) {
-	field := newFp()
 	for i := 0; i < fuz; i++ {
 		u := new(fe)
-		zero := field.zero()
-		one := field.one()
-		field.inverse(u, zero)
-		if !field.equal(u, zero) {
+		zero := zero()
+		one := one()
+		inverse(u, zero)
+		if !equal(u, zero) {
 			t.Fatalf("(0^-1) == 0)")
 		}
-		field.inverse(u, one)
-		if !field.equal(u, one) {
+		inverse(u, one)
+		if !equal(u, one) {
 			t.Fatalf("(1^-1) == 1)")
 		}
-		a, _ := field.rand(rand.Reader)
-		field.inverse(u, a)
-		field.mul(u, u, a)
-		if !field.equal(u, one) {
+		a, _ := newRand(rand.Reader)
+		inverse(u, a)
+		mul(u, u, a)
+		if !equal(u, one) {
 			t.Fatalf("(r*a) * r*(a^-1) == r)")
 		}
 		v := new(fe)
 		p := modulus.Big()
-		field.exp(u, a, p.Sub(p, big.NewInt(2)))
-		field.inverse(v, a)
-		if !field.equal(v, u) {
+		exp(u, a, p.Sub(p, big.NewInt(2)))
+		inverse(v, a)
+		if !equal(v, u) {
 			t.Fatalf("a^(p-2) == a^-1")
 		}
 	}
 }
 
 func TestFpSquareRoot(t *testing.T) {
-	field := newFp()
 	r := new(fe)
-	if field.sqrt(r, nonResidue1) {
+	if sqrt(r, nonResidue1) {
 		t.Fatalf("non residue cannot have a sqrt")
 	}
 	for i := 0; i < fuz; i++ {
-		a, _ := field.rand(rand.Reader)
+		a, _ := newRand(rand.Reader)
 		aa, rr, r := &fe{}, &fe{}, &fe{}
-		field.square(aa, a)
-		if !field.sqrt(r, aa) {
+		square(aa, a)
+		if !sqrt(r, aa) {
 			t.Fatalf("bad sqrt 1")
 		}
-		field.square(rr, r)
-		if !field.equal(rr, aa) {
+		square(rr, r)
+		if !equal(rr, aa) {
 			t.Fatalf("bad sqrt 2")
 		}
 	}
 }
 func TestFp2Serialization(t *testing.T) {
-	field := newFp2(nil)
+	field := newFp2()
 	for i := 0; i < fuz; i++ {
 		a, _ := field.rand(rand.Reader)
 		b, err := field.fromBytes(field.toBytes(a))
@@ -306,7 +299,7 @@ func TestFp2Serialization(t *testing.T) {
 }
 
 func TestFp2AdditionProperties(t *testing.T) {
-	field := newFp2(nil)
+	field := newFp2()
 	for i := 0; i < fuz; i++ {
 		zero := field.zero()
 		a, _ := field.rand(rand.Reader)
@@ -369,7 +362,7 @@ func TestFp2AdditionProperties(t *testing.T) {
 }
 
 func TestFp2MultiplicationProperties(t *testing.T) {
-	field := newFp2(nil)
+	field := newFp2()
 	for i := 0; i < fuz; i++ {
 		a, _ := field.rand(rand.Reader)
 		b, _ := field.rand(rand.Reader)
@@ -401,7 +394,7 @@ func TestFp2MultiplicationProperties(t *testing.T) {
 }
 
 // func TestXXX(t *testing.T) {
-// 	field := newFp2(nil)
+// 	field := newFp2()
 // 	for i := 0; i < fuz; i++ {
 // 		a, _ := field.fromBytes(fromHex(48,
 // 			"03f6990397861375e9a35a4a9024d1cbeefd3df70f026b5781197624a4a7e1de45927f80b4d36efd7a6d275a1f9dcfa6",
@@ -419,7 +412,7 @@ func TestFp2MultiplicationProperties(t *testing.T) {
 // }
 
 func TestFp2Exponentiation(t *testing.T) {
-	field := newFp2(nil)
+	field := newFp2()
 	for i := 0; i < fuz; i++ {
 		a, _ := field.rand(rand.Reader)
 		u := field.new()
@@ -452,7 +445,7 @@ func TestFp2Exponentiation(t *testing.T) {
 }
 
 func TestFp2Inversion(t *testing.T) {
-	field := newFp2(nil)
+	field := newFp2()
 	u := field.new()
 	zero := field.zero()
 	one := field.one()
@@ -482,7 +475,7 @@ func TestFp2Inversion(t *testing.T) {
 }
 
 func TestFp2SquareRoot(t *testing.T) {
-	field := newFp2(nil)
+	field := newFp2()
 	r := field.new()
 	if field.sqrt(r, nonResidue2) {
 		t.Fatalf("non residue cannot have a sqrt")
@@ -894,13 +887,12 @@ func TestFp12Inversion(t *testing.T) {
 }
 
 func BenchmarkMultiplication(t *testing.B) {
-	var field = newFp()
-	a, _ := field.rand(rand.Reader)
-	b, _ := field.rand(rand.Reader)
-	c, _ := field.rand(rand.Reader)
+	a, _ := newRand(rand.Reader)
+	b, _ := newRand(rand.Reader)
+	c, _ := newRand(rand.Reader)
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
-		field.mul(c, a, b)
+		mul(c, a, b)
 	}
 }
 
