@@ -5,114 +5,85 @@ import (
 	"fmt"
 	"io"
 	"math/big"
-
-	"golang.org/x/sys/cpu"
 )
 
-var enforceNonBMI2 bool
-
-var fpOne = *r1
-var fpZero = fe{0, 0, 0, 0, 0, 0}
-
-type fp struct {
-	mul       func(c, a, b *fe)
-	mulAssign func(a, b *fe)
-}
-
-func newFp() *fp {
-	if cpu.X86.HasBMI2 && !enforceNonBMI2 {
-		return &fp{
-			mul:       montmul_bmi2,
-			mulAssign: montmul_assign_bmi2,
-		}
-	}
-	return &fp{
-		mul:       montmul_nobmi2,
-		mulAssign: montmul_assign_nobmi2,
-	}
-}
-
-func (f *fp) fromBytes(in []byte) (*fe, error) {
+func fromBytes(in []byte) (*fe, error) {
 	fe := &fe{}
 	if len(in) != 48 {
 		return nil, fmt.Errorf("input string should be equal 48 bytes")
 	}
 	fe.FromBytes(in)
-	if !f.valid(fe) {
+	if !valid(fe) {
 		return nil, fmt.Errorf("invalid input string")
 	}
-	f.mul(fe, fe, r2)
+	mul(fe, fe, r2)
 	return fe, nil
 }
 
-func (f *fp) fromUInt64(in uint64) (*fe, error) {
+func fromUInt64(in uint64) (*fe, error) {
 	fe := &fe{in}
 	if in == 0 {
 		return fe, nil
 	}
-	if !f.valid(fe) {
+	if !valid(fe) {
 		return nil, fmt.Errorf("invalid input string")
 	}
-	f.mul(fe, fe, r2)
+	mul(fe, fe, r2)
 	return fe, nil
 }
 
-func (f *fp) fromBig(in *big.Int) (*fe, error) {
+func fromBig(in *big.Int) (*fe, error) {
 	fe := new(fe).SetBig(in)
-	if !f.valid(fe) {
+	if !valid(fe) {
 		return nil, fmt.Errorf("invalid input string")
 	}
-	f.mul(fe, fe, r2)
+	mul(fe, fe, r2)
 	return fe, nil
 }
 
-func (f *fp) fromString(in string) (*fe, error) {
+func fromString(in string) (*fe, error) {
 	fe, err := new(fe).SetString(in)
 	if err != nil {
 		return nil, err
 	}
-	if !f.valid(fe) {
+	if !valid(fe) {
 		return nil, fmt.Errorf("invalid input string")
 	}
-	f.mul(fe, fe, r2)
+	mul(fe, fe, r2)
 	return fe, nil
 }
 
-func (f *fp) toBytes(e *fe) []byte {
+func toBytes(e *fe) []byte {
 	e2 := new(fe)
-	f.fromMont(e2, e)
+	fromMont(e2, e)
 	return e2.Bytes()
 }
 
-func (f *fp) toBig(e *fe) *big.Int {
+func toBig(e *fe) *big.Int {
 	e2 := new(fe)
-	f.fromMont(e2, e)
+	fromMont(e2, e)
 	return e2.Big()
 }
 
-func (f *fp) toString(e *fe) (s string) {
+func toString(e *fe) (s string) {
 	e2 := new(fe)
-	f.fromMont(e2, e)
+	fromMont(e2, e)
 	return e2.String()
 }
 
-func (f *fp) valid(fe *fe) bool {
+func valid(fe *fe) bool {
 	return fe.Cmp(&modulus) == -1
 }
 
-func (f *fp) zero() *fe {
+func zero() *fe {
 	return &fe{}
 }
 
-func (f *fp) one() *fe {
+func one() *fe {
 	return new(fe).Set(r1)
 }
 
-func (f *fp) copy(dst *fe, src *fe) *fe {
-	return dst.Set(src)
-}
-
-func (f *fp) rand(r io.Reader) (*fe, error) {
+func newRand(r io.Reader) (*fe, error) {
 	fe := new(fe)
 	bi, err := rand.Int(r, modulus.Big())
 	if err != nil {
@@ -121,89 +92,40 @@ func (f *fp) rand(r io.Reader) (*fe, error) {
 	return fe.SetBig(bi), nil
 }
 
-func (f *fp) equal(a, b *fe) bool {
+func equal(a, b *fe) bool {
 	return a.Equals(b)
 }
 
-func (f *fp) isZero(a *fe) bool {
+func isZero(a *fe) bool {
 	return a.IsZero()
 }
 
-func (f *fp) isOne(a *fe) bool {
-	return a.Equals(f.one())
+func isOne(a *fe) bool {
+	return a.Equals(one())
 }
 
-func (f *fp) add(c, a, b *fe) {
-	add6(c, a, b)
+func toMont(c, a *fe) {
+	mul(c, a, r2)
 }
 
-func (f *fp) addAssign(a, b *fe) {
-	add_assign_6(a, b)
+func fromMont(c, a *fe) {
+	mul(c, a, &fe{1})
 }
 
-func (f *fp) ladd(c, a, b *fe) {
-	ladd6(c, a, b)
-}
-
-func (f *fp) double(c, a *fe) {
-	double6(c, a)
-}
-
-func (f *fp) doubleAssign(a *fe) {
-	double_assign_6(a)
-}
-
-func (f *fp) ldouble(c, a *fe) {
-	ldouble6(c, a)
-}
-
-func (f *fp) sub(c, a, b *fe) {
-	sub6(c, a, b)
-}
-
-func (f *fp) subAssign(c, a *fe) {
-	sub_assign_6(c, a)
-}
-
-func (f *fp) lsub(c, a, b *fe) {
-	lsub6(c, a, b)
-}
-
-func (f *fp) neg(c, a *fe) {
-	if a.IsZero() {
-		c.Set(a)
-	} else {
-		neg(c, a)
-	}
-}
-
-func (f *fp) toMont(c, a *fe) {
-	f.mul(c, a, r2)
-}
-
-func (f *fp) fromMont(c, a *fe) {
-	f.mul(c, a, &fe{1})
-}
-
-func (f *fp) square(c, a *fe) {
-	f.mul(c, a, a)
-}
-
-func (f *fp) exp(c, a *fe, e *big.Int) {
+func exp(c, a *fe, e *big.Int) {
 	z := new(fe).Set(r1)
 	for i := e.BitLen(); i >= 0; i-- {
-		f.mul(z, z, z)
+		mul(z, z, z)
 		if e.Bit(i) == 1 {
-			f.mul(z, z, a)
+			mul(z, z, a)
 		}
 	}
 	c.Set(z)
 }
 
-func (f *fp) inverse(inv, e *fe) {
-	zero := &fe{0}
-	if f.equal(e, zero) {
-		f.copy(inv, zero)
+func inverse(inv, e *fe) {
+	if e.IsZero() {
+		inv.SetZero()
 		return
 	}
 	u := new(fe).Set(&modulus)
@@ -226,47 +148,46 @@ func (f *fp) inverse(inv, e *fe) {
 			v.div2(0)
 			z += r.mul2()
 		} else if u.Cmp(v) == 1 {
-			lsub_assign_nc_6(u, v)
+			lsubAssign(u, v)
 			u.div2(0)
-			ladd_assign_6(r, s)
+			laddAssign(r, s)
 			s.mul2()
 		} else {
-			lsub_assign_nc_6(v, u)
+			lsubAssign(v, u)
 			v.div2(0)
-			ladd_assign_6(s, r)
+			laddAssign(s, r)
 			z += r.mul2()
 		}
 		k += 1
 	}
 
 	if !found {
-		f.copy(inv, zero)
+		inv.SetZero()
 		return
 	}
 
 	if k < 381 || k > 381+384 {
-		f.copy(inv, zero)
+		inv.SetZero()
 		return
 	}
 
 	if r.Cmp(&modulus) != -1 || z > 0 {
-		lsub_assign_nc_6(r, &modulus)
+		lsubAssign(r, &modulus)
 	}
 	u.Set(&modulus)
-	lsub_assign_nc_6(u, r)
+	lsubAssign(u, r)
 
 	// Phase 2
 	for i := k; i < 384*2; i++ {
-		double6(u, u)
+		double(u, u)
 	}
 	inv.Set(u)
 	return
 }
 
-func (f *fp) sqrt(c, a *fe) (hasRoot bool) {
-	var u, v fe
-	f.copy(&u, a)
-	f.exp(c, a, pPlus1Over4)
-	f.square(&v, c)
-	return f.equal(&u, &v)
+func sqrt(c, a *fe) (hasRoot bool) {
+	u, v := new(fe).Set(a), new(fe)
+	exp(c, a, pPlus1Over4)
+	square(v, c)
+	return equal(u, v)
 }
