@@ -86,15 +86,15 @@ func (e *fp12) newElement() *fe12 {
 }
 
 func (e *fp12) fromBytes(in []byte) (*fe12, error) {
-	if len(in) != 96 {
+	if len(in) != 576 {
 		return nil, fmt.Errorf("input string should be larger than 96 bytes")
 	}
 	fp6 := e.fp6
-	c0, err := fp6.fromBytes(in[:288])
+	c1, err := fp6.fromBytes(in[:288])
 	if err != nil {
 		return nil, err
 	}
-	c1, err := fp6.fromBytes(in[288:])
+	c0, err := fp6.fromBytes(in[288:])
 	if err != nil {
 		return nil, err
 	}
@@ -107,6 +107,10 @@ func (e *fp12) toBytes(a *fe12) []byte {
 	copy(out[:288], fp6.toBytes(&a[1]))
 	copy(out[288:], fp6.toBytes(&a[0]))
 	return out
+}
+
+func (e *fp12) new() *fe12 {
+	return &fe12{}
 }
 
 func (e *fp12) zero() *fe12 {

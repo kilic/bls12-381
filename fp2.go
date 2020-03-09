@@ -36,11 +36,11 @@ func (e *fp2) fromBytes(in []byte) (*fe2, error) {
 		return nil, fmt.Errorf("input string should be larger than 96 bytes")
 	}
 	fp := e.fp
-	c0, err := fp.fromBytes(in[:48])
+	c1, err := fp.fromBytes(in[:48])
 	if err != nil {
 		return nil, err
 	}
-	c1, err := fp.fromBytes(in[48:])
+	c0, err := fp.fromBytes(in[48:])
 	if err != nil {
 		return nil, err
 	}
