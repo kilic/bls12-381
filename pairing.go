@@ -5,25 +5,22 @@ type BLSPairingEngine struct {
 	G2   *G2
 	fp12 *fp12
 	fp2  *fp2
-	fp   *fp
 	t2   [10]*fe2
 	t12  [9]fe12
 }
 
 func NewBLSPairingEngine() *BLSPairingEngine {
-	fp := newFp()
-	fp2 := newFp2(fp)
+	fp2 := newFp2()
 	fp6 := newFp6(fp2)
 	fp12 := newFp12(fp6)
-	g1 := NewG1(fp)
+	g1 := NewG1()
 	g2 := NewG2(fp2)
 	t2 := [10]*fe2{}
-	for i := 0; i < len(t2); i++ {
+	for i := 0; i < 10; i++ {
 		t2[i] = &fe2{}
 	}
 	t12 := [9]fe12{}
 	return &BLSPairingEngine{
-		fp:   fp,
 		fp2:  fp2,
 		fp12: fp12,
 		t2:   t2,
@@ -129,7 +126,7 @@ func (e *BLSPairingEngine) millerLoop(f *fe12, points []PointG1, twistPoints []P
 	fp12 := e.fp12
 	fp2 := e.fp2
 	t := e.t2
-	fp12.copy(f, &fp12One)
+	fp12.copy(f, fp12.one())
 	// first iteration
 	// x.BitLen() - 2
 	// w/o squaring f
@@ -210,8 +207,8 @@ func (e *BLSPairingEngine) pair(f *fe12, points []PointG1, twistPoints []PointG2
 }
 
 func (e *BLSPairingEngine) PairingCheck(points []PointG1, twistPoints []PointG2) bool {
-	f := &fe12{}
+	gt, f := e.fp12, &fe12{}
 	e.millerLoop(f, points, twistPoints)
 	e.finalExp(f)
-	return e.fp12.equal(&fp12One, f)
+	return gt.equal(gt.one(), f)
 }

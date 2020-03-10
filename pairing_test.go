@@ -9,18 +9,14 @@ import (
 func TestPairing(t *testing.T) {
 	e := NewBLSPairingEngine()
 	t.Run("Single Expected", func(t *testing.T) {
-		G := &PointG1{}
-		H := &PointG2{}
+		G, H := &PointG1{}, &PointG2{}
 		e.G1.Copy(G, &g1One)
 		e.G2.Copy(H, &g2One)
-		points := []PointG1{*G}
-		twistPoints := []PointG2{*H}
+		P1, P2 := []PointG1{*G}, []PointG2{*H}
 		f1 := &fe12{}
-		e.pair(f1, points, twistPoints)
-		f2 := &fe12{}
-		if err := e.fp12.newElementFromBytes(
-			f2,
-			bytes_(48,
+		e.pair(f1, P1, P2)
+		f2, err := e.fp12.fromBytes(
+			fromHex(48,
 				"0x0f41e58663bf08cf068672cbd01a7ec73baca4d72ca93544deff686bfd6df543d48eaa24afe47e1efde449383b676631",
 				"0x04c581234d086a9902249b64728ffd21a189e87935a954051c7cdba7b3872629a4fafc05066245cb9108f0242d0fe3ef",
 				"0x03350f55a7aefcd3c31b4fcb6ce5771cc6a0e9786ab5973320c806ad360829107ba810c5a09ffdd9be2291a0c25a99a2",
@@ -33,7 +29,8 @@ func TestPairing(t *testing.T) {
 				"0x1368bb445c7c2d209703f239689ce34c0378a68e72a6b3b216da0e22a5031b54ddff57309396b38c881c4c849ec23e87",
 				"0x089a1c5b46e5110b86750ec6a532348868a84045483c92b7af5af689452eafabf1a8943e50439f1d59882a98eaa0170f",
 				"0x1250ebd871fc0a92a7b2d83168d0d727272d441befa15c503dd8e90ce98db3e7b6d194f60839c508a84305aaca1789b6",
-			)); err != nil {
+			))
+		if err != nil {
 			t.Fatal(err)
 		}
 		if !e.fp12.equal(f1, f2) {
@@ -103,10 +100,9 @@ func BenchmarkPairing(t *testing.B) {
 
 func BenchmarkFinalExp(t *testing.B) {
 	e := NewBLSPairingEngine()
-	a := fe12{}
-	e.fp12.randElement(&a, rand.Reader)
+	a, _ := e.fp12.rand(rand.Reader)
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
-		e.finalExp(&a)
+		e.finalExp(a)
 	}
 }
