@@ -210,9 +210,6 @@ func (e *BLSPairingEngine) finalExp(f *fe12) {
 
 func (e *BLSPairingEngine) pair(pairs Pairs) *fe12 {
 	f := e.fp12.one()
-	if len(pairs) == 0 {
-		return f
-	}
 	var newPairs Pairs
 	for i := 0; i < len(pairs); i++ {
 		if !e.G1.IsZero(&pairs[i].g1) && !e.G2.IsZero(&pairs[i].g2) {

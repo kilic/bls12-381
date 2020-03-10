@@ -55,6 +55,13 @@ func TestPairing(t *testing.T) {
 		return pair, c
 	}
 
+	t.Run("Empty Pair", func(t *testing.T) {
+		f := bls.pair(Pairs{})
+		if !bls.fp12.equal(bls.fp12.one(), f) {
+			t.Fatalf("bad pairing")
+		}
+	})
+
 	t.Run("Multi Pair", func(t *testing.T) {
 		pairSize := 50
 		pairs := make(Pairs, pairSize)
