@@ -41,50 +41,6 @@ func (e *fp12) fp2() *fp2 {
 	return e.fp6.fp2
 }
 
-func (e *fp12) mul(c, a, b *fe12) {
-	t, fp6 := e.t6, e.fp6
-	fp6.mul(t[1], &a[0], &b[0])
-	fp6.mul(t[2], &a[1], &b[1])
-	fp6.add(t[0], t[1], t[2])
-	fp6.mulByNonResidue(t[2], t[2])
-	fp6.add(t[3], t[1], t[2])
-	fp6.add(t[1], &a[0], &a[1])
-	fp6.add(t[2], &b[0], &b[1])
-	fp6.mulAssign(t[1], t[2])
-	fp6.copy(&c[0], t[3])
-	fp6.sub(&c[1], t[1], t[0])
-}
-
-func (e *fp12) mulAssign(a, b *fe12) {
-	t, fp6 := e.t6, e.fp6
-	fp6.mul(t[1], &a[0], &b[0])
-	fp6.mul(t[2], &a[1], &b[1])
-	fp6.add(t[0], t[1], t[2])
-	fp6.mulByNonResidue(t[2], t[2])
-	fp6.add(t[3], t[1], t[2])
-	fp6.add(t[1], &a[0], &a[1])
-	fp6.add(t[2], &b[0], &b[1])
-	fp6.mulAssign(t[1], t[2])
-	fp6.copy(&a[0], t[3])
-	fp6.sub(&a[1], t[1], t[0])
-}
-
-func (e *fp12) fp4Square(c0, c1, a0, a1 *fe2) {
-	t, fp2 := e.t2, e.fp2()
-	fp2.square(t[0], a0)
-	fp2.square(t[1], a1)
-	fp2.mulByNonResidue(t[2], t[1])
-	fp2.add(c0, t[2], t[0])
-	fp2.add(t[2], a0, a1)
-	fp2.squareAssign(t[2])
-	fp2.subAssign(t[2], t[0])
-	fp2.sub(c1, t[2], t[1])
-}
-
-func (e *fp12) newElement() *fe12 {
-	return &fe12{}
-}
-
 func (e *fp12) fromBytes(in []byte) (*fe12, error) {
 	if len(in) != 576 {
 		return nil, fmt.Errorf("input string should be larger than 96 bytes")
@@ -222,6 +178,46 @@ func (e *fp12) cyclotomicSquare(c, a *fe12) {
 	fp2.add(&c[0][2], t[2], t[5])
 }
 
+func (e *fp12) mul(c, a, b *fe12) {
+	t, fp6 := e.t6, e.fp6
+	fp6.mul(t[1], &a[0], &b[0])
+	fp6.mul(t[2], &a[1], &b[1])
+	fp6.add(t[0], t[1], t[2])
+	fp6.mulByNonResidue(t[2], t[2])
+	fp6.add(t[3], t[1], t[2])
+	fp6.add(t[1], &a[0], &a[1])
+	fp6.add(t[2], &b[0], &b[1])
+	fp6.mulAssign(t[1], t[2])
+	fp6.copy(&c[0], t[3])
+	fp6.sub(&c[1], t[1], t[0])
+}
+
+func (e *fp12) mulAssign(a, b *fe12) {
+	t, fp6 := e.t6, e.fp6
+	fp6.mul(t[1], &a[0], &b[0])
+	fp6.mul(t[2], &a[1], &b[1])
+	fp6.add(t[0], t[1], t[2])
+	fp6.mulByNonResidue(t[2], t[2])
+	fp6.add(t[3], t[1], t[2])
+	fp6.add(t[1], &a[0], &a[1])
+	fp6.add(t[2], &b[0], &b[1])
+	fp6.mulAssign(t[1], t[2])
+	fp6.copy(&a[0], t[3])
+	fp6.sub(&a[1], t[1], t[0])
+}
+
+func (e *fp12) fp4Square(c0, c1, a0, a1 *fe2) {
+	t, fp2 := e.t2, e.fp2()
+	fp2.square(t[0], a0)
+	fp2.square(t[1], a1)
+	fp2.mulByNonResidue(t[2], t[1])
+	fp2.add(c0, t[2], t[0])
+	fp2.add(t[2], a0, a1)
+	fp2.squareAssign(t[2])
+	fp2.subAssign(t[2], t[0])
+	fp2.sub(c1, t[2], t[1])
+}
+
 func (e *fp12) inverse(c, a *fe12) {
 	fp6, t := e.fp6, e.t6
 	fp6.square(t[0], &a[0])
@@ -232,6 +228,19 @@ func (e *fp12) inverse(c, a *fe12) {
 	fp6.mul(&c[0], &a[0], t[0])
 	fp6.mulAssign(t[0], &a[1])
 	fp6.neg(&c[1], t[0])
+}
+
+func (e *fp12) mulBy014Assign(a *fe12, c0, c1, c4 *fe2) {
+	fp2, fp6, t, t2 := e.fp2(), e.fp6, e.t6, e.t2[0]
+	fp6.mulBy01(t[0], &a[0], c0, c1)
+	fp6.mulBy1(t[1], &a[1], c4)
+	fp2.add(t2, c1, c4)
+	fp6.add(t[2], &a[1], &a[0])
+	fp6.mulBy01Assign(t[2], c0, t2)
+	fp6.subAssign(t[2], t[0])
+	fp6.sub(&a[1], t[2], t[1])
+	fp6.mulByNonResidue(t[1], t[1])
+	fp6.add(&a[0], t[1], t[0])
 }
 
 func (e *fp12) exp(c, a *fe12, s *big.Int) {
@@ -254,19 +263,6 @@ func (e *fp12) cyclotomicExp(c, a *fe12, s *big.Int) {
 		}
 	}
 	e.copy(c, z)
-}
-
-func (e *fp12) mulBy014Assign(a *fe12, c0, c1, c4 *fe2) {
-	fp2, fp6, t, t2 := e.fp2(), e.fp6, e.t6, e.t2[0]
-	fp6.mulBy01(t[0], &a[0], c0, c1)
-	fp6.mulBy1(t[1], &a[1], c4)
-	fp2.add(t2, c1, c4)
-	fp6.add(t[2], &a[1], &a[0])
-	fp6.mulBy01Assign(t[2], c0, t2)
-	fp6.subAssign(t[2], t[0])
-	fp6.sub(&a[1], t[2], t[1])
-	fp6.mulByNonResidue(t[1], t[1])
-	fp6.add(&a[0], t[1], t[0])
 }
 
 func (e *fp12) frobeniusMap(c, a *fe12, power uint) {
