@@ -20,18 +20,6 @@ func fromBytes(in []byte) (*fe, error) {
 	return fe, nil
 }
 
-func fromUInt64(in uint64) (*fe, error) {
-	fe := &fe{in}
-	if in == 0 {
-		return fe, nil
-	}
-	if !valid(fe) {
-		return nil, fmt.Errorf("invalid input string")
-	}
-	mul(fe, fe, r2)
-	return fe, nil
-}
-
 func fromBig(in *big.Int) (*fe, error) {
 	fe := new(fe).SetBig(in)
 	if !valid(fe) {
