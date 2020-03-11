@@ -142,7 +142,7 @@ func (e *Engine) additionStep(coeff *[3]fe2, r, q *PointG2) {
 }
 
 // Algorithm 5 in  https://eprint.iacr.org/2019/077.pdf
-func (e *Engine) preCompute(ellCoeffs *[70][3]fe2, twistPoint *PointG2) {
+func (e *Engine) preCompute(ellCoeffs *[68][3]fe2, twistPoint *PointG2) {
 	if e.G2.IsZero(twistPoint) {
 		return
 	}
@@ -162,27 +162,18 @@ func (e *Engine) preCompute(ellCoeffs *[70][3]fe2, twistPoint *PointG2) {
 
 func (e *Engine) millerLoop(f *fe12) {
 	pairs := e.pairs
-	ellCoeffs := make([][70][3]fe2, len(pairs))
+	ellCoeffs := make([][68][3]fe2, len(pairs))
 	for i := 0; i < len(pairs); i++ {
 		e.preCompute(&ellCoeffs[i], pairs[i].g2)
 	}
-	fp12 := e.fp12
-	fp2 := e.fp2
+	fp12, fp2 := e.fp12, e.fp2
 	t := e.t2
 	fp12.copy(f, fp12.one())
-	for i := 0; i <= len(pairs)-1; i++ {
-		fp2.mulByFq(t[0], &ellCoeffs[i][0][2], &pairs[i].g1[1])
-		fp2.mulByFq(t[1], &ellCoeffs[i][0][1], &pairs[i].g1[0])
-		fp12.mulBy014Assign(f, &ellCoeffs[i][0][0], t[1], t[0])
-	}
-	for i := 0; i <= len(pairs)-1; i++ {
-		fp2.mulByFq(t[0], &ellCoeffs[i][1][2], &pairs[i].g1[1])
-		fp2.mulByFq(t[1], &ellCoeffs[i][1][1], &pairs[i].g1[0])
-		fp12.mulBy014Assign(f, &ellCoeffs[i][1][0], t[1], t[0])
-	}
-	j := 2
-	for i := 61; /* x.BitLen() - 3 */ i >= 0; i-- {
-		fp12.square(f, f)
+	j := 0
+	for i := 62; /* x.BitLen() - 2 */ i >= 0; i-- {
+		if i != 62 {
+			fp12.square(f, f)
+		}
 		for i := 0; i <= len(pairs)-1; i++ {
 			fp2.mulByFq(t[0], &ellCoeffs[i][j][2], &pairs[i].g1[1])
 			fp2.mulByFq(t[1], &ellCoeffs[i][j][1], &pairs[i].g1[0])
