@@ -214,3 +214,15 @@ func TestPairingEmpty(t *testing.T) {
 		t.Fatalf("empty pairing result should be one")
 	}
 }
+
+func BenchmarkPairing(t *testing.B) {
+	bls := NewEngine()
+	g1, g2, gt := bls.G1, bls.G2, bls.GT()
+	bls.AddPair(g1.One(), g2.One())
+	e := gt.New()
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		e = bls.calculate()
+	}
+	_ = e
+}
