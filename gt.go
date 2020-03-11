@@ -1,6 +1,9 @@
 package bls
 
-import "fmt"
+import (
+	"fmt"
+	"math/big"
+)
 
 type E = fe12
 
@@ -50,6 +53,10 @@ func (g *Gt) One() *E {
 	return g.fp12.one()
 }
 
+func (g *Gt) IsOne(e *E) bool {
+	return g.Equal(e, g.fp12.one())
+}
+
 func (g *Gt) Copy(a, b *E) {
 	g.fp12.copy(a, b)
 }
@@ -71,5 +78,9 @@ func (g *Gt) Mul(c, a, b *E) {
 }
 
 func (g *Gt) Square(c, a *E) {
-	g.fp12.square(c, a)
+	g.fp12.cyclotomicSquare(c, a)
+}
+
+func (g *Gt) Exp(c, a *E, s *big.Int) {
+	g.fp12.cyclotomicExp(c, a, s)
 }
