@@ -76,7 +76,7 @@ func (g *G2) FromUncompressed(uncompressed []byte) (*PointG2, error) {
 	if !g.IsOnCurve(p) {
 		return nil, fmt.Errorf("point is not on curve")
 	}
-	if !g.isTorsionFree(p) {
+	if !g.InCorrectSubgroup(p) {
 		return nil, fmt.Errorf("point is not on correct subgroup")
 	}
 	return p, nil
@@ -135,7 +135,7 @@ func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 	}
 	z := g.f.one()
 	p := &PointG2{*x, *y, *z}
-	if !g.isTorsionFree(p) {
+	if !g.InCorrectSubgroup(p) {
 		return nil, fmt.Errorf("point is not on correct subgroup")
 	}
 	return p, nil
@@ -172,7 +172,7 @@ func (g *G2) fromRawUnchecked(in []byte) (*PointG2, error) {
 	return &PointG2{*p0, *p1, *p2}, nil
 }
 
-func (g *G2) isTorsionFree(p *PointG2) bool {
+func (g *G2) InCorrectSubgroup(p *PointG2) bool {
 	tmp := &PointG2{}
 	g.MulScalar(tmp, p, q)
 	return g.IsZero(tmp)
