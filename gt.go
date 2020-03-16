@@ -16,6 +16,10 @@ func NewGt() *Gt {
 	return &Gt{fp12}
 }
 
+func (g *Gt) Q() *big.Int {
+	return new(big.Int).Set(q)
+}
+
 func (g *Gt) FromBytes(in []byte) (*E, error) {
 	e, err := g.fp12.fromBytes(in)
 	if err != nil {

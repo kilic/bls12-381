@@ -42,6 +42,10 @@ func newTempG2() tempG2 {
 	return tempG2{t}
 }
 
+func (g *G2) Q() *big.Int {
+	return new(big.Int).Set(q)
+}
+
 func (g *G2) FromUncompressed(uncompressed []byte) (*PointG2, error) {
 	if len(uncompressed) < 192 {
 		return nil, fmt.Errorf("input string should be equal or larger than 192")

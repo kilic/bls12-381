@@ -35,6 +35,10 @@ func newTempG1() tempG1 {
 	return tempG1{t}
 }
 
+func (g *G1) Q() *big.Int {
+	return new(big.Int).Set(q)
+}
+
 func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 	if len(uncompressed) < 96 {
 		return nil, fmt.Errorf("input string should be equal or larger than 96")
