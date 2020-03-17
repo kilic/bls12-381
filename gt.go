@@ -88,3 +88,7 @@ func (g *Gt) Square(c, a *E) {
 func (g *Gt) Exp(c, a *E, s *big.Int) {
 	g.fp12.cyclotomicExp(c, a, s)
 }
+
+func (g *Gt) Inverse(c, a *E) {
+	g.fp12.inverse(c, a)
+}
