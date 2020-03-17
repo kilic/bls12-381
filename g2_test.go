@@ -183,7 +183,7 @@ func TestZKCryptoVectorsG2CompressedValid(t *testing.T) {
 	}
 }
 
-func TestG2MultiexpExpected(t *testing.T) {
+func TestG2MultiExpExpected(t *testing.T) {
 	g := NewG2(nil)
 	one := g.one()
 	var scalars [2]*big.Int
@@ -201,7 +201,7 @@ func TestG2MultiexpExpected(t *testing.T) {
 	}
 }
 
-func TestG2MultiexpBatch(t *testing.T) {
+func TestG2MultiExpBatch(t *testing.T) {
 	g := NewG2(nil)
 	one := g.one()
 	n := 1000
