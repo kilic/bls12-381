@@ -19,6 +19,7 @@ type Engine struct {
 }
 
 func NewEngine() *Engine {
+	cfgArch()
 	fp2 := newFp2()
 	fp6 := newFp6(fp2)
 	fp12 := newFp12(fp6)

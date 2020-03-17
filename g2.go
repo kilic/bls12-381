@@ -27,6 +27,7 @@ type G2 struct {
 }
 
 func NewG2(f *fp2) *G2 {
+	cfgArch()
 	if f == nil {
 		f = newFp2()
 	}

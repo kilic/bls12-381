@@ -252,3 +252,10 @@ var frobeniusCoeffs12 = [12]fe2{
 */
 
 var x, _ = new(big.Int).SetString("d201000000010000", 16)
+
+/*
+	Non bls related
+*/
+
+var forceNonADXArch bool
+var x86ArchitectureSet bool = false

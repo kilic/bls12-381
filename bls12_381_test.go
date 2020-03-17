@@ -9,7 +9,6 @@ import (
 )
 
 var fuz int
-var forceNonADXArch bool
 
 func TestMain(m *testing.M) {
 	_fuz := flag.Int("fuzz", 10, "# of iterations")
@@ -17,7 +16,7 @@ func TestMain(m *testing.M) {
 	flag.Parse()
 	forceNonADXArch = *adx
 	fuz = *_fuz
-	setup()
+	cfgArch()
 	m.Run()
 }
 

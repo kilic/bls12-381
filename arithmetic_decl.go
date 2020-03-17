@@ -9,10 +9,13 @@ import (
 var mul func(c, a, b *fe) = mulADX
 var mulAssign func(a, b *fe) = mulAssignADX
 
-func setup() {
-	if !(cpu.X86.HasADX && cpu.X86.HasBMI2) || forceNonADXArch {
-		mul = mulNoADX
-		mulAssign = mulAssignNoADX
+func cfgArch() {
+	if !x86ArchitectureSet {
+		if !(cpu.X86.HasADX && cpu.X86.HasBMI2) || forceNonADXArch {
+			mul = mulNoADX
+			mulAssign = mulAssignNoADX
+		}
+		x86ArchitectureSet = true
 	}
 }
 

@@ -35,10 +35,12 @@
 
 package bls
 
-import "math/bits"
+import (
+	"math/bits"
+)
 
-func setup() {
-
+func cfgArch() {
+	// no special configuration is needed
 }
 
 func add(z, x, y *fe) {

@@ -23,6 +23,7 @@ type G1 struct {
 }
 
 func NewG1() *G1 {
+	cfgArch()
 	t := newTempG1()
 	return &G1{t}
 }
