@@ -200,68 +200,48 @@ func TestZKCryptoVectorsG1CompressedValid(t *testing.T) {
 	}
 }
 
-func TestG1Multiexp(t *testing.T) {
+func TestG1MultiexpExpected(t *testing.T) {
 	g := NewG1()
 	one := g.one()
-	t.Run("Should fail", func(t *testing.T) {
-		count := 2
-		bases := make([]*PointG1, count)
-		scalars := make([]*big.Int, count)
-		scalars[0] = big.NewInt(2)
-		scalars[1] = big.NewInt(3)
-		bases[0], bases[1] = g.New(), g.New()
-		g.Copy(bases[0], one)
-		g.Copy(bases[1], one)
-		expected, result := g.New(), g.New()
-		g.MulScalar(expected, one, big.NewInt(6)) // shou
-		g.MultiExp(result, bases, scalars)
-		if g.Equal(expected, result) {
-			t.Fatalf("bad multi-exponentiation")
-		}
-	})
-	t.Run("Small size", func(t *testing.T) {
-		count := 2
-		bases := make([]*PointG1, count)
-		scalars := make([]*big.Int, count)
-		scalars[0] = big.NewInt(2)
-		scalars[1] = big.NewInt(3)
-		bases[0], bases[1] = g.New(), g.New()
-		g.Copy(bases[0], one)
-		g.Copy(bases[1], one)
-		expected, result := g.New(), g.New()
-		g.MulScalar(expected, one, big.NewInt(5))
-		g.MultiExp(result, bases, scalars)
-		if !g.Equal(expected, result) {
-			t.Fatalf("bad multi-exponentiation")
-		}
-	})
+	var scalars [2]*big.Int
+	var bases [2]*PointG1
+	scalars[0] = big.NewInt(2)
+	scalars[1] = big.NewInt(3)
+	bases[0], bases[1] = g.New(), g.New()
+	g.Copy(bases[0], one)
+	g.Copy(bases[1], one)
+	expected, result := g.New(), g.New()
+	g.MulScalar(expected, one, big.NewInt(5))
+	g.MultiExp(result, bases[:], scalars[:])
+	if !g.Equal(expected, result) {
+		t.Fatalf("bad multi-exponentiation")
+	}
+}
 
-	t.Run("Batch", func(t *testing.T) {
-		count := 1000
-		bases := make([]*PointG1, count)
-		scalars := make([]*big.Int, count)
-		// prepare bases
-		// bases: S[0]*G, S[1]*G ... S[n-1]*G
-		for i, j := 0, count-1; i < count; i, j = i+1, j-1 {
-			scalars[j] = new(big.Int)
-			s, _ := rand.Int(rand.Reader, big.NewInt(100000))
-			scalars[j].Set(s)
-			bases[i] = g.New()
-			g.MulScalar(bases[i], one, scalars[j])
-		}
-		// expected
-		//  S[n-1]*P[1], S[n-2]*P[2] ... S[0]*P[n-1]
-		expected, tmp := g.New(), g.New()
-		for i := 0; i < count; i++ {
-			g.MulScalar(tmp, bases[i], scalars[i])
-			g.Add(expected, expected, tmp)
-		}
-		result := g.New()
-		g.MultiExp(result, bases, scalars)
-		if !g.Equal(expected, result) {
-			t.Fatalf("bad multi-exponentiation")
-		}
-	})
+func TestG1MultiexpBatch(t *testing.T) {
+	g := NewG1()
+	one := g.one()
+	n := 1000
+	bases := make([]*PointG1, n)
+	scalars := make([]*big.Int, n)
+	// scalars: [s0,s1 ... s(n-1)]
+	// bases: [P0,P1,..P(n-1)] = [s(n-1)*G, s(n-2)*G ... s0*G]
+	for i, j := 0, n-1; i < n; i, j = i+1, j-1 {
+		scalars[j], _ = rand.Int(rand.Reader, big.NewInt(100000))
+		bases[i] = g.New()
+		g.MulScalar(bases[i], one, scalars[j])
+	}
+	// expected: s(n-1)*P0 + s(n-2)*P1 + s0*P(n-1)
+	expected, tmp := g.New(), g.New()
+	for i := 0; i < n; i++ {
+		g.MulScalar(tmp, bases[i], scalars[i])
+		g.Add(expected, expected, tmp)
+	}
+	result := g.New()
+	g.MultiExp(result, bases, scalars)
+	if !g.Equal(expected, result) {
+		t.Fatalf("bad multi-exponentiation")
+	}
 }
 
 func BenchmarkG1Add(t *testing.B) {
