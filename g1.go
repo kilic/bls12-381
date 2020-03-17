@@ -2,6 +2,7 @@ package bls
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 )
 
@@ -377,46 +378,56 @@ func (g *G1) MulByCofactor(c, p *PointG1) {
 	g.MulScalar(c, p, cofactorG1)
 }
 
-// func (g *G1) MultiExp(r *PointG1, points []*PointG1, powers []*big.Int) (*PointG1, error) {
-// 	if len(points) != len(powers) {
-// 		return nil, fmt.Errorf("point and scalar vectors should be in same length")
-// 	}
-// 	var c uint = 3
-// 	if len(powers) > 32 {
-// 		c = uint(math.Ceil(math.Log10(float64(len(powers)))))
-// 	}
-// 	bucket_size, numBits := (1<<c)-1, q.BitLen()
-// 	windows := make([]PointG1, numBits/int(c)+1)
-// 	bucket := make([]PointG1, bucket_size)
-// 	acc, sum, zero := g.Zero(), g.Zero(), g.Zero()
-// 	s := new(big.Int)
-// 	for i, m := 0, 0; i <= numBits; i, m = i+int(c), m+1 {
-// 		for i := 0; i < bucket_size; i++ {
-// 			g.Copy(&bucket[i], zero)
-// 		}
-// 		for j := 0; j < len(powers); j++ {
-// 			s = powers[j]
-// 			index := s.Uint64() & uint64(bucket_size)
-// 			if index != 0 {
-// 				g.Add(&bucket[index-1], &bucket[index-1], points[j])
-// 			}
-// 			s.Rsh(s, c)
-// 		}
-// 		g.Copy(acc, zero)
-// 		g.Copy(sum, zero)
-// 		for k := bucket_size - 1; k >= 0; k-- {
-// 			g.Add(sum, sum, &bucket[k])
-// 			g.Add(acc, acc, sum)
-// 		}
-// 		g.Copy(&windows[m], acc)
-// 	}
-// 	g.Copy(acc, zero)
-// 	for i := len(windows) - 1; i >= 0; i-- {
-// 		for j := 0; j < int(c); j++ {
-// 			g.Double(acc, acc)
-// 		}
-// 		g.Add(acc, acc, &windows[i])
-// 	}
-// 	g.Copy(r, acc)
-// 	return r, nil
-// }
+func (g *G1) MultiExp(r *PointG1, points []*PointG1, powers []*big.Int) (*PointG1, error) {
+	if len(points) != len(powers) {
+		return nil, fmt.Errorf("point and scalar vectors should be in same length")
+	}
+	var c uint32 = 3
+	if len(powers) >= 32 {
+		c = uint32(math.Ceil(math.Log10(float64(len(powers)))))
+	}
+	bucketSize, numBits := (1<<c)-1, uint32(g.Q().BitLen())
+	windows := make([]*PointG1, numBits/c+1)
+	bucket := make([]*PointG1, bucketSize)
+	acc, sum := g.New(), g.New()
+	for i := 0; i < bucketSize; i++ {
+		bucket[i] = g.New()
+	}
+	mask := (uint64(1) << c) - 1
+	j := 0
+	var cur uint32
+	for cur <= numBits {
+		g.Copy(acc, g.Zero())
+		bucket = make([]*PointG1, (1<<c)-1)
+		for i := 0; i < len(bucket); i++ {
+			bucket[i] = g.New()
+		}
+		for i := 0; i < len(powers); i++ {
+			s0 := powers[i].Uint64()
+			index := uint(s0 & mask)
+			if index != 0 {
+				g.Add(bucket[index-1], bucket[index-1], points[i])
+			}
+			powers[i] = new(big.Int).Rsh(powers[i], uint(c))
+		}
+
+		g.Copy(sum, g.Zero())
+		for i := len(bucket) - 1; i >= 0; i-- {
+			g.Add(sum, sum, bucket[i])
+			g.Add(acc, acc, sum)
+		}
+		windows[j] = g.New()
+		g.Copy(windows[j], acc)
+		j++
+		cur += c
+	}
+	g.Copy(acc, g.Zero())
+	for i := len(windows) - 1; i >= 0; i-- {
+		for j := uint32(0); j < c; j++ {
+			g.Double(acc, acc)
+		}
+		g.Add(acc, acc, windows[i])
+	}
+	g.Copy(r, acc)
+	return r, nil
+}

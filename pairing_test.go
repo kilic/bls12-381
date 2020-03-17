@@ -33,6 +33,9 @@ func TestPairingExpected(t *testing.T) {
 	if !GT.Equal(r, expected) {
 		t.Fatal("bad pairing")
 	}
+	if !GT.IsValid(r) {
+		t.Fatal("element is not in correct subgroup")
+	}
 }
 
 func TestPairingNonDegeneracy(t *testing.T) {

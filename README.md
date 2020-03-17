@@ -18,8 +18,8 @@ Point serialization is in line with [zkcrypto library](https://github.com/zkcryp
 
 #### Benchmarks
 
-on _2.7 GHz i5_
+on _3.1 GHz i5_
 
 ```
-BenchmarkPairing  1145435 ns/op
+BenchmarkPairing  1034837 ns/op
 ```
