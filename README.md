@@ -1,4 +1,4 @@
-High speed bls12-381 implementation in Go.
+### High Speed BLS12-381 Implementation in Go
 
 #### Pairing Instance
 
