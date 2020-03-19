@@ -1,4 +1,4 @@
-### High Speed BLS12-381 Implementation in Go
+### High Speed BLS12-381 Implementation in Go  
 
 #### Pairing Instance
 
@@ -17,9 +17,11 @@ Standart big.Int module is currently used for scalar field implementation. x86 o
 Point serialization is in line with [zkcrypto library](https://github.com/zkcrypto/pairing/tree/master/src/bls12_381#serialization).
 
 #### Benchmarks
+![test results badge](https://github.com/kilic/bls12-381/workflows/Test/badge.svg)
 
 on _3.1 GHz i5_
 
 ```
 BenchmarkPairing  1034837 ns/op
 ```
+
