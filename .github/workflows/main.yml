@@ -14,5 +14,9 @@ jobs:
         go-version: ${{ matrix.go-version }}
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: Test
+    - name: Test ADX
       run: go test -v ./...
+    - name: Test NOADX
+      run: go test -v ./... -noadx=true
+    - name: Test Generic
+      run: go test -v ./... -tags generic
