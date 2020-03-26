@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"io"
 
+	blsmap "github.com/drand/bls12381rs"
 	"github.com/drand/kyber"
 	"github.com/drand/kyber/group/mod"
 )
@@ -131,13 +132,15 @@ func (k *KyberG1) String() string {
 }
 
 func (k *KyberG1) Hash(m []byte) kyber.Point {
-	if len(m) != 32 {
-		m = sha256Hash(m)
-	}
-	var s [32]byte
-	copy(s[:], m)
-	pg1 := hashWithDomainG1(NewG1(nil), s, domainG2)
-	k.p = pg1
+	/*if len(m) != 32 {*/
+	//m = sha256Hash(m)
+	//}
+	//var s [32]byte
+	//copy(s[:], m)
+	//pg1 := hashWithDomainG1(NewG1(nil), s, domainG2)
+	/*k.p = pg1*/
+	buff := blsmap.MapToG1(m, nil)
+	_ = k.UnmarshalBinary(buff)
 	return k
 
 }
