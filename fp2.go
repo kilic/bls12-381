@@ -255,20 +255,53 @@ func (e *fp2) frobeniousMapAssign(a *fe2, power uint) {
 }
 
 func (e *fp2) sqrt(c, a *fe2) bool {
-	u, x0, a1, alpha := &fe2{}, &fe2{}, &fe2{}, &fe2{}
-	e.copy(u, a)
-	e.exp(a1, a, pMinus3Over4)
-	e.square(alpha, a1)
-	e.mul(alpha, alpha, a)
-	e.mul(x0, a1, a)
-	if e.equal(alpha, negativeOne2) {
-		neg(&c[0], &x0[1])
-		c[1].Set(&x0[0])
-		return true
+	// u, x0, a1, alpha := &fe2{}, &fe2{}, &fe2{}, &fe2{}
+	// e.copy(u, a)
+	// e.exp(a1, a, pMinus3Over4)
+	// e.square(alpha, a1)
+	// e.mul(alpha, alpha, a)
+	// e.mul(x0, a1, a)
+	// if e.equal(alpha, negativeOne2) {
+	// 	neg(&c[0], &x0[1])
+	// 	c[1].Set(&x0[0])
+	// 	return true
+	// }
+	// e.add(alpha, alpha, e.one())
+	// e.exp(alpha, alpha, pMinus1Over2)
+	// e.mul(c, alpha, x0)
+	// e.square(alpha, c)
+	// return e.equal(alpha, u)
+
+	// if p = 3 mod 4 then we can simply use righ-shift
+	// for division by multiples of two in order to get (p-3/4)
+
+	negOne, tmp, b := e.new(), e.new(), e.new()
+	pMinusThreeByFour := new(big.Int).Rsh(modulus.Big(), 2)
+	e.exp(b, a, pMinusThreeByFour)
+
+	e.square(tmp, b)
+	e.mul(tmp, tmp, a)
+	a0 := e.new()
+	e.frobeniousMap(a0, tmp, 1)
+	e.mul(a0, a0, tmp)
+
+	e.neg(negOne, e.one())
+	if e.equal(a0, negOne) {
+		e.copy(c, e.zero())
+		return false
 	}
-	e.add(alpha, alpha, e.one())
-	e.exp(alpha, alpha, pMinus1Over2)
-	e.mul(c, alpha, x0)
-	e.square(alpha, c)
-	return e.equal(alpha, u)
+
+	e.mul(b, b, a)
+	if e.equal(tmp, negOne) {
+		zeroOne := e.new()
+		zeroOne[0].Set(zero())
+		zeroOne[1].Set(one())
+		e.mul(c, b, zeroOne)
+	} else {
+		e.add(tmp, tmp, e.one())
+		pMinusOneByTwo := new(big.Int).Rsh(modulus.Big(), 1)
+		e.exp(tmp, tmp, pMinusOneByTwo)
+		e.mul(c, b, tmp)
+	}
+	return true
 }
