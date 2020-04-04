@@ -459,7 +459,7 @@ func (g *G2) MapToPointTI(in []byte) (*PointG2, error) {
 				fp2.copy(y, negY)
 			}
 			p := &PointG2{*x, *y, *one}
-			g.MulByCofactor(p, p)
+			g.clearCofactor(p)
 			return p, nil
 		}
 		fp2.add(x, x, one)
@@ -486,4 +486,8 @@ func (g *G2) MapToPointSWU(in []byte) (*PointG2, error) {
 	}
 	g.MulScalar(q, q, cofactorEFFG2)
 	return g.Affine(q), nil
+}
+
+func (g *G2) clearCofactor(p *PointG2) {
+	g.MulScalar(p, p, cofactorEFFG2)
 }
