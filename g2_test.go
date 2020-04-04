@@ -227,6 +227,42 @@ func TestG2MultiExpBatch(t *testing.T) {
 	}
 }
 
+func TestG2SWUMap(t *testing.T) {
+	// G.10.2.  BLS12381G2_XMD:SHA-256_SSWU_NU_
+	// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06#appendix-G.10.2
+	for i, v := range []struct {
+		U []byte
+		P []byte
+	}{
+		{
+			U: fromHex(-1, "094376a68cdc8f64bd981d59bf762f9b2960df6b135f6e09ceada2fe8d0000bbf04023492796c09f8ef04016a2e8365f09367e3b485dda3925e82cc458e5009051281d3e442e94f9ef9feec44ee26375d6dc904dc1aa1f831f2aebd7b437ad12"),
+			P: fromHex(-1, "04264ddf941f7c9ea5ad62027c72b194c6c3f62a92fcdb56ddc9de7990489af1f81c576e7f451c2cd416102253e040f0170919c7845a9e623cef297e17484606a3eb2ae21ed8a21ff2b258861daefa3ac36955c0b374c6f4925868920d9c5f0b02d03d852629f70563e3a653ccc2e114439f551a2fd87c8136eb205b84e22c3f40507beccdcdc52c921b69a57968ec7c0ce03abe6c55ff0640b2b303440d88bd1a2b0cbfe3274b2802c1f58b1085e4dd8795c9c4d9c166d2f033e3c438e7f8a9"),
+		},
+		{
+			U: fromHex(-1, "0f105595e14847cc9a41fd70deb3240337678b266304100ec261add2585b991c7268bb1a325d2f871b327e8d04fd579b17ecd5d41a860b8886cb1210874b254f59945b089f774dcc14bc1aca7d4e3c975bce0d28510c442e9a932be5880ee5b1"),
+			P: fromHex(-1, "019a3b47aa956b2b548cc04d9e109dec06642d6e28814f7e35f807e1ce609e2eae3a155af406c842529776d8192f562e16d830a4e12fddfbdaf9a667f94f21e490879fd3ccc5ee6f039cd7c2174fb47ea8027af78779a978d2a921612844587f15adde069459ab2012b44c7703119185b96b7f04ad59b39f4f6aea35fdbb9c5c7d876b5f89afb55b67e7da96ad489dc315930174c11aa9b51a5cc3ebfa1ab6377e2318c4ea2df387bdb84b28687a02c86e6401b195bbcabb6e95d6ae43669e12"),
+		},
+		{
+			U: fromHex(-1, "1107a6f450c6c9580c720190b577f52c633cf5f3defb528ae873d3723bccc8fa433014e9120a1da31abc27c674f37ae4032ae17a23a76c94745a5460cd9f1191c0ebeec7adfc4df28b0833e536b7dbabf498dc076ff16cc11c6a6ef5105df693"),
+			P: fromHex(-1, "0910b2d55e210122fab2d2dae81e6a440fd22e925e422aaf16a8fd28477bacb12aa888de0faeea203e372a1c1cd9578c1498937f0ed18c49ebbcdee579b58ce235f3ab03be5dc809e1df25e2e0b4eb4c672f4eaf26df91f3755d6367df55d5be102631eb4e684d759312d7eab78598f487c2c10ad3d3552cb43ce6f09a11eb46e551864863077906d3ecfd921f1fe541033b1948575e70fed67fb4f7bd86b5452dfc0afeb74ecf5cab4a6872e33f0eade9564d3d5b9fcb9d4c498afda0bc037d"),
+		},
+		{
+			U: fromHex(-1, "0306162d24592a18fa8de2007d7b69d04bb7a71a5a7965d15bdcbaa4ddf9b599079fbdae9f67d55ab6dba044f9daf1790cda6b874f8c41862c078099aa76d607be51d913a2e3f997539a0993bda31892292818c74aa9be035f234df2576fe49a"),
+			P: fromHex(-1, "021f7faa0550e5a5d08338b4c0a5d30240dec7989fc7c77b6ffba9bfd5d64ce45af5aad8da8482bf0da91af4f29d371f18af6eedb7ed3be66c5a1d998ad4d9640f557b189558baec41f6e712ff2a39f795a35494b4b12343b7a1a2b17686d793166c1abec65af593d291dbd05e5d7d28f1a9ffb73751d65f49d76084493f3da707ee2bbf54cf6de5bbaac2ffa0028c310cc46cea229960bfbe25831162c27f96cf8bb14c017938e35b636987a306521915456fbd40633c6d5a30f61bce52a3f5"),
+		},
+	} {
+		g := NewG2(nil)
+		p0, err := g.MapToPointSWU(v.U)
+		p1, _ := g.fromRawUnchecked(v.P)
+		if err != nil {
+			t.Fatal("swu mapping fails", i, err)
+		}
+		if !g.Equal(p0, p1) {
+			t.Fatal("bad swu mapping", i, p1)
+		}
+	}
+}
+
 func BenchmarkG2Add(t *testing.B) {
 	g2 := NewG2(newFp2())
 	a, b, c := g2.rand(), g2.rand(), PointG2{}
@@ -242,5 +278,17 @@ func BenchmarkG2Mul(t *testing.B) {
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
 		g2.MulScalar(&c, a, e)
+	}
+}
+
+func BenchmarkG2SWUMap(t *testing.B) {
+	a := fromHex(96, "0x1234")
+	g2 := NewG2(nil)
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		_, err := g2.MapToPointSWU(a)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 }
