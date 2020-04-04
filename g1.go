@@ -432,23 +432,24 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, powers []*big.Int) (*PointG
 	return r, nil
 }
 
+// Implementation of Simplified Shallue-van de Woestijne-Ulas Method
+// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
 func (g *G1) MapToPointSWU(in []byte) (*PointG1, error) {
 	u, err := fromBytes(in)
 	if err != nil {
 		return nil, err
 	}
-	x, y, hasSqrt := swuMapG1(u)
+	x, y, hasSqrt := swuMap(u)
 	if !hasSqrt {
 		return nil, fmt.Errorf("SWU mapped element has no square root")
 	}
-	isogenyMapG1(x, y)
+	isogenyMap(x, y)
 	one := one()
 	p := &PointG1{*x, *y, *one}
 	if !g.IsOnCurve(p) {
 		return nil, fmt.Errorf("Found point is not on curve")
 	}
-	cofactor := new(big.Int).SetUint64(0xd201000000010001)
-	g.MulScalar(p, p, cofactor)
+	g.clearCofactor(p)
 	return g.Affine(p), nil
 }
 
@@ -480,4 +481,8 @@ func (g *G1) MapToPointTI(in []byte) (*PointG1, error) {
 		}
 		add(x, x, one)
 	}
+}
+
+func (g *G1) clearCofactor(p *PointG1) {
+	g.MulScalar(p, p, cofactorEFFG1)
 }
