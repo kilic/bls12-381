@@ -164,6 +164,14 @@ func (fe *fe) Equals(fe2 *fe) bool {
 	return fe2[0] == fe[0] && fe2[1] == fe[1] && fe2[2] == fe[2] && fe2[3] == fe[3] && fe2[4] == fe[4] && fe2[5] == fe[5]
 }
 
+func (e *fe) sign() int {
+	negE := new(fe)
+	neg(negE, e)
+	repr := toBig(e)
+	negRepr := toBig(negE)
+	return repr.Cmp(negRepr) * -1
+}
+
 func (fe *fe) div2(e uint64) {
 	fe[0] = fe[0]>>1 | fe[1]<<63
 	fe[1] = fe[1]>>1 | fe[2]<<63
@@ -182,4 +190,12 @@ func (fe *fe) mul2() uint64 {
 	fe[1] = fe[1]<<1 | fe[0]>>63
 	fe[0] = fe[0] << 1
 	return e
+}
+
+func (fe *fe2) sign() int {
+	cmp := fe[1].sign()
+	if cmp != 0 {
+		return cmp
+	}
+	return fe[0].sign()
 }
