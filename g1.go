@@ -378,36 +378,6 @@ func (g *G1) MulByCofactor(c, p *PointG1) {
 	g.MulScalar(c, p, cofactorG1)
 }
 
-func (g *G1) MapToPointTI(in []byte) (*PointG1, error) {
-	y := &fe{}
-	x, err := fromBytes(in)
-	if err != nil {
-		panic(err)
-	}
-	one := one()
-	for {
-		square(y, x)
-		mul(y, y, x)
-		add(y, y, b)
-		if ok := sqrt(y, y); ok {
-			// favour negative y
-			negYn, negY, yn := &fe{}, &fe{}, &fe{}
-			fromMont(yn, y)
-			neg(negY, y)
-			neg(negYn, yn)
-			if yn.Cmp(negYn) > 0 {
-				// fp.copy(y, y)
-			} else {
-				y.Set(negY)
-			}
-			p := &PointG1{*x, *y, *one}
-			g.MulByCofactor(p, p)
-			return p, nil
-		}
-		add(x, x, one)
-	}
-}
-
 func (g *G1) MultiExp(r *PointG1, points []*PointG1, powers []*big.Int) (*PointG1, error) {
 	if len(points) != len(powers) {
 		return nil, fmt.Errorf("point and scalar vectors should be in same length")
@@ -460,4 +430,54 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, powers []*big.Int) (*PointG
 	}
 	g.Copy(r, acc)
 	return r, nil
+}
+
+func (g *G1) MapToPointSWU(in []byte) (*PointG1, error) {
+	u, err := fromBytes(in)
+	if err != nil {
+		return nil, err
+	}
+	x, y, hasSqrt := swuMapG1(u)
+	if !hasSqrt {
+		return nil, fmt.Errorf("SWU mapped element has no square root")
+	}
+	isogenyMapG1(x, y)
+	one := one()
+	p := &PointG1{*x, *y, *one}
+	if !g.IsOnCurve(p) {
+		return nil, fmt.Errorf("Found point is not on curve")
+	}
+	cofactor := new(big.Int).SetUint64(0xd201000000010001)
+	g.MulScalar(p, p, cofactor)
+	return g.Affine(p), nil
+}
+
+func (g *G1) MapToPointTI(in []byte) (*PointG1, error) {
+	y := &fe{}
+	x, err := fromBytes(in)
+	if err != nil {
+		return nil, err
+	}
+	one := one()
+	for {
+		square(y, x)
+		mul(y, y, x)
+		add(y, y, b)
+		if ok := sqrt(y, y); ok {
+			// favour negative y
+			negYn, negY, yn := &fe{}, &fe{}, &fe{}
+			fromMont(yn, y)
+			neg(negY, y)
+			neg(negYn, yn)
+			if yn.Cmp(negYn) > 0 {
+				// fp.copy(y, y)
+			} else {
+				y.Set(negY)
+			}
+			p := &PointG1{*x, *y, *one}
+			g.MulByCofactor(p, p)
+			return p, nil
+		}
+		add(x, x, one)
+	}
 }
