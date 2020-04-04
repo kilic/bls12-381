@@ -4,45 +4,291 @@ import (
 	"math/big"
 )
 
+// Implementation of Simplified Shallue-van de Woestijne-Ulas Method
+// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
+// Algorithms is same for Fp and Fp2 field elements
+
 type swuMapper struct {
+	g1 *G1
+	g2 *G2
 }
 
 func newSwuMapper() *swuMapper {
-	return &swuMapper{}
+	return &swuMapper{NewG1(), NewG2(newFp2())}
 }
 
 func (m *swuMapper) toG1(u *fe) (*PointG1, bool) {
-	x, y, hasSqrt := swuMapToG1(u)
+	x, y, hasSqrt := m.swuMapToG1(u)
 	if !hasSqrt {
 		return nil, false
 	}
-	x, y = isogenyMapForG1(x, y)
+	x, y = m.isogenyMapForG1(x, y)
 	one := one()
 	p := &PointG1{*x, *y, *one}
-	g1 := NewG1()
-	if !g1.IsOnCurve(p) {
+	if !m.g1.IsOnCurve(p) {
 		return nil, false
 	}
 	cofactor := new(big.Int).SetUint64(0xd201000000010001)
-	g1.MulScalar(p, p, cofactor)
+	m.g1.MulScalar(p, p, cofactor)
 
-	return g1.Affine(p), true
+	return m.g1.Affine(p), true
 }
 
 func (m *swuMapper) toG2(u *fe2) (*PointG2, bool) {
-	x, y, hasSqrt := swuMapToG2(u)
+	x, y, hasSqrt := m.swuMapToG2(u)
 	if !hasSqrt {
 		return nil, false
 	}
-	x, y = isogenyMapForG2(x, y)
+	x, y = m.isogenyMapForG2(x, y)
 	one := newFp2().one()
 	q := &PointG2{*x, *y, *one}
-	g2 := NewG2(newFp2())
-	if !g2.IsOnCurve(q) {
+	if !m.g2.IsOnCurve(q) {
 		return nil, false
 	}
-	g2.MulByCofactor(q, q)
-	return q, true
+	cofactor := new(big.Int).SetBytes(
+		fromHex(-1, "0x0bc69f08f2ee75b3584c6a0ea91b352888e2a8e9145ad7689986ff031508ffe1329c2f178731db956d82bf015d1212b02ec0ec69d7477c1ae954cbc06689f6a359894c0adebbf6b4e8020005aaa95551"),
+	)
+	m.g2.MulScalar(q, q, cofactor)
+	return m.g2.Affine(q), true
+}
+
+func (m *swuMapper) swuMapToG1(u *fe) (*fe, *fe, bool) {
+	var params = swuParamsForG1
+	var tv [4]*fe
+	for i := 0; i < 4; i++ {
+		tv[i] = new(fe)
+	}
+	// 1.  tv1 = Z * u^2
+	square(tv[0], u)
+	mul(tv[0], tv[0], params.z)
+	// 2.  tv2 = tv1^2
+	square(tv[1], tv[0])
+	// 3.   x1 = tv1 + tv2
+	x1 := new(fe)
+	add(x1, tv[0], tv[1])
+	// 4.   x1 = inv0(x1)
+	inverse(x1, x1)
+	// 5.   e1 = x1 == 0
+	e1 := isZero(x1)
+	// 6.   x1 = x1 + 1
+	add(x1, x1, one())
+	// 7.   x1 = CMOV(x1, c2, e1)    # If (tv1 + tv2) == 0, set x1 = -1 / Z
+	if e1 {
+		x1.Set(params.zInv)
+	}
+	// 8.   x1 = x1 * c1      # x1 = (-B / A) * (1 + (1 / (Z^2 * u^4 + Z * u^2)))
+	mul(x1, x1, params.minusBOverA)
+	// 9.  gx1 = x1^2
+	gx1 := new(fe)
+	square(gx1, x1)
+	// 10. gx1 = gx1 + A
+	add(gx1, gx1, params.a) // TODO: a is zero we can ommit
+	// 11. gx1 = gx1 * x1
+	mul(gx1, gx1, x1)
+	// 12. gx1 = gx1 + B             # gx1 = g(x1) = x1^3 + A * x1 + B
+	add(gx1, gx1, params.b)
+	// 13.  x2 = tv1 * x1            # x2 = Z * u^2 * x1
+	x2 := new(fe)
+	mul(x2, tv[0], x1)
+	// 14. tv2 = tv1 * tv2
+	mul(tv[1], tv[0], tv[1])
+	// 15. gx2 = gx1 * tv2           # gx2 = (Z * u^2)^3 * gx1
+	gx2 := new(fe)
+	mul(gx2, gx1, tv[1])
+	// 16.  e2 = is_square(gx1)
+	e2 := !isQNRInFp(gx1)
+	// 17.   x = CMOV(x2, x1, e2)    # If is_square(gx1), x = x1, else x = x2
+	x := new(fe)
+	if e2 {
+		x.Set(x1)
+	} else {
+		x.Set(x2)
+	}
+	// 18.  y2 = CMOV(gx2, gx1, e2)  # If is_square(gx1), y2 = gx1, else y2 = gx2
+	y2 := new(fe)
+	if e2 {
+		y2.Set(gx1)
+	} else {
+		y2.Set(gx2)
+	}
+	// 19.   y = sqrt(y2)
+	y := new(fe)
+	if hasSquareRoot := sqrt(y, y2); !hasSquareRoot {
+		return nil, nil, false
+	}
+	// 20.  e3 = sgn0(u) == sgn0(y)  # Fix sign of y
+	uSign := signOfFp(u)
+	ySign := signOfFp(y)
+	if ((uSign == 1 && ySign == -1) || (uSign == -1 && ySign == 1)) || ((uSign == 0 && ySign == -1) || (uSign == -1 && ySign == 0)) {
+		neg(y, y)
+	}
+	return x, y, true
+}
+
+func (m *swuMapper) swuMapToG2(u *fe2) (*fe2, *fe2, bool) {
+	params := swuParamsForG2
+	var tv [4]*fe2
+	for i := 0; i < 4; i++ {
+		tv[i] = m.g2.f.new()
+	}
+
+	// 1.  tv1 = Z * u^2
+	m.g2.f.square(tv[0], u)
+	m.g2.f.mul(tv[0], tv[0], params.z)
+	// 2.  tv2 = tv1^2
+	m.g2.f.square(tv[1], tv[0])
+	// 3.   x1 = tv1 + tv2
+	x1 := m.g2.f.new()
+	m.g2.f.add(x1, tv[0], tv[1])
+	// 4.   x1 = inv0(x1)
+	m.g2.f.inverse(x1, x1)
+	// 5.   e1 = x1 == 0
+	e1 := m.g2.f.isZero(x1)
+	// 6.   x1 = x1 + 1
+	m.g2.f.add(x1, x1, m.g2.f.one())
+	// 7.   x1 = CMOV(x1, c2, e1)    # If (tv1 + tv2) == 0, set x1 = -1 / Z
+	if e1 {
+		m.g2.f.copy(x1, params.zInv)
+	}
+	// 8.   x1 = x1 * c1      # x1 = (-B / A) * (1 + (1 / (Z^2 * u^4 + Z * u^2)))
+	m.g2.f.mul(x1, x1, params.minusBOverA)
+	// 9.  gx1 = x1^2
+	gx1 := m.g2.f.new()
+	m.g2.f.square(gx1, x1)
+	// 10. gx1 = gx1 + A
+	m.g2.f.add(gx1, gx1, params.a) // TODO: a is zero we can ommit
+	// 11. gx1 = gx1 * x1
+	m.g2.f.mul(gx1, gx1, x1)
+	// 12. gx1 = gx1 + B             # gx1 = g(x1) = x1^3 + A * x1 + B
+	m.g2.f.add(gx1, gx1, params.b)
+	// 13.  x2 = tv1 * x1            # x2 = Z * u^2 * x1
+	x2 := m.g2.f.new()
+	m.g2.f.mul(x2, tv[0], x1)
+	// 14. tv2 = tv1 * tv2
+	m.g2.f.mul(tv[1], tv[0], tv[1])
+	// 15. gx2 = gx1 * tv2           # gx2 = (Z * u^2)^3 * gx1
+	gx2 := m.g2.f.new()
+	m.g2.f.mul(gx2, gx1, tv[1])
+	// 16.  e2 = is_square(gx1)
+	// is quadratic non-residue
+	isQNRInFp2 := func(elem *fe2) bool {
+		// https://github.com/leovt/constructible/wiki/Taking-Square-Roots-in-quadratic-extension-Fields
+		c0, c1 := new(fe), new(fe)
+		square(c0, &elem[0])
+		square(c1, &elem[1])
+		mul(c1, c1, nonResidue1)
+		neg(c1, c1)
+		add(c1, c1, c0)
+		return isQNRInFp(c1)
+	}
+	e2 := !isQNRInFp2(gx1)
+	// 17.   x = CMOV(x2, x1, e2)    # If is_square(gx1), x = x1, else x = x2
+	x := m.g2.f.new()
+	if e2 {
+		m.g2.f.copy(x, x1)
+	} else {
+		m.g2.f.copy(x, x2)
+	}
+	// 18.  y2 = CMOV(gx2, gx1, e2)  # If is_square(gx1), y2 = gx1, else y2 = gx2
+	y2 := m.g2.f.new()
+	if e2 {
+		m.g2.f.copy(y2, gx1)
+	} else {
+		m.g2.f.copy(y2, gx2)
+	}
+	// 19.   y = sqrt(y2)
+	y := m.g2.f.new()
+	if hasSquareRoot := m.g2.f.sqrt(y, y2); !hasSquareRoot {
+		return nil, nil, false
+	}
+	// 20.  e3 = sgn0(u) == sgn0(y)  # Fix sign of y
+	uSign := signOfFp2(u)
+	ySign := signOfFp2(y)
+
+	if ((uSign == 1 && ySign == -1) || (uSign == -1 && ySign == 1)) || ((uSign == 0 && ySign == -1) || (uSign == -1 && ySign == 0)) {
+		m.g2.f.neg(y, y)
+	}
+	return x, y, true
+}
+
+func (m *swuMapper) isogenyMapForG1(x, y *fe) (*fe, *fe) {
+	params := isogenyConstansG1
+	degree := 15
+	xNum, xDen, yNum, yDen := new(fe), new(fe), new(fe), new(fe)
+	xNum.Set(params[0][degree])
+	xDen.Set(params[1][degree])
+	yNum.Set(params[2][degree])
+	yDen.Set(params[3][degree])
+	for i := degree - 1; i >= 0; i-- {
+		mul(xNum, xNum, x)
+		mul(xDen, xDen, x)
+		mul(yNum, yNum, x)
+		mul(yDen, yDen, x)
+
+		add(xNum, xNum, params[0][i])
+		add(xDen, xDen, params[1][i])
+		add(yNum, yNum, params[2][i])
+		add(yDen, yDen, params[3][i])
+	}
+	inverse(xDen, xDen)
+	inverse(yDen, yDen)
+	mul(xNum, xNum, xDen)
+	mul(yNum, yNum, yDen)
+	mul(yNum, yNum, y)
+
+	return xNum, yNum
+}
+
+func (m *swuMapper) isogenyMapForG2(x, y *fe2) (*fe2, *fe2) {
+	params := isogenyConstantsG2
+	degree := 3
+	xNum, xDen, yNum, yDen := new(fe2), new(fe2), new(fe2), new(fe2)
+	m.g2.f.copy(xNum, params[0][degree])
+	m.g2.f.copy(xDen, params[1][degree])
+	m.g2.f.copy(yNum, params[2][degree])
+	m.g2.f.copy(yDen, params[3][degree])
+	for i := degree - 1; i >= 0; i-- {
+		m.g2.f.mul(xNum, xNum, x)
+		m.g2.f.mul(xDen, xDen, x)
+		m.g2.f.mul(yNum, yNum, x)
+		m.g2.f.mul(yDen, yDen, x)
+
+		m.g2.f.add(xNum, xNum, params[0][i])
+		m.g2.f.add(xDen, xDen, params[1][i])
+		m.g2.f.add(yNum, yNum, params[2][i])
+		m.g2.f.add(yDen, yDen, params[3][i])
+	}
+	m.g2.f.inverse(xDen, xDen)
+	m.g2.f.inverse(yDen, yDen)
+	m.g2.f.mul(xNum, xNum, xDen)
+	m.g2.f.mul(yNum, yNum, yDen)
+	m.g2.f.mul(yNum, yNum, y)
+
+	return xNum, yNum
+}
+
+// is quadratic non-residue
+func isQNRInFp(elem *fe) bool {
+	result := new(fe)
+	exp(result, elem, pMinus1Over2)
+	return !equal(result, one())
+}
+
+// sign of fp
+func signOfFp(e *fe) int {
+	negE := new(fe)
+	neg(negE, e)
+	repr := toBig(e)
+	negRepr := toBig(negE)
+	return repr.Cmp(negRepr) * -1 // invert
+}
+func signOfFp2(a *fe2) int {
+	cmp := signOfFp(&a[1])
+	if cmp != 0 {
+		return cmp
+	} else {
+		return signOfFp(&a[0])
+	}
 }
 
 var isogenyConstansG1 = [4][16]*fe{
@@ -236,285 +482,4 @@ var swuParamsForG2 = struct {
 		fe{10393275865055580083, 6888480573845999877, 11497223857339693790, 14306043441748627554, 5078453791572287059, 1040691004897901061},
 		fe{3009155151022283512, 13768405011380760314, 14385194789933939525, 11380038592375636572, 333649986898415235, 833107612749638805},
 	},
-}
-
-func swuMapToG1(u *fe) (*fe, *fe, bool) {
-	var params = swuParamsForG1
-	var tv [4]*fe
-	for i := 0; i < 4; i++ {
-		tv[i] = new(fe)
-	}
-
-	// 1.  tv1 = Z * u^2
-	square(tv[0], u)
-	mul(tv[0], tv[0], params.z)
-
-	// 2.  tv2 = tv1^2
-	square(tv[1], tv[0])
-
-	// 3.   x1 = tv1 + tv2
-	x1 := new(fe)
-	add(x1, tv[0], tv[1])
-
-	// 4.   x1 = inv0(x1)
-	inverse(x1, x1)
-
-	// 5.   e1 = x1 == 0
-	e1 := isZero(x1)
-
-	// 6.   x1 = x1 + 1
-	add(x1, x1, one())
-
-	// 7.   x1 = CMOV(x1, c2, e1)    # If (tv1 + tv2) == 0, set x1 = -1 / Z
-	if e1 {
-		x1.Set(params.zInv)
-	}
-
-	// 8.   x1 = x1 * c1      # x1 = (-B / A) * (1 + (1 / (Z^2 * u^4 + Z * u^2)))
-	mul(x1, x1, params.minusBOverA)
-
-	// 9.  gx1 = x1^2
-	gx1 := new(fe)
-	square(gx1, x1)
-
-	// 10. gx1 = gx1 + A
-	add(gx1, gx1, params.a) // TODO: a is zero we can ommit
-
-	// 11. gx1 = gx1 * x1
-	mul(gx1, gx1, x1)
-
-	// 12. gx1 = gx1 + B             # gx1 = g(x1) = x1^3 + A * x1 + B
-	add(gx1, gx1, params.b)
-
-	// 13.  x2 = tv1 * x1            # x2 = Z * u^2 * x1
-	x2 := new(fe)
-	mul(x2, tv[0], x1)
-
-	// 14. tv2 = tv1 * tv2
-	mul(tv[1], tv[0], tv[1])
-
-	// 15. gx2 = gx1 * tv2           # gx2 = (Z * u^2)^3 * gx1
-	gx2 := new(fe)
-	mul(gx2, gx1, tv[1])
-
-	// is quadratic non-residue
-	isQNRInFp := func(elem *fe) bool {
-		result := new(fe)
-		exp(result, elem, pMinus1Over2)
-		return !equal(result, one())
-	}
-
-	// 16.  e2 = is_square(gx1)
-	e2 := !isQNRInFp(gx1)
-
-	// 17.   x = CMOV(x2, x1, e2)    # If is_square(gx1), x = x1, else x = x2
-	x := new(fe)
-	if e2 {
-		x.Set(x1)
-	} else {
-		x.Set(x2)
-	}
-
-	// 18.  y2 = CMOV(gx2, gx1, e2)  # If is_square(gx1), y2 = gx1, else y2 = gx2
-	y2 := new(fe)
-	if e2 {
-		y2.Set(gx1)
-	} else {
-		y2.Set(gx2)
-	}
-
-	// 19.   y = sqrt(y2)
-	y := new(fe)
-	if hasSquareRoot := sqrt(y, y2); !hasSquareRoot {
-		// panic("y2 is not a square")
-		return nil, nil, false
-	}
-	// 20.  e3 = sgn0(u) == sgn0(y)  # Fix sign of y
-
-	uSign := signFp(u)
-	ySign := signFp(y)
-
-	if ((uSign == 1 && ySign == -1) || (uSign == -1 && ySign == 1)) || ((uSign == 0 && ySign == -1) || (uSign == -1 && ySign == 0)) {
-		neg(y, y)
-	}
-	return x, y, true
-}
-
-func signFp(e *fe) int {
-	negE := new(fe)
-	neg(negE, e)
-	repr := toBig(e)
-	negRepr := toBig(negE)
-	return repr.Cmp(negRepr) * -1 // invert
-}
-
-func signFp2(a *fe2) int {
-	cmp := signFp(&a[1])
-	if cmp != 0 {
-		return cmp
-	} else {
-		return signFp(&a[0])
-	}
-}
-
-func swuMapToG2(u *fe2) (*fe2, *fe2, bool) {
-	fp2 := newFp2()
-	params := swuParamsForG2
-	var tv [4]*fe2
-	for i := 0; i < 4; i++ {
-		tv[i] = fp2.new()
-	}
-
-	// 1.  tv1 = Z * u^2
-	fp2.square(tv[0], u)
-	fp2.mul(tv[0], tv[0], params.z)
-
-	// 2.  tv2 = tv1^2
-	fp2.square(tv[1], tv[0])
-
-	// 3.   x1 = tv1 + tv2
-	x1 := fp2.new()
-	fp2.add(x1, tv[0], tv[1])
-
-	// 4.   x1 = inv0(x1)
-	fp2.inverse(x1, x1)
-
-	// 5.   e1 = x1 == 0
-	e1 := fp2.isZero(x1)
-
-	// 6.   x1 = x1 + 1
-	fp2.add(x1, x1, fp2.one())
-
-	// 7.   x1 = CMOV(x1, c2, e1)    # If (tv1 + tv2) == 0, set x1 = -1 / Z
-	if e1 {
-		fp2.copy(x1, params.zInv)
-	}
-
-	// 8.   x1 = x1 * c1      # x1 = (-B / A) * (1 + (1 / (Z^2 * u^4 + Z * u^2)))
-	fp2.mul(x1, x1, params.minusBOverA)
-
-	// 9.  gx1 = x1^2
-	gx1 := fp2.new()
-	fp2.square(gx1, x1)
-	// 10. gx1 = gx1 + A
-	fp2.add(gx1, gx1, params.a) // TODO: a is zero we can ommit
-
-	// 11. gx1 = gx1 * x1
-	fp2.mul(gx1, gx1, x1)
-
-	// 12. gx1 = gx1 + B             # gx1 = g(x1) = x1^3 + A * x1 + B
-	fp2.add(gx1, gx1, params.b)
-
-	// 13.  x2 = tv1 * x1            # x2 = Z * u^2 * x1
-	x2 := fp2.new()
-	fp2.mul(x2, tv[0], x1)
-
-	// 14. tv2 = tv1 * tv2
-	fp2.mul(tv[1], tv[0], tv[1])
-
-	// 15. gx2 = gx1 * tv2           # gx2 = (Z * u^2)^3 * gx1
-	gx2 := fp2.new()
-	fp2.mul(gx2, gx1, tv[1])
-
-	// 16.  e2 = is_square(gx1)
-	// is quadratic non-residue
-	isQNRInFp2 := func(elem *fe2) bool {
-		result := fp2.new()
-		fp2.exp(result, elem, pMinus1Over2)
-		return !fp2.equal(result, fp2.one())
-	}
-	e2 := !isQNRInFp2(gx1)
-	// 17.   x = CMOV(x2, x1, e2)    # If is_square(gx1), x = x1, else x = x2
-	x := fp2.new()
-	if e2 {
-		fp2.copy(x, x1)
-	} else {
-		fp2.copy(x, x2)
-	}
-
-	// 18.  y2 = CMOV(gx2, gx1, e2)  # If is_square(gx1), y2 = gx1, else y2 = gx2
-	y2 := fp2.new()
-	if e2 {
-		fp2.copy(y2, gx1)
-	} else {
-		fp2.copy(y2, gx2)
-	}
-
-	// 19.   y = sqrt(y2)
-	y := fp2.new()
-	if hasSquareRoot := fp2.sqrt(y, y2); !hasSquareRoot {
-		return nil, nil, false
-	}
-
-	// 20.  e3 = sgn0(u) == sgn0(y)  # Fix sign of y
-	uSign := signFp2(u)
-	ySign := signFp2(y)
-
-	if ((uSign == 1 && ySign == -1) || (uSign == -1 && ySign == 1)) || ((uSign == 0 && ySign == -1) || (uSign == -1 && ySign == 0)) {
-		fp2.neg(y, y)
-	}
-	return x, y, true
-}
-
-func isogenyMapForG1(x, y *fe) (*fe, *fe) {
-	params := isogenyConstansG1
-	degree := 15
-	xNum, xDen, yNum, yDen := new(fe), new(fe), new(fe), new(fe)
-	xNum.Set(params[0][degree])
-	xDen.Set(params[1][degree])
-	yNum.Set(params[2][degree])
-	yDen.Set(params[3][degree])
-
-	for i := degree - 1; i >= 0; i-- {
-		mul(xNum, xNum, x)
-		mul(xDen, xDen, x)
-		mul(yNum, yNum, x)
-		mul(yDen, yDen, x)
-
-		add(xNum, xNum, params[0][i])
-		add(xDen, xDen, params[1][i])
-		add(yNum, yNum, params[2][i])
-		add(yDen, yDen, params[3][i])
-	}
-	inverse(xDen, xDen)
-	inverse(yDen, yDen)
-
-	mul(xNum, xNum, xDen)
-	mul(yNum, yNum, yDen)
-
-	mul(yNum, yNum, y)
-
-	return xNum, yNum
-}
-
-func isogenyMapForG2(x, y *fe2) (*fe2, *fe2) {
-	fp2 := newFp2()
-	params := isogenyConstantsG2
-	degree := 3
-	xNum, xDen, yNum, yDen := new(fe2), new(fe2), new(fe2), new(fe2)
-	fp2.copy(xNum, params[0][degree])
-	fp2.copy(xDen, params[1][degree])
-	fp2.copy(yNum, params[2][degree])
-	fp2.copy(yDen, params[3][degree])
-	for i := degree - 1; i >= 0; i-- {
-		fp2.mul(xNum, xNum, x)
-		fp2.mul(xDen, xDen, x)
-		fp2.mul(yNum, yNum, x)
-		fp2.mul(yDen, yDen, x)
-
-		fp2.add(xNum, xNum, params[0][i])
-		fp2.add(xDen, xDen, params[1][i])
-		fp2.add(yNum, yNum, params[2][i])
-		fp2.add(yDen, yDen, params[3][i])
-	}
-
-	fp2.inverse(xDen, xDen)
-	fp2.inverse(yDen, yDen)
-
-	fp2.mul(xNum, xNum, xDen)
-	fp2.mul(yNum, yNum, yDen)
-
-	fp2.mul(yNum, yNum, y)
-
-	return xNum, yNum
 }
