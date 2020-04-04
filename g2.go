@@ -381,7 +381,7 @@ func (g *G2) MulByCofactor(c, p *PointG2) {
 	g.MulScalar(c, p, cofactorG2)
 }
 
-func (g *G2) MapToPoint(in []byte) (*PointG2, error) {
+func (g *G2) MapToPointTI(in []byte) (*PointG2, error) {
 	fp2 := g.f
 	x, err := fp2.fromBytes(in)
 	if err != nil {
@@ -400,7 +400,7 @@ func (g *G2) MapToPoint(in []byte) (*PointG2, error) {
 			fp2.neg(negY, y)
 			fp2.neg(negYn, yn)
 			if yn[1].Cmp(&negYn[1]) > 0 || (yn[1].IsZero() && yn[0].Cmp(&negYn[0]) > 0) {
-				fp2.copy(y, y)
+				// fp2.copy(y, y)
 			} else {
 				fp2.copy(y, negY)
 			}
