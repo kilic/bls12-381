@@ -393,24 +393,6 @@ func TestFp2MultiplicationProperties(t *testing.T) {
 	}
 }
 
-// func TestXXX(t *testing.T) {
-// 	field := newFp2()
-// 	for i := 0; i < fuz; i++ {
-// 		a, _ := field.fromBytes(fromHex(48,
-// 			"03f6990397861375e9a35a4a9024d1cbeefd3df70f026b5781197624a4a7e1de45927f80b4d36efd7a6d275a1f9dcfa6",
-// 			"1307ba78e83c65582c202f0d528495ab60c538019c93455b2f36e4c7e60ca09885c86b0788eaaf5679064746b958f0a0",
-// 		))
-// 		u := field.new()
-// 		p := modulus.Big()
-// 		field.exp(u, a, p)
-// 		fmt.Printf("%x\n", field.toBytes(a))
-// 		fmt.Printf("%x\n", field.toBytes(u))
-// 		if !field.equal(u, a) {
-// 			t.Fatalf("a^p == a")
-// 		}
-// 	}
-// }
-
 func TestFp2Exponentiation(t *testing.T) {
 	field := newFp2()
 	for i := 0; i < fuz; i++ {
