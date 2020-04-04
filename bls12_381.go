@@ -254,7 +254,16 @@ var frobeniusCoeffs12 = [12]fe2{
 var x, _ = new(big.Int).SetString("d201000000010000", 16)
 
 /*
-	Non bls related
+	Efficient cofactors.
+*/
+
+var cofactorEFFG1 = new(big.Int).SetUint64(0xd201000000010001)
+var cofactorEFFG2 = new(big.Int).SetBytes(
+	fromHex(-1, "0x0bc69f08f2ee75b3584c6a0ea91b352888e2a8e9145ad7689986ff031508ffe1329c2f178731db956d82bf015d1212b02ec0ec69d7477c1ae954cbc06689f6a359894c0adebbf6b4e8020005aaa95551"),
+)
+
+/*
+	Non bls12-381 related.
 */
 
 var forceNonADXArch bool
