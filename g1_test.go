@@ -297,3 +297,15 @@ func BenchmarkG1Mul(t *testing.B) {
 		g1.MulScalar(&c, a, e)
 	}
 }
+
+func BenchmarkG1SWUMap(t *testing.B) {
+	a := fromHex(48, "0x1234")
+	g1 := NewG1()
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		_, err := g1.MapToPointSWU(a)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+}
