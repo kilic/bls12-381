@@ -126,7 +126,7 @@ func (fe *fe) IsOne() bool {
 	return 1 == fe[0] && 0 == fe[1] && 0 == fe[2] && 0 == fe[3] && 0 == fe[4] && 0 == fe[5]
 }
 
-func (fe *fe) Cmp(fe2 *fe) int64 {
+func (fe *fe) Cmp(fe2 *fe) int {
 	if fe[5] > fe2[5] {
 		return 1
 	} else if fe[5] < fe2[5] {
@@ -165,11 +165,10 @@ func (fe *fe) Equals(fe2 *fe) bool {
 }
 
 func (e *fe) sign() int {
-	negE := new(fe)
-	neg(negE, e)
-	repr := toBig(e)
-	negRepr := toBig(negE)
-	return repr.Cmp(negRepr) * -1
+	negZ, z := new(fe), new(fe)
+	fromMont(z, e)
+	neg(negZ, z)
+	return negZ.Cmp(z)
 }
 
 func (fe *fe) div2(e uint64) {
