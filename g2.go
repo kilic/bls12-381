@@ -381,37 +381,6 @@ func (g *G2) MulByCofactor(c, p *PointG2) {
 	g.MulScalar(c, p, cofactorG2)
 }
 
-func (g *G2) MapToPointTI(in []byte) (*PointG2, error) {
-	fp2 := g.f
-	x, err := fp2.fromBytes(in)
-	if err != nil {
-		return nil, err
-	}
-	y := &fe2{}
-	one := fp2.one()
-	for {
-		fp2.square(y, x)
-		fp2.mul(y, y, x)
-		fp2.add(y, y, b2)
-		if ok := fp2.sqrt(y, y); ok {
-			// favour negative y
-			negYn, negY, yn := &fe2{}, &fe2{}, &fe2{}
-			fp2.fromMont(yn, y)
-			fp2.neg(negY, y)
-			fp2.neg(negYn, yn)
-			if yn[1].Cmp(&negYn[1]) > 0 || (yn[1].IsZero() && yn[0].Cmp(&negYn[0]) > 0) {
-				// fp2.copy(y, y)
-			} else {
-				fp2.copy(y, negY)
-			}
-			p := &PointG2{*x, *y, *one}
-			g.MulByCofactor(p, p)
-			return p, nil
-		}
-		fp2.add(x, x, one)
-	}
-}
-
 func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG2, error) {
 	if len(points) != len(powers) {
 		return nil, fmt.Errorf("point and scalar vectors should be in same length")
@@ -464,4 +433,57 @@ func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG
 	}
 	g.Copy(r, acc)
 	return r, nil
+}
+
+func (g *G2) MapToPointTI(in []byte) (*PointG2, error) {
+	fp2 := g.f
+	x, err := fp2.fromBytes(in)
+	if err != nil {
+		return nil, err
+	}
+	y := &fe2{}
+	one := fp2.one()
+	for {
+		fp2.square(y, x)
+		fp2.mul(y, y, x)
+		fp2.add(y, y, b2)
+		if ok := fp2.sqrt(y, y); ok {
+			// favour negative y
+			negYn, negY, yn := &fe2{}, &fe2{}, &fe2{}
+			fp2.fromMont(yn, y)
+			fp2.neg(negY, y)
+			fp2.neg(negYn, yn)
+			if yn[1].Cmp(&negYn[1]) > 0 || (yn[1].IsZero() && yn[0].Cmp(&negYn[0]) > 0) {
+				// fp2.copy(y, y)
+			} else {
+				fp2.copy(y, negY)
+			}
+			p := &PointG2{*x, *y, *one}
+			g.MulByCofactor(p, p)
+			return p, nil
+		}
+		fp2.add(x, x, one)
+	}
+}
+
+// Implementation of Simplified Shallue-van de Woestijne-Ulas Method
+// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
+func (g *G2) MapToPointSWU(in []byte) (*PointG2, error) {
+	fp2 := g.f
+	u, err := fp2.fromBytes(in)
+	if err != nil {
+		return nil, err
+	}
+	x, y, hasSqrt := fp2.swuMap(u)
+	if !hasSqrt {
+		return nil, fmt.Errorf("SWU mapped element has no square root")
+	}
+	fp2.isogenyMap(x, y)
+	one := newFp2().one()
+	q := &PointG2{*x, *y, *one}
+	if !g.IsOnCurve(q) {
+		return nil, fmt.Errorf("Found point is not on curve")
+	}
+	g.MulScalar(q, q, cofactorEFFG2)
+	return g.Affine(q), nil
 }
