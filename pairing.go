@@ -9,6 +9,7 @@ func newPair(g1 *PointG1, g2 *PointG2) pair {
 	return pair{g1, g2}
 }
 
+// Engine is BLS12-381 elliptic curve pairing engine
 type Engine struct {
 	G1   *G1
 	G2   *G2
@@ -18,6 +19,7 @@ type Engine struct {
 	pairs []pair
 }
 
+// NewEngine creates new pairing engine insteace.
 func NewEngine() *Engine {
 	cfgArch()
 	fp2 := newFp2()
@@ -48,6 +50,7 @@ func newEngineTemp() pairingEngineTemp {
 	return pairingEngineTemp{t2, t12}
 }
 
+// AddPair adds a g1, g2 point pair to pairing engine
 func (e *Engine) AddPair(g1 *PointG1, g2 *PointG2) *Engine {
 	p := newPair(g1, g2)
 	if !e.isZero(p) {
@@ -57,12 +60,14 @@ func (e *Engine) AddPair(g1 *PointG1, g2 *PointG2) *Engine {
 	return e
 }
 
-func (e *Engine) AddInvPair(g1 *PointG1, g2 *PointG2) *Engine {
+// AddPairInv adds a G1, G2 point pair to pairing engine. G1 point is negated.
+func (e *Engine) AddPairInv(g1 *PointG1, g2 *PointG2) *Engine {
 	e.G1.Neg(g1, g1)
 	e.AddPair(g1, g2)
 	return e
 }
 
+// Reset deletes added pairs.
 func (e *Engine) Reset() *Engine {
 	e.pairs = []pair{}
 	return e
@@ -77,8 +82,8 @@ func (e *Engine) affine(p pair) {
 	e.G2.Affine(p.g2)
 }
 
-// Adaptation of Formula 3 in https://eprint.iacr.org/2010/526.pdf
 func (e *Engine) doublingStep(coeff *[3]fe2, r *PointG2) {
+	// Adaptation of Formula 3 in https://eprint.iacr.org/2010/526.pdf
 	fp2 := e.fp2
 	t := e.t2
 	fp2.mul(t[0], &r[0], &r[1])
@@ -111,8 +116,8 @@ func (e *Engine) doublingStep(coeff *[3]fe2, r *PointG2) {
 	fp2.neg(&coeff[2], t[6])
 }
 
-// Algorithm 12 in https://eprint.iacr.org/2010/526.pdf
 func (e *Engine) additionStep(coeff *[3]fe2, r, q *PointG2) {
+	// Algorithm 12 in https://eprint.iacr.org/2010/526.pdf
 	fp2 := e.fp2
 	t := e.t2
 	fp2.mul(t[0], &q[1], &r[2])
@@ -142,8 +147,8 @@ func (e *Engine) additionStep(coeff *[3]fe2, r, q *PointG2) {
 	fp2.copy(&coeff[2], t[1])
 }
 
-// Algorithm 5 in  https://eprint.iacr.org/2019/077.pdf
 func (e *Engine) preCompute(ellCoeffs *[68][3]fe2, twistPoint *PointG2) {
+	// Algorithm 5 in  https://eprint.iacr.org/2019/077.pdf
 	if e.G2.IsZero(twistPoint) {
 		return
 	}
@@ -245,16 +250,19 @@ func (e *Engine) calculate() *fe12 {
 	return f
 }
 
+// Check computes pairing and checks if result is equal to one
 func (e *Engine) Check() bool {
 	return e.fp12.equal(e.fp12.one(), e.calculate())
 }
 
+// Result computes pairing and returns target group element as result.
 func (e *Engine) Result() *E {
 	r := e.calculate()
 	e.Reset()
 	return r
 }
 
-func (e *Engine) GT() *Gt {
-	return NewGt()
+// GT returns target group instance.
+func (e *Engine) GT() *GT {
+	return NewGT()
 }

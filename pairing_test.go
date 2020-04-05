@@ -9,7 +9,7 @@ func TestPairingExpected(t *testing.T) {
 	bls := NewEngine()
 	G1, G2 := bls.G1, bls.G2
 	GT := bls.GT()
-	expected, err := GT.FromBytesUnchecked(
+	expected, err := GT.FromBytes(
 		fromHex(
 			48,
 			"0x0f41e58663bf08cf068672cbd01a7ec73baca4d72ca93544deff686bfd6df543d48eaa24afe47e1efde449383b676631",
@@ -87,7 +87,7 @@ func TestPairingNonDegeneracy(t *testing.T) {
 	//
 	bls.Reset()
 	{
-		expected, err := GT.FromBytesUnchecked(
+		expected, err := GT.FromBytes(
 			fromHex(
 				48,
 				"0x0f41e58663bf08cf068672cbd01a7ec73baca4d72ca93544deff686bfd6df543d48eaa24afe47e1efde449383b676631",
@@ -150,7 +150,7 @@ func TestPairingBilinearity(t *testing.T) {
 		P1, P2 := g1.One(), g2.One()
 		g1.MulScalar(P1, P1, a)
 		g2.MulScalar(P2, P2, b)
-		bls.AddInvPair(P1, P2)
+		bls.AddPairInv(P1, P2)
 		// should be one
 		if !bls.Check() {
 			t.Fatalf("bad pairing, 2")
@@ -169,7 +169,7 @@ func TestPairingBilinearity(t *testing.T) {
 		H1, H2 := g1.One(), g2.One()
 		g1.MulScalar(H1, H1, a)
 		g2.MulScalar(H2, H2, b)
-		bls.AddInvPair(H1, H2)
+		bls.AddPairInv(H1, H2)
 		// should be one
 		if !bls.Check() {
 			t.Fatalf("bad pairing, 3")
@@ -201,7 +201,7 @@ func TestPairingMulti(t *testing.T) {
 	// e(t * G1, G2)
 	T1, T2 := g1.One(), g2.One()
 	g1.MulScalar(T1, T1, targetExp)
-	bls.AddInvPair(T1, T2)
+	bls.AddPairInv(T1, T2)
 	if !bls.Check() {
 		t.Fatalf("fail multi pairing")
 	}

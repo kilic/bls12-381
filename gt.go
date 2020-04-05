@@ -5,90 +5,101 @@ import (
 	"math/big"
 )
 
+// E is type for target group element
 type E = fe12
 
-type Gt struct {
+// GT is type for target multiplicative group GT.
+type GT struct {
 	fp12 *fp12
 }
 
-func NewGt() *Gt {
+// NewGT constructs new target group instance.
+func NewGT() *GT {
 	fp12 := newFp12(nil)
-	return &Gt{fp12}
+	return &GT{fp12}
 }
 
-func (g *Gt) Q() *big.Int {
+// Q returns group order in big.Int.
+func (g *GT) Q() *big.Int {
 	return new(big.Int).Set(q)
 }
 
-func (g *Gt) FromBytes(in []byte) (*E, error) {
+// FromBytes expects 576 byte input and returns target group element
+// FromBytes returns error if given element is not on correct subgroup.
+func (g *GT) FromBytes(in []byte) (*E, error) {
 	e, err := g.fp12.fromBytes(in)
 	if err != nil {
 		return nil, err
 	}
 	if !g.IsValid(e) {
-		return nil, fmt.Errorf("invalid element")
+		return e, fmt.Errorf("invalid element")
 	}
 	return e, nil
 }
 
-func (g *Gt) FromBytesUnchecked(in []byte) (*E, error) {
-	e, err := g.fp12.fromBytes(in)
-	if err != nil {
-		return nil, err
-	}
-	return e, nil
-}
-
-func (g *Gt) ToBytes(e *E) []byte {
+// ToBytes serializes target group element.
+func (g *GT) ToBytes(e *E) []byte {
 	return g.fp12.toBytes(e)
 }
 
-func (g *Gt) IsValid(e *E) bool {
+// IsValid checks whether given target group element is in correct subgroup.
+func (g *GT) IsValid(e *E) bool {
 	r := g.New()
 	g.fp12.exp(r, e, q)
 	return g.Equal(r, g.fp12.one())
 }
 
-func (g *Gt) New() *E {
+// New initializes a new target group element which is equal to one
+func (g *GT) New() *E {
 	return g.One()
 }
 
-func (g *Gt) One() *E {
+// One initializes a new target group element which is equal to one
+func (g *GT) One() *E {
 	return g.fp12.one()
 }
 
-func (g *Gt) IsOne(e *E) bool {
+// IsOne returns true if given element equals to one
+func (g *GT) IsOne(e *E) bool {
 	return g.Equal(e, g.fp12.one())
 }
 
-func (g *Gt) Copy(a, b *E) {
+// Copy copies values of the second source element to first element
+func (g *GT) Copy(a, b *E) {
 	g.fp12.copy(a, b)
 }
 
-func (g *Gt) Equal(a, b *E) bool {
+// Equal returns true if given two element is equal, otherwise returns false
+func (g *GT) Equal(a, b *E) bool {
 	return g.fp12.equal(a, b)
 }
 
-func (g *Gt) Add(c, a, b *E) {
+// Add adds two field element `a` and `b` and assigns the result to the element in first argument.
+func (g *GT) Add(c, a, b *E) {
 	g.fp12.add(c, a, b)
 }
 
-func (g *Gt) Sub(c, a, b *E) {
+// Sub subtracts two field element `a` and `b`, and assigns the result to the element in first argument.
+func (g *GT) Sub(c, a, b *E) {
 	g.fp12.sub(c, a, b)
 }
 
-func (g *Gt) Mul(c, a, b *E) {
+// Mul multiplies two field element `a` and `b` and assigns the result to the element in first argument.
+func (g *GT) Mul(c, a, b *E) {
 	g.fp12.mul(c, a, b)
 }
 
-func (g *Gt) Square(c, a *E) {
+// Square squares an element `a` and assigns the result to the element in first argument.
+func (g *GT) Square(c, a *E) {
 	g.fp12.cyclotomicSquare(c, a)
 }
 
-func (g *Gt) Exp(c, a *E, s *big.Int) {
+// Exp exponents an element `a` by a scalar `s` and assigns the result to the element in first argument.
+func (g *GT) Exp(c, a *E, s *big.Int) {
 	g.fp12.cyclotomicExp(c, a, s)
 }
 
-func (g *Gt) Inverse(c, a *E) {
+// Inverse inverses an element `a` and assigns the result to the element in first argument.
+func (g *GT) Inverse(c, a *E) {
 	g.fp12.inverse(c, a)
 }

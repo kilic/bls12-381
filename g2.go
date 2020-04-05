@@ -6,8 +6,12 @@ import (
 	"math/big"
 )
 
+// PointG2 is type for point in G2.
+// PointG2 is both used for Affine and Jacobian point representation.
+// If z is equal to one the point is accounted as in affine form.
 type PointG2 [3]fe2
 
+// Set copies valeus of one point to another.
 func (p *PointG2) Set(p2 *PointG2) *PointG2 {
 	p[0][0].Set(&p2[0][0])
 	p[1][1].Set(&p2[1][1])
@@ -22,11 +26,13 @@ type tempG2 struct {
 	t [9]*fe2
 }
 
+// G2 is struct for G2 group.
 type G2 struct {
 	f *fp2
 	tempG2
 }
 
+// NewG2 constructs a new G2 instance.
 func NewG2(f *fp2) *G2 {
 	cfgArch()
 	if f == nil {
@@ -44,10 +50,14 @@ func newTempG2() tempG2 {
 	return tempG2{t}
 }
 
+// Q returns group order in big.Int.
 func (g *G2) Q() *big.Int {
 	return new(big.Int).Set(q)
 }
 
+// FromUncompressed expects byte slice larger than 192 bytes and given bytes returns a new point in G2.
+// Serialization rules are in line with zcash library. See below for details.
+// https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
 func (g *G2) FromUncompressed(uncompressed []byte) (*PointG2, error) {
 	if len(uncompressed) < 192 {
 		return nil, fmt.Errorf("input string should be equal or larger than 192")
@@ -88,6 +98,7 @@ func (g *G2) FromUncompressed(uncompressed []byte) (*PointG2, error) {
 	return p, nil
 }
 
+// ToUncompressed given a G2 point returns bytes in uncompressed (x, y) form of the point.
 func (g *G2) ToUncompressed(p *PointG2) []byte {
 	out := make([]byte, 192)
 	g.Affine(p)
@@ -99,6 +110,9 @@ func (g *G2) ToUncompressed(p *PointG2) []byte {
 	return out
 }
 
+// FromCompressed expects byte slice larger than 96 bytes and given bytes returns a new point in G2.
+// Serialization rules are in line with zcash library. See below for details.
+// https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
 func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 	if len(compressed) < 96 {
 		return nil, fmt.Errorf("input string should be equal or larger than 96")
@@ -147,6 +161,9 @@ func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 	return p, nil
 }
 
+// ToCompressed given a G2 point returns bytes in compressed form of the point.
+// Serialization rules are in line with zcash library. See below for details.
+// https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
 func (g *G2) ToCompressed(p *PointG2) []byte {
 	out := make([]byte, 96)
 	g.Affine(p)
@@ -178,16 +195,12 @@ func (g *G2) fromRawUnchecked(in []byte) (*PointG2, error) {
 	return &PointG2{*p0, *p1, *p2}, nil
 }
 
-func (g *G2) InCorrectSubgroup(p *PointG2) bool {
-	tmp := &PointG2{}
-	g.MulScalar(tmp, p, q)
-	return g.IsZero(tmp)
-}
-
+// New creates a new G2 Point which is equal to zero in other words point at infinity.
 func (g *G2) New() *PointG2 {
 	return g.Zero()
 }
 
+// Zero returns a new G2 Point which is equal to point at infinity.
 func (g *G2) Zero() *PointG2 {
 	return &PointG2{
 		*g.f.zero(),
@@ -196,18 +209,22 @@ func (g *G2) Zero() *PointG2 {
 	}
 }
 
+// One returns a new G2 Point which is equal to generator point.
 func (g *G2) One() *PointG2 {
 	return g.Copy(&PointG2{}, &g2One)
 }
 
+// Copy copies source point to destination point.
 func (g *G2) Copy(dst *PointG2, src *PointG2) *PointG2 {
 	return dst.Set(src)
 }
 
+// IsZero returns true if given point is equal to zero.
 func (g *G2) IsZero(p *PointG2) bool {
 	return g.f.isZero(&p[2])
 }
 
+// Equal checks if given two G2 point is equal in their affine form.
 func (g *G2) Equal(p1, p2 *PointG2) bool {
 	if g.IsZero(p1) {
 		return g.IsZero(p2)
@@ -227,6 +244,14 @@ func (g *G2) Equal(p1, p2 *PointG2) bool {
 	return g.f.equal(t[0], t[1]) && g.f.equal(t[2], t[3])
 }
 
+// InCorrectSubgroup checks whether given point is in correct subgroup.
+func (g *G2) InCorrectSubgroup(p *PointG2) bool {
+	tmp := &PointG2{}
+	g.MulScalar(tmp, p, q)
+	return g.IsZero(tmp)
+}
+
+// IsOnCurve checks a G2 point is on curve.
 func (g *G2) IsOnCurve(p *PointG2) bool {
 	if g.IsZero(p) {
 		return true
@@ -243,10 +268,12 @@ func (g *G2) IsOnCurve(p *PointG2) bool {
 	return g.f.equal(t[0], t[1])
 }
 
+// IsAffine checks a G2 point whether it is in affine form.
 func (g *G2) IsAffine(p *PointG2) bool {
 	return g.f.equal(&p[2], g.f.one())
 }
 
+// Affine calculates affine form of given G2 point.
 func (g *G2) Affine(p *PointG2) *PointG2 {
 	if g.IsZero(p) {
 		return p
@@ -263,7 +290,9 @@ func (g *G2) Affine(p *PointG2) *PointG2 {
 	return p
 }
 
+// Add adds two G2 points p1, p2 and assigns the result to point at first argument.
 func (g *G2) Add(r, p1, p2 *PointG2) *PointG2 {
+	// http://www.hyperelliptic.org/EFD/gp/auto-shortw-jacobian-0.html#addition-add-2007-bl
 	if g.IsZero(p1) {
 		g.Copy(r, p2)
 		return r
@@ -312,7 +341,9 @@ func (g *G2) Add(r, p1, p2 *PointG2) *PointG2 {
 	return r
 }
 
+// Double doubles a G2 point p and assigns the result to the point at first argument.
 func (g *G2) Double(r, p *PointG2) *PointG2 {
+	// http://www.hyperelliptic.org/EFD/gp/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
 	if g.IsZero(p) {
 		g.Copy(r, p)
 		return r
@@ -343,6 +374,7 @@ func (g *G2) Double(r, p *PointG2) *PointG2 {
 	return r
 }
 
+// Neg negates a G2 point p and assigns the result to the point at first argument.
 func (g *G2) Neg(r, p *PointG2) *PointG2 {
 	g.f.copy(&r[0], &p[0])
 	g.f.neg(&r[1], &p[1])
@@ -350,6 +382,7 @@ func (g *G2) Neg(r, p *PointG2) *PointG2 {
 	return r
 }
 
+// Sub subtracts two G2 points p1, p2 and assigns the result to point at first argument.
 func (g *G2) Sub(c, a, b *PointG2) *PointG2 {
 	d := &PointG2{}
 	g.Neg(d, b)
@@ -357,13 +390,7 @@ func (g *G2) Sub(c, a, b *PointG2) *PointG2 {
 	return c
 }
 
-// negates second operand
-func (g *G2) SubUnsafe(c, a, b *PointG2) *PointG2 {
-	g.Neg(b, b)
-	g.Add(c, a, b)
-	return c
-}
-
+// MulScalar multiplies a point by given scalar value in big.Int and assigns the result to point at first argument.
 func (g *G2) MulScalar(c, p *PointG2, e *big.Int) *PointG2 {
 	q, n := &PointG2{}, &PointG2{}
 	g.Copy(n, p)
@@ -377,10 +404,15 @@ func (g *G2) MulScalar(c, p *PointG2, e *big.Int) *PointG2 {
 	return g.Copy(c, q)
 }
 
-func (g *G2) MulByCofactor(c, p *PointG2) {
-	g.MulScalar(c, p, cofactorG2)
+// ClearCofactor maps given a G2 point to correct subgroup
+func (g *G2) ClearCofactor(p *PointG2) {
+	g.MulScalar(p, p, cofactorEFFG2)
 }
 
+// MultiExp calculates multi exponentiation. Given pairs of G2 point and scalar values
+// (P_0, e_0), (P_1, e_1), ... (P_n, e_n) calculates r = e_0 * P_0 + e_1 * P_1 + ... + e_n * P_n
+// Length of points and scalars are expected to be equal, otherwise an error is returned.
+// Result is assigned to point at first argument.
 func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG2, error) {
 	if len(points) != len(powers) {
 		return nil, fmt.Errorf("point and scalar vectors should be in same length")
@@ -435,6 +467,8 @@ func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG
 	return r, nil
 }
 
+// MapToPointTI given a byte slice returns a valid G2 point.
+// This mapping function implements the 'try and increment' method.
 func (g *G2) MapToPointTI(in []byte) (*PointG2, error) {
 	fp2 := g.f
 	x, err := fp2.fromBytes(in)
@@ -459,14 +493,15 @@ func (g *G2) MapToPointTI(in []byte) (*PointG2, error) {
 				fp2.copy(y, negY)
 			}
 			p := &PointG2{*x, *y, *one}
-			g.clearCofactor(p)
+			g.ClearCofactor(p)
 			return p, nil
 		}
 		fp2.add(x, x, one)
 	}
 }
 
-// Implementation of Simplified Shallue-van de Woestijne-Ulas Method
+// MapToPointSWU given a byte slice returns a valid G2 point.
+// This mapping function implements the Simplified Shallue-van de Woestijne-Ulas method
 // https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
 func (g *G2) MapToPointSWU(in []byte) (*PointG2, error) {
 	fp2 := g.f
@@ -486,8 +521,4 @@ func (g *G2) MapToPointSWU(in []byte) (*PointG2, error) {
 	}
 	g.MulScalar(q, q, cofactorEFFG2)
 	return g.Affine(q), nil
-}
-
-func (g *G2) clearCofactor(p *PointG2) {
-	g.MulScalar(p, p, cofactorEFFG2)
 }

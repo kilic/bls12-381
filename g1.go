@@ -6,6 +6,9 @@ import (
 	"math/big"
 )
 
+// PointG1 is type for point in G1.
+// PointG1 is both used for Affine and Jacobian point representation.
+// If z is equal to one the point is accounted as in affine form.
 type PointG1 [3]fe
 
 func (p *PointG1) Set(p2 *PointG1) *PointG1 {
@@ -19,10 +22,12 @@ type tempG1 struct {
 	t [9]*fe
 }
 
+// G1 is struct for G1 group.
 type G1 struct {
 	tempG1
 }
 
+// NewG1 constructs a new G1 instance.
 func NewG1() *G1 {
 	cfgArch()
 	t := newTempG1()
@@ -37,10 +42,14 @@ func newTempG1() tempG1 {
 	return tempG1{t}
 }
 
+// Q returns group order in big.Int.
 func (g *G1) Q() *big.Int {
 	return new(big.Int).Set(q)
 }
 
+// FromUncompressed expects byte slice larger than 96 bytes and given bytes returns a new point in G1.
+// Serialization rules are in line with zcash library. See below for details.
+// https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
 func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 	if len(uncompressed) < 96 {
 		return nil, fmt.Errorf("input string should be equal or larger than 96")
@@ -81,6 +90,7 @@ func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 	return p, nil
 }
 
+// ToUncompressed given a G1 point returns bytes in uncompressed (x, y) form of the point.
 func (g *G1) ToUncompressed(p *PointG1) []byte {
 	out := make([]byte, 96)
 	g.Affine(p)
@@ -92,6 +102,9 @@ func (g *G1) ToUncompressed(p *PointG1) []byte {
 	return out
 }
 
+// FromCompressed expects byte slice larger than 96 bytes and given bytes returns a new point in G1.
+// Serialization rules are in line with zcash library. See below for details.
+// https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
 func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 	if len(compressed) < 48 {
 		return nil, fmt.Errorf("input string should be equal or larger than 48")
@@ -140,6 +153,9 @@ func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 	return p, nil
 }
 
+// ToCompressed given a G1 point returns bytes in compressed form of the point.
+// Serialization rules are in line with zcash library. See below for details.
+// https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
 func (g *G1) ToCompressed(p *PointG1) []byte {
 	out := make([]byte, 48)
 	g.Affine(p)
@@ -158,10 +174,6 @@ func (g *G1) ToCompressed(p *PointG1) []byte {
 	return out
 }
 
-func (g *G1) New() *PointG1 {
-	return g.Zero()
-}
-
 func (g *G1) fromRawUnchecked(in []byte) (*PointG1, error) {
 	p0, err := fromBytes(in[:48])
 	if err != nil {
@@ -175,12 +187,12 @@ func (g *G1) fromRawUnchecked(in []byte) (*PointG1, error) {
 	return &PointG1{*p0, *p1, *p2}, nil
 }
 
-func (g *G1) InCorrectSubgroup(p *PointG1) bool {
-	tmp := &PointG1{}
-	g.MulScalar(tmp, p, q)
-	return g.IsZero(tmp)
+// New creates a new G1 Point which is equal to zero in other words point at infinity.
+func (g *G1) New() *PointG1 {
+	return g.Zero()
 }
 
+// Zero returns a new G1 Point which is equal to point at infinity.
 func (g *G1) Zero() *PointG1 {
 	return &PointG1{
 		*zero(),
@@ -189,22 +201,22 @@ func (g *G1) Zero() *PointG1 {
 	}
 }
 
-func (g *G1) NegativeOne() *PointG1 {
-	return g.Copy(&PointG1{}, &g1NegativeOne)
-}
-
+// One returns a new G1 Point which is equal to generator point.
 func (g *G1) One() *PointG1 {
 	return g.Copy(&PointG1{}, &g1One)
 }
 
+// Copy copies source point to destination point.
 func (g *G1) Copy(dst *PointG1, src *PointG1) *PointG1 {
 	return dst.Set(src)
 }
 
+// IsZero returns true if given point is equal to zero.
 func (g *G1) IsZero(p *PointG1) bool {
 	return isZero(&p[2])
 }
 
+// Equal checks if given two G1 point is equal in their affine form.
 func (g *G1) Equal(p1, p2 *PointG1) bool {
 	if g.IsZero(p1) {
 		return g.IsZero(p2)
@@ -224,6 +236,14 @@ func (g *G1) Equal(p1, p2 *PointG1) bool {
 	return equal(t[0], t[1]) && equal(t[2], t[3])
 }
 
+// InCorrectSubgroup checks whether given point is in correct subgroup.
+func (g *G1) InCorrectSubgroup(p *PointG1) bool {
+	tmp := &PointG1{}
+	g.MulScalar(tmp, p, q)
+	return g.IsZero(tmp)
+}
+
+// IsOnCurve checks a G1 point is on curve.
 func (g *G1) IsOnCurve(p *PointG1) bool {
 	if g.IsZero(p) {
 		return true
@@ -240,10 +260,12 @@ func (g *G1) IsOnCurve(p *PointG1) bool {
 	return equal(t[0], t[1])
 }
 
+// IsAffine checks a G1 point whether it is in affine form.
 func (g *G1) IsAffine(p *PointG1) bool {
 	return equal(&p[2], one())
 }
 
+// Add adds two G1 points p1, p2 and assigns the result to point at first argument.
 func (g *G1) Affine(p *PointG1) *PointG1 {
 	if g.IsZero(p) {
 		return p
@@ -260,7 +282,9 @@ func (g *G1) Affine(p *PointG1) *PointG1 {
 	return p
 }
 
+// Add adds two G1 points p1, p2 and assigns the result to point at first argument.
 func (g *G1) Add(r, p1, p2 *PointG1) *PointG1 {
+	// http://www.hyperelliptic.org/EFD/gp/auto-shortw-jacobian-0.html#addition-add-2007-bl
 	if g.IsZero(p1) {
 		g.Copy(r, p2)
 		return r
@@ -309,7 +333,9 @@ func (g *G1) Add(r, p1, p2 *PointG1) *PointG1 {
 	return r
 }
 
+// Double doubles a G1 point p and assigns the result to the point at first argument.
 func (g *G1) Double(r, p *PointG1) *PointG1 {
+	// http://www.hyperelliptic.org/EFD/gp/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
 	if g.IsZero(p) {
 		g.Copy(r, p)
 		return r
@@ -340,6 +366,7 @@ func (g *G1) Double(r, p *PointG1) *PointG1 {
 	return r
 }
 
+// Neg negates a G1 point p and assigns the result to the point at first argument.
 func (g *G1) Neg(r, p *PointG1) *PointG1 {
 	r[0].Set(&p[0])
 	r[2].Set(&p[2])
@@ -347,6 +374,7 @@ func (g *G1) Neg(r, p *PointG1) *PointG1 {
 	return r
 }
 
+// Sub subtracts two G1 points p1, p2 and assigns the result to point at first argument.
 func (g *G1) Sub(c, a, b *PointG1) *PointG1 {
 	d := &PointG1{}
 	g.Neg(d, b)
@@ -354,13 +382,7 @@ func (g *G1) Sub(c, a, b *PointG1) *PointG1 {
 	return c
 }
 
-// negates second operand
-func (g *G1) SubUnsafe(c, a, b *PointG1) *PointG1 {
-	g.Neg(b, b)
-	g.Add(c, a, b)
-	return c
-}
-
+// MulScalar multiplies a point by given scalar value in big.Int and assigns the result to point at first argument.
 func (g *G1) MulScalar(c, p *PointG1, e *big.Int) *PointG1 {
 	q, n := &PointG1{}, &PointG1{}
 	g.Copy(n, p)
@@ -374,10 +396,15 @@ func (g *G1) MulScalar(c, p *PointG1, e *big.Int) *PointG1 {
 	return g.Copy(c, q)
 }
 
-func (g *G1) MulByCofactor(c, p *PointG1) {
-	g.MulScalar(c, p, cofactorG1)
+// ClearCofactor maps given a G1 point to correct subgroup
+func (g *G1) ClearCofactor(p *PointG1) {
+	g.MulScalar(p, p, cofactorEFFG1)
 }
 
+// MultiExp calculates multi exponentiation. Given pairs of G1 point and scalar values
+// (P_0, e_0), (P_1, e_1), ... (P_n, e_n) calculates r = e_0 * P_0 + e_1 * P_1 + ... + e_n * P_n
+// Length of points and scalars are expected to be equal, otherwise an error is returned.
+// Result is assigned to point at first argument.
 func (g *G1) MultiExp(r *PointG1, points []*PointG1, powers []*big.Int) (*PointG1, error) {
 	if len(points) != len(powers) {
 		return nil, fmt.Errorf("point and scalar vectors should be in same length")
@@ -432,27 +459,8 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, powers []*big.Int) (*PointG
 	return r, nil
 }
 
-// Implementation of Simplified Shallue-van de Woestijne-Ulas Method
-// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
-func (g *G1) MapToPointSWU(in []byte) (*PointG1, error) {
-	u, err := fromBytes(in)
-	if err != nil {
-		return nil, err
-	}
-	x, y, hasSqrt := swuMap(u)
-	if !hasSqrt {
-		return nil, fmt.Errorf("SWU mapped element has no square root")
-	}
-	isogenyMap(x, y)
-	one := one()
-	p := &PointG1{*x, *y, *one}
-	if !g.IsOnCurve(p) {
-		return nil, fmt.Errorf("Found point is not on curve")
-	}
-	g.clearCofactor(p)
-	return g.Affine(p), nil
-}
-
+// MapToPointTI given a byte slice returns a valid G1 point.
+// This mapping function implements the 'try and increment' method.
 func (g *G1) MapToPointTI(in []byte) (*PointG1, error) {
 	y := &fe{}
 	x, err := fromBytes(in)
@@ -476,13 +484,31 @@ func (g *G1) MapToPointTI(in []byte) (*PointG1, error) {
 				y.Set(negY)
 			}
 			p := &PointG1{*x, *y, *one}
-			g.MulByCofactor(p, p)
+			g.ClearCofactor(p)
 			return p, nil
 		}
 		add(x, x, one)
 	}
 }
 
-func (g *G1) clearCofactor(p *PointG1) {
-	g.MulScalar(p, p, cofactorEFFG1)
+// MapToPointSWU given a byte slice returns a valid G1 point.
+// This mapping function implements the Simplified Shallue-van de Woestijne-Ulas method
+// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
+func (g *G1) MapToPointSWU(in []byte) (*PointG1, error) {
+	u, err := fromBytes(in)
+	if err != nil {
+		return nil, err
+	}
+	x, y, hasSqrt := swuMap(u)
+	if !hasSqrt {
+		return nil, fmt.Errorf("SWU mapped element has no square root")
+	}
+	isogenyMap(x, y)
+	one := one()
+	p := &PointG1{*x, *y, *one}
+	if !g.IsOnCurve(p) {
+		return nil, fmt.Errorf("Found point is not on curve")
+	}
+	g.ClearCofactor(p)
+	return g.Affine(p), nil
 }
