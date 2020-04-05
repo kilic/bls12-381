@@ -186,11 +186,10 @@ func isQuadraticNonResidue(elem *fe) bool {
 	return !equal(result, one())
 }
 
-// swuMap and isogenyMap methods are used for
-// implementation of Simplified Shallue-van de Woestijne-Ulas Method
-// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
-
+// swuMap is implementation of Simplified Shallue-van de Woestijne-Ulas Method
+// defined at draft-irtf-cfrg-hash-to-curve-06.
 func swuMap(u *fe) (*fe, *fe, bool) {
+	// https: //tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
 	var params = swuParamsForG1
 	var tv [4]*fe
 	for i := 0; i < 4; i++ {
@@ -255,15 +254,15 @@ func swuMap(u *fe) (*fe, *fe, bool) {
 		return nil, nil, false
 	}
 	// 20.  e3 = sgn0(u) == sgn0(y)  # Fix sign of y
-	uSign := u.sign()
-	ySign := y.sign()
-	if ((uSign == 1 && ySign == -1) || (uSign == -1 && ySign == 1)) || ((uSign == 0 && ySign == -1) || (uSign == -1 && ySign == 0)) {
+	if y.sign()^u.sign() != 0 {
 		neg(y, y)
 	}
 	return x, y, true
 }
 
+// isogenyMap applies 11-isogeny map for BLS12-381 G1 defined at draft-irtf-cfrg-hash-to-curve-06.
 func isogenyMap(x, y *fe) {
+	// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06#appendix-C.2
 	params := isogenyConstansG1
 	degree := 15
 	xNum, xDen, yNum, yDen := new(fe), new(fe), new(fe), new(fe)

@@ -273,38 +273,10 @@ func (e *fp2) sqrt(c, a *fe2) bool {
 	return e.equal(alpha, u)
 }
 
-// swuMap and isogenyMap methods are used for
-// implementation of Simplified Shallue-van de Woestijne-Ulas Method
-// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
-
-func (e *fp2) isogenyMap(x, y *fe2) {
-	params := isogenyConstantsG2
-	degree := 3
-	xNum, xDen, yNum, yDen := new(fe2), new(fe2), new(fe2), new(fe2)
-	e.copy(xNum, params[0][degree])
-	e.copy(xDen, params[1][degree])
-	e.copy(yNum, params[2][degree])
-	e.copy(yDen, params[3][degree])
-	for i := degree - 1; i >= 0; i-- {
-		e.mul(xNum, xNum, x)
-		e.mul(xDen, xDen, x)
-		e.mul(yNum, yNum, x)
-		e.mul(yDen, yDen, x)
-		e.add(xNum, xNum, params[0][i])
-		e.add(xDen, xDen, params[1][i])
-		e.add(yNum, yNum, params[2][i])
-		e.add(yDen, yDen, params[3][i])
-	}
-	e.inverse(xDen, xDen)
-	e.inverse(yDen, yDen)
-	e.mul(xNum, xNum, xDen)
-	e.mul(yNum, yNum, yDen)
-	e.mul(yNum, yNum, y)
-	e.copy(x, xNum)
-	e.copy(y, yNum)
-}
-
+// swuMap is implementation of Simplified Shallue-van de Woestijne-Ulas Method
+// defined at draft-irtf-cfrg-hash-to-curve-06.
 func (e *fp2) swuMap(u *fe2) (*fe2, *fe2, bool) {
+	// https: //tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
 	params := swuParamsForG2
 	var tv [4]*fe2
 	for i := 0; i < 4; i++ {
@@ -386,4 +358,33 @@ func (e *fp2) swuMap(u *fe2) (*fe2, *fe2, bool) {
 		e.neg(y, y)
 	}
 	return x, y, true
+}
+
+// isogenyMap applies 11-isogeny map for BLS12-381 G1 defined at draft-irtf-cfrg-hash-to-curve-06.
+func (e *fp2) isogenyMap(x, y *fe2) {
+	// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06#appendix-C.2
+	params := isogenyConstantsG2
+	degree := 3
+	xNum, xDen, yNum, yDen := new(fe2), new(fe2), new(fe2), new(fe2)
+	e.copy(xNum, params[0][degree])
+	e.copy(xDen, params[1][degree])
+	e.copy(yNum, params[2][degree])
+	e.copy(yDen, params[3][degree])
+	for i := degree - 1; i >= 0; i-- {
+		e.mul(xNum, xNum, x)
+		e.mul(xDen, xDen, x)
+		e.mul(yNum, yNum, x)
+		e.mul(yDen, yDen, x)
+		e.add(xNum, xNum, params[0][i])
+		e.add(xDen, xDen, params[1][i])
+		e.add(yNum, yNum, params[2][i])
+		e.add(yDen, yDen, params[3][i])
+	}
+	e.inverse(xDen, xDen)
+	e.inverse(yDen, yDen)
+	e.mul(xNum, xNum, xDen)
+	e.mul(yNum, yNum, yDen)
+	e.mul(yNum, yNum, y)
+	e.copy(x, xNum)
+	e.copy(y, yNum)
 }
