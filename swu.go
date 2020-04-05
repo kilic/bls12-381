@@ -1,4 +1,4 @@
-package bls
+package bls12381
 
 var isogenyConstansG1 = [4][16]*fe{
 	[16]*fe{

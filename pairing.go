@@ -1,4 +1,4 @@
-package bls
+package bls12381
 
 type pair struct {
 	g1 *PointG1

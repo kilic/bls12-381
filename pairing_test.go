@@ -1,4 +1,4 @@
-package bls
+package bls12381
 
 import (
 	"math/big"

@@ -1,4 +1,4 @@
-package bls
+package bls12381
 
 import (
 	"crypto/rand"
@@ -14,7 +14,7 @@ func fromBytes(in []byte) (*fe, error) {
 	}
 	fe.FromBytes(in)
 	if !valid(fe) {
-		return nil, fmt.Errorf("invalid input string")
+		return nil, fmt.Errorf("must be less than modulus")
 	}
 	mul(fe, fe, r2)
 	return fe, nil
