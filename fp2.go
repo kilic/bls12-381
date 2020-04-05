@@ -352,9 +352,7 @@ func (e *fp2) swuMap(u *fe2) (*fe2, *fe2, bool) {
 		return nil, nil, false
 	}
 	// 20.  e3 = sgn0(u) == sgn0(y)  # Fix sign of y
-	uSign := u.sign()
-	ySign := y.sign()
-	if ((uSign == 1 && ySign == -1) || (uSign == -1 && ySign == 1)) || ((uSign == 0 && ySign == -1) || (uSign == -1 && ySign == 0)) {
+	if y.sign()^u.sign() != 0 {
 		e.neg(y, y)
 	}
 	return x, y, true
