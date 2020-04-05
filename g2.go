@@ -182,6 +182,29 @@ func (g *G2) ToCompressed(p *PointG2) []byte {
 	return out
 }
 
+// FromBytes constructs a new point given byte input.
+// Byte input expected to be larger than 96 bytes.
+// First 96 bytes should be concatenation of x and y values
+func (g *G2) FromBytes(in []byte) (*PointG2, error) {
+	if len(in) < 192 {
+		return nil, fmt.Errorf("input string should be equal or larger than 192")
+	}
+	p0, err := g.f.fromBytes(in[:96])
+	if err != nil {
+		return nil, err
+	}
+	p1, err := g.f.fromBytes(in[96:])
+	if err != nil {
+		panic(err)
+	}
+	p2 := g.f.one()
+	p := &PointG2{*p0, *p1, *p2}
+	if !g.IsOnCurve(p) {
+		return nil, fmt.Errorf("point is not on curve")
+	}
+	return p, nil
+}
+
 func (g *G2) fromRawUnchecked(in []byte) (*PointG2, error) {
 	p0, err := g.f.fromBytes(in[:96])
 	if err != nil {

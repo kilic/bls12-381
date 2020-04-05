@@ -187,7 +187,13 @@ func (g *G1) fromBytesUnchecked(in []byte) (*PointG1, error) {
 	return &PointG1{*p0, *p1, *p2}, nil
 }
 
+// FromBytes constructs a new point given byte input.
+// Byte input expected to be larger than 96 bytes.
+// First 96 bytes should be concatenation of x and y values
 func (g *G1) FromBytes(in []byte) (*PointG1, error) {
+	if len(in) < 96 {
+		return nil, fmt.Errorf("input string should be equal or larger than 96")
+	}
 	p0, err := fromBytes(in[:48])
 	if err != nil {
 		return nil, err
