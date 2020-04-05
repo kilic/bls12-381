@@ -1,4 +1,4 @@
-package bls
+package bls12381
 
 import (
 	"fmt"
@@ -174,7 +174,7 @@ func (g *G1) ToCompressed(p *PointG1) []byte {
 	return out
 }
 
-func (g *G1) fromRawUnchecked(in []byte) (*PointG1, error) {
+func (g *G1) fromBytesUnchecked(in []byte) (*PointG1, error) {
 	p0, err := fromBytes(in[:48])
 	if err != nil {
 		return nil, err
@@ -185,6 +185,23 @@ func (g *G1) fromRawUnchecked(in []byte) (*PointG1, error) {
 	}
 	p2 := one()
 	return &PointG1{*p0, *p1, *p2}, nil
+}
+
+func (g *G1) FromBytes(in []byte) (*PointG1, error) {
+	p0, err := fromBytes(in[:48])
+	if err != nil {
+		return nil, err
+	}
+	p1, err := fromBytes(in[48:])
+	if err != nil {
+		panic(err)
+	}
+	p2 := one()
+	p := &PointG1{*p0, *p1, *p2}
+	if !g.IsOnCurve(p) {
+		return nil, fmt.Errorf("point is not on curve")
+	}
+	return p, nil
 }
 
 // New creates a new G1 Point which is equal to zero in other words point at infinity.
