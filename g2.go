@@ -509,12 +509,9 @@ func (g *G2) MapToPointSWU(in []byte) (*PointG2, error) {
 	if err != nil {
 		return nil, err
 	}
-	x, y, hasSqrt := fp2.swuMap(u)
-	if !hasSqrt {
-		return nil, fmt.Errorf("SWU mapped element has no square root")
-	}
+	x, y := fp2.swuMap(u)
 	fp2.isogenyMap(x, y)
-	one := newFp2().one()
+	one := fp2.one()
 	q := &PointG2{*x, *y, *one}
 	if !g.IsOnCurve(q) {
 		return nil, fmt.Errorf("Found point is not on curve")

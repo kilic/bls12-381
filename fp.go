@@ -188,7 +188,7 @@ func isQuadraticNonResidue(elem *fe) bool {
 
 // swuMap is implementation of Simplified Shallue-van de Woestijne-Ulas Method
 // defined at draft-irtf-cfrg-hash-to-curve-06.
-func swuMap(u *fe) (*fe, *fe, bool) {
+func swuMap(u *fe) (*fe, *fe) {
 	// https: //tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
 	var params = swuParamsForG1
 	var tv [4]*fe
@@ -250,14 +250,12 @@ func swuMap(u *fe) (*fe, *fe, bool) {
 	}
 	// 19.   y = sqrt(y2)
 	y := new(fe)
-	if hasSquareRoot := sqrt(y, y2); !hasSquareRoot {
-		return nil, nil, false
-	}
+	sqrt(y, y2)
 	// 20.  e3 = sgn0(u) == sgn0(y)  # Fix sign of y
 	if y.sign()^u.sign() != 0 {
 		neg(y, y)
 	}
-	return x, y, true
+	return x, y
 }
 
 // isogenyMap applies 11-isogeny map for BLS12-381 G1 defined at draft-irtf-cfrg-hash-to-curve-06.

@@ -499,10 +499,7 @@ func (g *G1) MapToPointSWU(in []byte) (*PointG1, error) {
 	if err != nil {
 		return nil, err
 	}
-	x, y, hasSqrt := swuMap(u)
-	if !hasSqrt {
-		return nil, fmt.Errorf("SWU mapped element has no square root")
-	}
+	x, y := swuMap(u)
 	isogenyMap(x, y)
 	one := one()
 	p := &PointG1{*x, *y, *one}

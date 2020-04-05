@@ -275,7 +275,7 @@ func (e *fp2) sqrt(c, a *fe2) bool {
 
 // swuMap is implementation of Simplified Shallue-van de Woestijne-Ulas Method
 // defined at draft-irtf-cfrg-hash-to-curve-06.
-func (e *fp2) swuMap(u *fe2) (*fe2, *fe2, bool) {
+func (e *fp2) swuMap(u *fe2) (*fe2, *fe2) {
 	// https: //tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
 	params := swuParamsForG2
 	var tv [4]*fe2
@@ -348,14 +348,12 @@ func (e *fp2) swuMap(u *fe2) (*fe2, *fe2, bool) {
 	}
 	// 19.   y = sqrt(y2)
 	y := e.new()
-	if hasSquareRoot := e.sqrt(y, y2); !hasSquareRoot {
-		return nil, nil, false
-	}
+	e.sqrt(y, y2)
 	// 20.  e3 = sgn0(u) == sgn0(y)  # Fix sign of y
 	if y.sign()^u.sign() != 0 {
 		e.neg(y, y)
 	}
-	return x, y, true
+	return x, y
 }
 
 // isogenyMap applies 11-isogeny map for BLS12-381 G1 defined at draft-irtf-cfrg-hash-to-curve-06.
