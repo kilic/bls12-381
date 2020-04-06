@@ -205,7 +205,7 @@ func (g *G2) FromBytes(in []byte) (*PointG2, error) {
 	return p, nil
 }
 
-func (g *G2) fromRawUnchecked(in []byte) (*PointG2, error) {
+func (g *G2) fromBytesUnchecked(in []byte) (*PointG2, error) {
 	p0, err := g.f.fromBytes(in[:96])
 	if err != nil {
 		return nil, err
