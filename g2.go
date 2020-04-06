@@ -58,6 +58,7 @@ func (g *G2) Q() *big.Int {
 // FromUncompressed expects byte slice larger than 192 bytes and given bytes returns a new point in G2.
 // Serialization rules are in line with zcash library. See below for details.
 // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
+// https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G2) FromUncompressed(uncompressed []byte) (*PointG2, error) {
 	if len(uncompressed) < 192 {
 		return nil, fmt.Errorf("input string should be equal or larger than 192")
@@ -99,11 +100,15 @@ func (g *G2) FromUncompressed(uncompressed []byte) (*PointG2, error) {
 }
 
 // ToUncompressed given a G2 point returns bytes in uncompressed (x, y) form of the point.
+// Serialization rules are in line with zcash library. See below for details.
+// https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
+// https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G2) ToUncompressed(p *PointG2) []byte {
 	out := make([]byte, 192)
 	g.Affine(p)
 	if g.IsZero(p) {
 		out[0] |= 1 << 6
+		return out
 	}
 	copy(out[:96], g.f.toBytes(&p[0]))
 	copy(out[96:], g.f.toBytes(&p[1]))
@@ -113,6 +118,7 @@ func (g *G2) ToUncompressed(p *PointG2) []byte {
 // FromCompressed expects byte slice larger than 96 bytes and given bytes returns a new point in G2.
 // Serialization rules are in line with zcash library. See below for details.
 // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
+// https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 	if len(compressed) < 96 {
 		return nil, fmt.Errorf("input string should be equal or larger than 96")
@@ -164,6 +170,7 @@ func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 // ToCompressed given a G2 point returns bytes in compressed form of the point.
 // Serialization rules are in line with zcash library. See below for details.
 // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
+// https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G2) ToCompressed(p *PointG2) []byte {
 	out := make([]byte, 96)
 	g.Affine(p)
@@ -182,9 +189,24 @@ func (g *G2) ToCompressed(p *PointG2) []byte {
 	return out
 }
 
-// FromBytes constructs a new point given byte input.
+func (g *G2) fromBytesUnchecked(in []byte) (*PointG2, error) {
+	p0, err := g.f.fromBytes(in[:96])
+	if err != nil {
+		return nil, err
+	}
+	p1, err := g.f.fromBytes(in[96:])
+	if err != nil {
+		panic(err)
+	}
+	p2 := g.f.one()
+	return &PointG2{*p0, *p1, *p2}, nil
+}
+
+// FromBytes constructs a new point given uncompressed byte input.
+// FromBytes does not take zcash flags into account.
 // Byte input expected to be larger than 96 bytes.
-// First 96 bytes should be concatenation of x and y values
+// First 192 bytes should be concatenation of x and y values
+// Point (0, 0) is considered as infinity.
 func (g *G2) FromBytes(in []byte) (*PointG2, error) {
 	if len(in) < 192 {
 		return nil, fmt.Errorf("input string should be equal or larger than 192")
@@ -197,6 +219,10 @@ func (g *G2) FromBytes(in []byte) (*PointG2, error) {
 	if err != nil {
 		panic(err)
 	}
+	// check if given input points to infinity
+	if g.f.isZero(p0) && g.f.isZero(p1) {
+		return g.Zero(), nil
+	}
 	p2 := g.f.one()
 	p := &PointG2{*p0, *p1, *p2}
 	if !g.IsOnCurve(p) {
@@ -205,17 +231,18 @@ func (g *G2) FromBytes(in []byte) (*PointG2, error) {
 	return p, nil
 }
 
-func (g *G2) fromBytesUnchecked(in []byte) (*PointG2, error) {
-	p0, err := g.f.fromBytes(in[:96])
-	if err != nil {
-		return nil, err
+// ToBytes serializes a point into bytes in uncompressed form,
+// does not take zcash flags into account,
+// returns (0, 0) if point is infinity.
+func (g *G2) ToBytes(p *PointG2) []byte {
+	out := make([]byte, 192)
+	if g.IsZero(p) {
+		return out
 	}
-	p1, err := g.f.fromBytes(in[96:])
-	if err != nil {
-		panic(err)
-	}
-	p2 := g.f.one()
-	return &PointG2{*p0, *p1, *p2}, nil
+	g.Affine(p)
+	copy(out[:96], g.f.toBytes(&p[0]))
+	copy(out[96:], g.f.toBytes(&p[1]))
+	return out
 }
 
 // New creates a new G2 Point which is equal to zero in other words point at infinity.

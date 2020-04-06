@@ -50,6 +50,7 @@ func (g *G1) Q() *big.Int {
 // FromUncompressed expects byte slice larger than 96 bytes and given bytes returns a new point in G1.
 // Serialization rules are in line with zcash library. See below for details.
 // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
+// https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 	if len(uncompressed) < 96 {
 		return nil, fmt.Errorf("input string should be equal or larger than 96")
@@ -91,12 +92,16 @@ func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 }
 
 // ToUncompressed given a G1 point returns bytes in uncompressed (x, y) form of the point.
+// Serialization rules are in line with zcash library. See below for details.
+// https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
+// https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G1) ToUncompressed(p *PointG1) []byte {
 	out := make([]byte, 96)
-	g.Affine(p)
 	if g.IsZero(p) {
 		out[0] |= 1 << 6
+		return out
 	}
+	g.Affine(p)
 	copy(out[:48], toBytes(&p[0]))
 	copy(out[48:], toBytes(&p[1]))
 	return out
@@ -105,6 +110,7 @@ func (g *G1) ToUncompressed(p *PointG1) []byte {
 // FromCompressed expects byte slice larger than 96 bytes and given bytes returns a new point in G1.
 // Serialization rules are in line with zcash library. See below for details.
 // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
+// https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 	if len(compressed) < 48 {
 		return nil, fmt.Errorf("input string should be equal or larger than 48")
@@ -156,6 +162,7 @@ func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 // ToCompressed given a G1 point returns bytes in compressed form of the point.
 // Serialization rules are in line with zcash library. See below for details.
 // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
+// https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G1) ToCompressed(p *PointG1) []byte {
 	out := make([]byte, 48)
 	g.Affine(p)
@@ -187,9 +194,11 @@ func (g *G1) fromBytesUnchecked(in []byte) (*PointG1, error) {
 	return &PointG1{*p0, *p1, *p2}, nil
 }
 
-// FromBytes constructs a new point given byte input.
+// FromBytes constructs a new point given uncompressed byte input.
+// FromBytes does not take zcash flags into account.
 // Byte input expected to be larger than 96 bytes.
-// First 96 bytes should be concatenation of x and y values
+// First 96 bytes should be concatenation of x and y values.
+// Point (0, 0) is considered as infinity.
 func (g *G1) FromBytes(in []byte) (*PointG1, error) {
 	if len(in) < 96 {
 		return nil, fmt.Errorf("input string should be equal or larger than 96")
@@ -202,12 +211,30 @@ func (g *G1) FromBytes(in []byte) (*PointG1, error) {
 	if err != nil {
 		panic(err)
 	}
+	// check if given input points to infinity
+	if p0.IsZero() && p1.IsZero() {
+		return g.Zero(), nil
+	}
 	p2 := one()
 	p := &PointG1{*p0, *p1, *p2}
 	if !g.IsOnCurve(p) {
 		return nil, fmt.Errorf("point is not on curve")
 	}
 	return p, nil
+}
+
+// ToBytes serializes a point into bytes in uncompressed form.
+// ToBytes does not take zcash flags into account.
+// ToBytes returns (0, 0) if point is infinity.
+func (g *G1) ToBytes(p *PointG1) []byte {
+	out := make([]byte, 96)
+	if g.IsZero(p) {
+		return out
+	}
+	g.Affine(p)
+	copy(out[:48], toBytes(&p[0]))
+	copy(out[48:], toBytes(&p[1]))
+	return out
 }
 
 // New creates a new G1 Point which is equal to zero in other words point at infinity.
