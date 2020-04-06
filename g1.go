@@ -515,8 +515,9 @@ func (g *G1) MapToPointTI(in []byte) (*PointG1, error) {
 }
 
 // MapToPointSWU given a byte slice returns a valid G1 point.
-// This mapping function implements the Simplified Shallue-van de Woestijne-Ulas method
+// This mapping function implements the Simplified Shallue-van de Woestijne-Ulas method.
 // https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
+// Input byte slice should be a valid field element, otherwise an error is returned.
 func (g *G1) MapToPointSWU(in []byte) (*PointG1, error) {
 	u, err := fromBytes(in)
 	if err != nil {
