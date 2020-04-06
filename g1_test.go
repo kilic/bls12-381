@@ -31,7 +31,33 @@ func (g *G1) randAffine() *PointG1 {
 }
 
 func TestG1Serialization(t *testing.T) {
+	var err error
 	g1 := NewG1()
+	zero := g1.Zero()
+	b0 := g1.ToUncompressed(zero)
+	p0, err := g1.FromUncompressed(b0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !g1.IsZero(p0) {
+		t.Fatalf("bad infinity serialization 1")
+	}
+	b0 = g1.ToCompressed(zero)
+	p0, err = g1.FromCompressed(b0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !g1.IsZero(p0) {
+		t.Fatalf("bad infinity serialization 2")
+	}
+	b0 = g1.ToBytes(zero)
+	p0, err = g1.FromBytes(b0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !g1.IsZero(p0) {
+		t.Fatalf("bad infinity serialization 3")
+	}
 	for i := 0; i < fuz; i++ {
 		a := g1.rand()
 		uncompressed := g1.ToUncompressed(a)
@@ -49,6 +75,17 @@ func TestG1Serialization(t *testing.T) {
 		}
 		if !g1.Equal(a, b) {
 			t.Fatalf("bad serialization 2")
+		}
+	}
+	for i := 0; i < fuz; i++ {
+		a := g1.rand()
+		uncompressed := g1.ToBytes(a)
+		b, err := g1.FromBytes(uncompressed)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !g1.Equal(a, b) {
+			t.Fatalf("bad serialization 3")
 		}
 	}
 }

@@ -36,6 +36,66 @@ func (g *G2) new() *PointG2 {
 	return g.Zero()
 }
 
+func TestG2Serialization(t *testing.T) {
+	var err error
+	g2 := NewG2(nil)
+	zero := g2.Zero()
+	b0 := g2.ToUncompressed(zero)
+	p0, err := g2.FromUncompressed(b0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !g2.IsZero(p0) {
+		t.Fatalf("bad infinity serialization 1")
+	}
+	b0 = g2.ToCompressed(zero)
+	p0, err = g2.FromCompressed(b0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !g2.IsZero(p0) {
+		t.Fatalf("bad infinity serialization 2")
+	}
+	b0 = g2.ToBytes(zero)
+	p0, err = g2.FromBytes(b0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !g2.IsZero(p0) {
+		t.Fatalf("bad infinity serialization 3")
+	}
+	for i := 0; i < fuz; i++ {
+		a := g2.rand()
+		uncompressed := g2.ToUncompressed(a)
+		b, err := g2.FromUncompressed(uncompressed)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !g2.Equal(a, b) {
+			t.Fatalf("bad serialization 1")
+		}
+		compressed := g2.ToCompressed(b)
+		a, err = g2.FromCompressed(compressed)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !g2.Equal(a, b) {
+			t.Fatalf("bad serialization 2")
+		}
+	}
+	for i := 0; i < fuz; i++ {
+		a := g2.rand()
+		uncompressed := g2.ToBytes(a)
+		b, err := g2.FromBytes(uncompressed)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !g2.Equal(a, b) {
+			t.Fatalf("bad serialization 3")
+		}
+	}
+}
+
 func TestG2AdditiveProperties(t *testing.T) {
 	g := NewG2(newFp2())
 	t0, t1 := g.new(), g.new()
