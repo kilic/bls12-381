@@ -196,7 +196,7 @@ func (g *G2) fromBytesUnchecked(in []byte) (*PointG2, error) {
 	}
 	p1, err := g.f.fromBytes(in[96:])
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	p2 := g.f.one()
 	return &PointG2{*p0, *p1, *p2}, nil
@@ -217,7 +217,7 @@ func (g *G2) FromBytes(in []byte) (*PointG2, error) {
 	}
 	p1, err := g.f.fromBytes(in[96:])
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	// check if given input points to infinity
 	if g.f.isZero(p0) && g.f.isZero(p1) {
