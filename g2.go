@@ -517,6 +517,49 @@ func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG
 	return r, nil
 }
 
+func (g *G2) wnafMul(c, p *PointG2, e []uint64) *PointG2 {
+	windowSize := uint(6)
+	precompTable := make([]*PointG2, (1 << (windowSize - 1)))
+	for i := 0; i < len(precompTable); i++ {
+		precompTable[i] = g.New()
+	}
+	var indexForPositive uint64
+	indexForPositive = (1 << (windowSize - 2))
+	g.Copy(precompTable[indexForPositive], p)
+	g.Neg(precompTable[indexForPositive-1], p)
+	doubled, precomp := g.New(), g.New()
+	g.Double(doubled, p)
+	g.Copy(precomp, p)
+	for i := uint64(1); i < indexForPositive; i++ {
+		g.Add(precomp, precomp, doubled)
+		g.Copy(precompTable[indexForPositive+i], precomp)
+		g.Neg(precompTable[indexForPositive-1-i], precomp)
+	}
+
+	wnaf := wnaf(e, windowSize)
+	q := g.Zero()
+	l := len(wnaf)
+	found := false
+	var idx uint64
+	for i := l - 1; i >= 0; i-- {
+		if found {
+			g.Double(q, q)
+		}
+		if wnaf[i] != 0 {
+			found = true
+			if wnaf[i] > 0 {
+				idx = uint64(wnaf[i] >> 1)
+				g.Add(q, q, precompTable[indexForPositive+idx])
+			} else {
+				idx = uint64(((0 - wnaf[i]) >> 1))
+				g.Add(q, q, precompTable[indexForPositive-1-idx])
+			}
+		}
+	}
+	g.Copy(c, q)
+	return c
+}
+
 // MapToPointTI given a byte slice returns a valid G2 point.
 // This mapping function implements the 'try and increment' method.
 func (g *G2) MapToPointTI(in []byte) (*PointG2, error) {
@@ -554,6 +597,7 @@ func (g *G2) MapToPointTI(in []byte) (*PointG2, error) {
 // This mapping function implements the Simplified Shallue-van de Woestijne-Ulas method.
 // https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
 // Input byte slice should be a valid field element, otherwise an error is returned.
+// Clearing cofactor h is done with wnaf multiplication with windows size 6.
 func (g *G2) MapToPointSWU(in []byte) (*PointG2, error) {
 	fp2 := g.f
 	u, err := fp2.fromBytes(in)
@@ -567,6 +611,18 @@ func (g *G2) MapToPointSWU(in []byte) (*PointG2, error) {
 	if !g.IsOnCurve(q) {
 		return nil, fmt.Errorf("Found point is not on curve")
 	}
-	g.MulScalar(q, q, cofactorEFFG2)
+	cofactor := []uint64{
+		0xe8020005aaa95551,
+		0x59894c0adebbf6b4,
+		0xe954cbc06689f6a3,
+		0x2ec0ec69d7477c1a,
+		0x6d82bf015d1212b0,
+		0x329c2f178731db95,
+		0x9986ff031508ffe1,
+		0x88e2a8e9145ad768,
+		0x584c6a0ea91b3528,
+		0x0bc69f08f2ee75b3,
+	}
+	g.wnafMul(q, q, cofactor)
 	return g.Affine(q), nil
 }
