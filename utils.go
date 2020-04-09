@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func bytes_(size int, hexStrs ...string) []byte {
+func fromHex(size int, hexStrs ...string) []byte {
 	var out []byte
 	if size > 0 {
 		out = make([]byte, size*len(hexStrs))

@@ -102,11 +102,10 @@ func (s *Suite) GT() kyber.Group {
 }
 
 func (s *Suite) Pair(p1, p2 kyber.Point) kyber.Point {
-	e := NewBLSPairingEngine()
-	gt := s.GT().Point().(*KyberGT)
-	points := []PointG1{*p1.(*KyberG1).p}
-	twistsPoints := []PointG2{*p2.(*KyberG2).p}
-	e.pair(gt.f, points, twistsPoints)
+	e := NewEngine()
+	g1point := p1.(*KyberG1).p
+	g2point := p2.(*KyberG2).p
+	gt := newKyberGT(e.AddPair(g1point, g2point).Result())
 	return gt
 }
 

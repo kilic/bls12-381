@@ -1,4 +1,0 @@
-input: {message: '0xabababababababababababababababababababababababababababababababab',
-  domain: '0x0100000000000000'}
-output: ['0xaef32368d7f9ab1110a0a20e54c0ea9cc671b5435cbd87b112fdde471e4847e168ef8db5abc586a76962327cf1d753ed',
-  '0x0c3fa97ecd48fe5ee7d831cdfb2fd45dbc3d9a35ee1e3ea259fdd9d73d86e96bb57e9f3538c9c6ada57cd40377f0fe65']

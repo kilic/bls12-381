@@ -8,14 +8,15 @@ import (
 	"testing"
 )
 
-var n int
+var fuz int
 
 func TestMain(m *testing.M) {
-	iter := flag.Int("iter", 10, "# of iterations")
-	bmi2 := flag.Bool("nobmi2", false, "to enfoce non bmi2 arch")
+	_fuz := flag.Int("fuzz", 10, "# of iterations")
+	adx := flag.Bool("noadx", false, "to enfoce non adx arch")
 	flag.Parse()
-	n = *iter
-	enforceNonBMI2 = *bmi2
+	forceNonADXArch = *adx
+	fuz = *_fuz
+	cfgArch()
 	m.Run()
 }
 

@@ -1,97 +1,77 @@
+// +build amd64, !generic
+
 package bls
 
-//go:noescape
-func add6(c, a, b *fe)
+import (
+	"golang.org/x/sys/cpu"
+)
+
+var mul func(c, a, b *fe) = mulADX
+var mulAssign func(a, b *fe) = mulAssignADX
+
+func cfgArch() {
+	if !x86ArchitectureSet {
+		if !(cpu.X86.HasADX && cpu.X86.HasBMI2) || forceNonADXArch {
+			mul = mulNoADX
+			mulAssign = mulAssignNoADX
+		}
+		x86ArchitectureSet = true
+	}
+}
+
+func square(c, a *fe) {
+	mul(c, a, a)
+}
+
+func neg(c, a *fe) {
+	if a.IsZero() {
+		c.Set(a)
+	} else {
+		_neg(c, a)
+	}
+}
 
 //go:noescape
-func add_assign_6(a, b *fe)
+func add(c, a, b *fe)
 
 //go:noescape
-func ladd6(c, a, b *fe)
+func addAssign(a, b *fe)
 
 //go:noescape
-func ladd_assign_6(a, b *fe)
+func ladd(c, a, b *fe)
 
 //go:noescape
-func add12(c, a, b *lfe)
+func laddAssign(a, b *fe)
 
 //go:noescape
-func add_assign_12(a, b *lfe)
+func double(c, a *fe)
 
 //go:noescape
-func ladd12(c, a, b *lfe)
+func doubleAssign(a *fe)
 
 //go:noescape
-func double6(c, a *fe)
+func ldouble(c, a *fe)
 
 //go:noescape
-func double_assign_6(a *fe)
+func sub(c, a, b *fe)
 
 //go:noescape
-func ldouble6(c, a *fe)
+func subAssign(a, b *fe)
 
 //go:noescape
-func double12(c, a *lfe)
+func lsubAssign(a, b *fe)
 
 //go:noescape
-func double_assign_12(a *lfe)
+func _neg(c, a *fe)
 
 //go:noescape
-func ldouble12(c, a *lfe)
+func mulNoADX(c, a, b *fe)
 
 //go:noescape
-func sub6(c, a, b *fe)
+func mulAssignNoADX(a, b *fe)
 
 //go:noescape
-func sub_assign_6(a, b *fe)
+func mulADX(c, a, b *fe)
 
 //go:noescape
-func lsub6(c, a, b *fe)
-
-//go:noescape
-func lsub_assign_nc_6(a, b *fe)
-
-//go:noescape
-func sub12(c, a, b *lfe)
-
-//go:noescape
-func sub_assign_12(a, b *lfe)
-
-//go:noescape
-func lsub12(c, a, b *lfe)
-
-//go:noescape
-func lsub_assign_12(a, b *lfe)
-
-//go:noescape
-func sub12_opt1_h2(c, a, b *lfe)
-
-//go:noescape
-func sub12_opt1_h1(c, a, b *lfe)
-
-//go:noescape
-func neg(c, a *fe)
-
-//go:noescape
-func mul_nobmi2(c *lfe, a, b *fe)
-
-//go:noescape
-func mont_nobmi2(c *fe, a *lfe)
-
-//go:noescape
-func montmul_nobmi2(c, a, b *fe)
-
-//go:noescape
-func montmul_assign_nobmi2(a, b *fe)
-
-//go:noescape
-func mul_bmi2(c *lfe, a, b *fe)
-
-//go:noescape
-func mont_bmi2(c *fe, a *lfe)
-
-//go:noescape
-func montmul_bmi2(c, a, b *fe)
-
-//go:noescape
-func montmul_assign_bmi2(a, b *fe)
+func mulAssignADX(a, b *fe)

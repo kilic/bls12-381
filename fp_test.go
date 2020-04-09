@@ -7,926 +7,882 @@ import (
 	"testing"
 )
 
-func TestFpOne(t *testing.T) {
-	t.Run("Encoding & Decoding", func(t *testing.T) {
-		field := newFp()
-		zero := &fe{0}
-		t.Run("1", func(t *testing.T) {
-			in := make([]byte, 48)
-			fe := &fe{}
-			if err := field.newElementFromBytes(fe, in); err != nil {
+func TestFpSerialization(t *testing.T) {
+	zero := zero()
+	t.Run("zero", func(t *testing.T) {
+		in := make([]byte, 48)
+		fe, err := fromBytes(in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !equal(fe, zero) {
+			t.Fatalf("bad serialization\n")
+		}
+		if !bytes.Equal(in, toBytes(fe)) {
+			t.Fatalf("bad serialization\n")
+		}
+	})
+	t.Run("bytes", func(t *testing.T) {
+		for i := 0; i < fuz; i++ {
+			a, _ := newRand(rand.Reader)
+			b, err := fromBytes(toBytes(a))
+			if err != nil {
 				t.Fatal(err)
 			}
-			if !field.equal(fe, zero) {
-				t.Fatalf("bad encoding\n")
+			if !equal(a, b) {
+				t.Fatalf("bad serialization\n")
 			}
-			if !bytes.Equal(in, field.toBytes(fe)) {
-				t.Fatalf("bad encoding\n")
-			}
-		})
-		t.Run("2", func(t *testing.T) {
-			in := make([]byte, 48)
-			copy(in, []byte{0x11, 0x12})
-			fe := &fe{}
-			if err := field.newElementFromBytes(fe, in); err != nil {
+		}
+	})
+	t.Run("string", func(t *testing.T) {
+		for i := 0; i < fuz; i++ {
+			a, _ := newRand(rand.Reader)
+			b, err := fromString(toString(a))
+			if err != nil {
 				t.Fatal(err)
 			}
-			if !bytes.Equal(in, field.toBytes(fe)) {
-				t.Fatalf("bad encoding\n")
-			}
-		})
-		t.Run("3", func(t *testing.T) {
-			for i := 0; i < n; i++ {
-				a, _ := field.randElement(&fe{}, rand.Reader)
-				b := &fe{}
-				if err := field.newElementFromBytes(b, field.toBytes(a)); err != nil {
-					t.Fatal(err)
-				}
-				if !field.equal(a, b) {
-					t.Fatalf("bad encoding or decoding\n")
-				}
-			}
-		})
-		t.Run("4", func(t *testing.T) {
-			for i := 0; i < n; i++ {
-				a, _ := field.randElement(&fe{}, rand.Reader)
-				b, err := field.newElementFromString(field.toString(a))
-				if err != nil {
-					t.Fatal(err)
-				}
-				if !field.equal(a, b) {
-					t.Fatalf("bad encoding or decoding\n")
-				}
-			}
-		})
-		t.Run("5", func(t *testing.T) {
-			for i := 0; i < n; i++ {
-				a, _ := field.randElement(&fe{}, rand.Reader)
-				b, err := field.newElementFromBig(field.toBig(a))
-				if err != nil {
-					t.Fatal(err)
-				}
-				if !field.equal(a, b) {
-					t.Fatalf("bad encoding or decoding\n")
-				}
-			}
-		})
-	})
-	t.Run("Addition", func(t *testing.T) {
-		field := newFp()
-		zero := &fe{}
-		var a, b, c, u, v *fe
-		for i := 0; i < n; i++ {
-			u = &fe{}
-			v = &fe{}
-			a, _ = field.randElement(&fe{}, rand.Reader)
-			b, _ = field.randElement(&fe{}, rand.Reader)
-			c, _ = field.randElement(&fe{}, rand.Reader)
-			field.add(u, a, b)
-			field.add(u, u, c)
-			field.add(v, b, c)
-			field.add(v, v, a)
-			if !field.equal(u, v) {
-				t.Fatalf("additive associativity does not hold")
-			}
-			field.add(u, a, b)
-			field.add(v, b, a)
-			if !field.equal(u, v) {
-				t.Fatalf("additive commutativity does not hold")
-			}
-			field.add(u, a, zero)
-			if !field.equal(u, a) {
-				t.Fatalf("additive identity does not hold")
-			}
-			field.add(u, zero, zero)
-			if !field.equal(u, zero) {
-				t.Fatalf("bad zero addition")
-			}
-			field.neg(u, a)
-			field.add(u, u, a)
-			if !field.equal(u, zero) {
-				t.Fatalf("bad Negation")
+			if !equal(a, b) {
+				t.Fatalf("bad encoding or decoding\n")
 			}
 		}
 	})
-	t.Run("Doubling", func(t *testing.T) {
-		field := newFp()
-		zero := &fe{}
-		var a, u, v *fe
-		for j := 0; j < n; j++ {
-			u = &fe{}
-			v = &fe{}
-			a, _ = field.randElement(&fe{}, rand.Reader)
-			field.double(u, a)
-			field.add(v, a, a)
-			if !field.equal(u, v) {
-				t.Fatalf("bad doubling\na: %s\nu: %s\nv: %s\n", a, u, v)
+	t.Run("big", func(t *testing.T) {
+		for i := 0; i < fuz; i++ {
+			a, _ := newRand(rand.Reader)
+			b, err := fromBig(toBig(a))
+			if err != nil {
+				t.Fatal(err)
 			}
-			field.double(u, zero)
-			if !field.equal(u, zero) {
-				t.Fatalf("bad zero addition")
+			if !equal(a, b) {
+				t.Fatalf("bad encoding or decoding\n")
 			}
 		}
 	})
-	t.Run("Subtraction", func(t *testing.T) {
-		field := newFp()
-		zero := &fe{}
-		var a, b, c, u, v *fe
-		for j := 0; j < n; j++ {
-			u = &fe{}
-			v = &fe{}
-			a, _ = field.randElement(&fe{}, rand.Reader)
-			b, _ = field.randElement(&fe{}, rand.Reader)
-			c, _ = field.randElement(&fe{}, rand.Reader)
-			field.sub(u, a, c)
-			field.sub(u, u, b)
-			field.sub(v, a, b)
-			field.sub(v, v, c)
-			if !field.equal(u, v) {
-				t.Fatalf("additive associativity does not hold\na: %s\nb: %s\nc: %s\nu: %s\nv:%s\n", a, b, c, u, v)
-			}
-			field.sub(u, a, zero)
-			if !field.equal(u, a) {
-				t.Fatalf("additive identity does not hold\na: %s\nu: %s\n", a, u)
-			}
-			field.sub(u, a, b)
-			field.sub(v, b, a)
-			field.add(u, u, v)
-			if !field.equal(u, zero) {
-				t.Fatalf("additive commutativity does not hold\na: %s\nb: %s\nu: %s\nv: %s", a, b, u, v)
-			}
-			field.sub(u, zero, zero)
-			if !field.equal(u, zero) {
-				t.Fatalf("bad zero subtraction")
-			}
-			field.sub(u, a, a)
-			if !field.equal(u, zero) {
-				t.Fatalf("bad subtraction")
-			}
-			field.sub(u, a, b)
-			field.sub(v, b, a)
-			field.neg(v, v)
-			if !field.equal(u, u) {
-				t.Fatalf("bad negation\na:%s", a.String())
-			}
+}
+
+func TestFpAdditionCrossAgainstBigInt(t *testing.T) {
+	for i := 0; i < fuz; i++ {
+		a, _ := newRand(rand.Reader)
+		b, _ := newRand(rand.Reader)
+		c := new(fe)
+		big_a := toBig(a)
+		big_b := toBig(b)
+		big_c := new(big.Int)
+		add(c, a, b)
+		out_1 := toBytes(c)
+		out_2 := padBytes(big_c.Add(big_a, big_b).Mod(big_c, modulus.Big()).Bytes(), 48)
+		if !bytes.Equal(out_1, out_2) {
+			t.Fatalf("cross test against big.Int is not satisfied A")
 		}
-	})
-	t.Run("Montgomerry", func(t *testing.T) {
-		field := newFp()
-		zero := &fe{}
-		one := &fe{1}
-		var a, b, c, u, v, w *fe
-		for j := 0; j < n; j++ {
-			u = &fe{}
-			v = &fe{}
-			w = &fe{}
-			a, _ = field.randElement(&fe{}, rand.Reader)
-			b, _ = field.randElement(&fe{}, rand.Reader)
-			c, _ = field.randElement(&fe{}, rand.Reader)
-			field.mont(u, zero)
-			if !field.equal(u, zero) {
-				t.Fatalf("bad montgomerry encoding")
-			}
-			field.demont(u, zero)
-			if !field.equal(u, zero) {
-				t.Fatalf("bad montgomerry decoding")
-			}
-			field.mont(u, one)
-			if !field.equal(u, field.one()) {
-				t.Fatalf("bad montgomerry encoding")
-			}
-			field.demont(u, field.one())
-			if !field.equal(u, one) {
-				t.Fatalf("bad montgomerry decoding")
-			}
-			field.mul(u, a, zero)
-			if !field.equal(u, zero) {
-				t.Fatalf("bad zero element")
-			}
-			field.mul(u, a, one)
-			field.mul(u, u, r2)
-			if !field.equal(u, a) {
-				t.Fatalf("multiplication identity does not hold")
-			}
-			field.mul(u, r2, one)
-			if !field.equal(u, field.one()) {
-				t.Fatalf("multiplication identity does not hold, expected to equal r1")
-			}
-			field.mul(u, a, b)
-			field.mul(u, u, c)
-			field.mul(v, b, c)
-			field.mul(v, v, a)
-			if !field.equal(u, v) {
-				t.Fatalf("multiplicative associativity does not hold")
-			}
-			field.add(u, a, b)
-			field.mul(u, c, u)
-			field.mul(w, a, c)
-			field.mul(v, b, c)
-			field.add(v, v, w)
-			if !field.equal(u, v) {
-				t.Fatalf("distributivity does not hold")
-			}
-			field.square(u, a)
-			field.mul(v, a, a)
-			if !field.equal(u, v) {
-				t.Fatalf("bad squaring")
-			}
-			field.mul(u, a, b)
-			field.copy(v, a)
-			field.mulAssign(v, b)
-			if !field.equal(u, v) {
-				t.Fatalf("bad mul assign")
-			}
+		double(c, a)
+		out_1 = toBytes(c)
+		out_2 = padBytes(big_c.Add(big_a, big_a).Mod(big_c, modulus.Big()).Bytes(), 48)
+		if !bytes.Equal(out_1, out_2) {
+			t.Fatalf("cross test against big.Int is not satisfied B")
 		}
-	})
-	t.Run("Exponentiation", func(t *testing.T) {
-		var a, u, v *fe
-		field := newFp()
-		for j := 0; j < n; j++ {
-			u = &fe{}
-			v = &fe{}
-			a, _ = field.randElement(&fe{}, rand.Reader)
-			field.exp(u, a, big.NewInt(0))
-			if !field.equal(u, field.one()) {
-				t.Fatalf("bad exponentiation, expected to equal r1")
-			}
-			field.exp(u, a, big.NewInt(1))
-			if !field.equal(u, a) {
-				t.Fatalf("bad exponentiation, expected to equal a")
-			}
-			field.mul(u, a, a)
-			field.mul(u, u, u)
-			field.mul(u, u, u)
-			field.exp(v, a, big.NewInt(8))
-			if !field.equal(u, v) {
-				t.Fatalf("bad exponentiation")
-			}
-			p := new(big.Int).SetBytes(modulus.Bytes())
-			field.exp(u, a, p)
-			if !field.equal(u, a) {
-				t.Fatalf("bad exponentiation, expected to equal itself")
-			}
-			field.exp(u, a, p.Sub(p, big.NewInt(1)))
-			if !field.equal(u, field.one()) {
-				t.Fatalf("bad exponentiation, expected to equal r1")
-			}
+		sub(c, a, b)
+		out_1 = toBytes(c)
+		out_2 = padBytes(big_c.Sub(big_a, big_b).Mod(big_c, modulus.Big()).Bytes(), 48)
+		if !bytes.Equal(out_1, out_2) {
+			t.Fatalf("cross test against big.Int is not satisfied C")
 		}
-	})
-	t.Run("Inversion", func(t *testing.T) {
-		var a, u, v *fe
-		field := newFp()
-		one := &fe{1}
-		for j := 0; j < n; j++ {
-			u = &fe{}
-			v = &fe{}
-			a, _ = field.randElement(&fe{}, rand.Reader)
-			field.invMontUp(u, a)
-			field.mul(u, u, a)
-			if !field.equal(u, field.one()) {
-				t.Fatalf("bad inversion, expected to equal r1")
-			}
-			field.mont(u, a)
-			field.invMontDown(v, u)
-			field.mul(v, v, u)
-			if !field.equal(v, one) {
-				t.Fatalf("bad inversion, expected to equal 1")
-			}
-			p := new(big.Int).SetBytes(modulus.Bytes())
-			field.exp(u, a, p.Sub(p, big.NewInt(2)))
-			field.invMontUp(v, a)
-			if !field.equal(v, u) {
-				t.Fatalf("bad inversion 1")
-			}
-			field.invEEA(u, a)
-			field.mul(u, u, a)
-			field.mul(u, u, r2)
-			if !field.equal(u, one) {
-				t.Fatalf("bad inversion 2")
-			}
+		neg(c, a)
+		out_1 = toBytes(c)
+		out_2 = padBytes(big_c.Neg(big_a).Mod(big_c, modulus.Big()).Bytes(), 48)
+		if !bytes.Equal(out_1, out_2) {
+			t.Fatalf("cross test against big.Int is not satisfied D")
 		}
-	})
-	t.Run("Sqrt", func(t *testing.T) {
-		r := &fe{}
-		field := newFp()
-		if field.sqrt(r, nonResidue1) {
+	}
+}
+
+func TestFpAdditionProperties(t *testing.T) {
+	for i := 0; i < fuz; i++ {
+
+		zero := zero()
+		a, _ := newRand(rand.Reader)
+		b, _ := newRand(rand.Reader)
+		c_1, c_2 := new(fe), new(fe)
+		add(c_1, a, zero)
+		if !equal(c_1, a) {
+			t.Fatalf("a + 0 == a")
+		}
+		sub(c_1, a, zero)
+		if !equal(c_1, a) {
+			t.Fatalf("a - 0 == a")
+		}
+		double(c_1, zero)
+		if !equal(c_1, zero) {
+			t.Fatalf("2 * 0 == 0")
+		}
+		neg(c_1, zero)
+		if !equal(c_1, zero) {
+			t.Fatalf("-0 == 0")
+		}
+		sub(c_1, zero, a)
+		neg(c_2, a)
+		if !equal(c_1, c_2) {
+			t.Fatalf("0-a == -a")
+		}
+		double(c_1, a)
+		add(c_2, a, a)
+		if !equal(c_1, c_2) {
+			t.Fatalf("2 * a == a + a")
+		}
+		add(c_1, a, b)
+		add(c_2, b, a)
+		if !equal(c_1, c_2) {
+			t.Fatalf("a + b = b + a")
+		}
+		sub(c_1, a, b)
+		sub(c_2, b, a)
+		neg(c_2, c_2)
+		if !equal(c_1, c_2) {
+			t.Fatalf("a - b = - ( b - a )")
+		}
+		c_x, _ := newRand(rand.Reader)
+		add(c_1, a, b)
+		add(c_1, c_1, c_x)
+		add(c_2, a, c_x)
+		add(c_2, c_2, b)
+		if !equal(c_1, c_2) {
+			t.Fatalf("(a + b) + c == (a + c ) + b")
+		}
+		sub(c_1, a, b)
+		sub(c_1, c_1, c_x)
+		sub(c_2, a, c_x)
+		sub(c_2, c_2, b)
+		if !equal(c_1, c_2) {
+			t.Fatalf("(a - b) - c == (a - c ) -b")
+		}
+	}
+}
+
+func TestFpMultiplicationCrossAgainstBigInt(t *testing.T) {
+	for i := 0; i < fuz; i++ {
+		a, _ := newRand(rand.Reader)
+		b, _ := newRand(rand.Reader)
+		c := new(fe)
+		big_a := toBig(a)
+		big_b := toBig(b)
+		big_c := new(big.Int)
+		mul(c, a, b)
+		out_1 := toBytes(c)
+		out_2 := padBytes(big_c.Mul(big_a, big_b).Mod(big_c, modulus.Big()).Bytes(), 48)
+		if !bytes.Equal(out_1, out_2) {
+			t.Fatalf("cross test against big.Int is not satisfied")
+		}
+	}
+}
+
+func TestFpMultiplicationProperties(t *testing.T) {
+	for i := 0; i < fuz; i++ {
+		a, _ := newRand(rand.Reader)
+		b, _ := newRand(rand.Reader)
+		zero := zero()
+		one := one()
+		c_1, c_2 := new(fe), new(fe)
+		mul(c_1, a, zero)
+		if !equal(c_1, zero) {
+			t.Fatalf("a * 0 == 0")
+		}
+		mul(c_1, a, one)
+		if !equal(c_1, a) {
+			t.Fatalf("a * 1 == a")
+		}
+		mul(c_1, a, b)
+		mul(c_2, b, a)
+		if !equal(c_1, c_2) {
+			t.Fatalf("a * b == b * a")
+		}
+		c_x, _ := newRand(rand.Reader)
+		mul(c_1, a, b)
+		mul(c_1, c_1, c_x)
+		mul(c_2, c_x, b)
+		mul(c_2, c_2, a)
+		if !equal(c_1, c_2) {
+			t.Fatalf("(a * b) * c == (a * c) * b")
+		}
+	}
+}
+
+func TestFpExponentiation(t *testing.T) {
+	for i := 0; i < fuz; i++ {
+		a, _ := newRand(rand.Reader)
+		u := new(fe)
+		exp(u, a, big.NewInt(0))
+		if !equal(u, one()) {
+			t.Fatalf("a^0 == 1")
+		}
+		exp(u, a, big.NewInt(1))
+		if !equal(u, a) {
+			t.Fatalf("a^1 == a")
+		}
+		v := new(fe)
+		mul(u, a, a)
+		mul(u, u, u)
+		mul(u, u, u)
+		exp(v, a, big.NewInt(8))
+		if !equal(u, v) {
+			t.Fatalf("((a^2)^2)^2 == a^8")
+		}
+		p := modulus.Big()
+		exp(u, a, p)
+		if !equal(u, a) {
+			t.Fatalf("a^p == a")
+		}
+		exp(u, a, p.Sub(p, big.NewInt(1)))
+		if !equal(u, one()) {
+			t.Fatalf("a^(p-1) == 1")
+		}
+	}
+}
+
+func TestFpInversion(t *testing.T) {
+	for i := 0; i < fuz; i++ {
+		u := new(fe)
+		zero := zero()
+		one := one()
+		inverse(u, zero)
+		if !equal(u, zero) {
+			t.Fatalf("(0^-1) == 0)")
+		}
+		inverse(u, one)
+		if !equal(u, one) {
+			t.Fatalf("(1^-1) == 1)")
+		}
+		a, _ := newRand(rand.Reader)
+		inverse(u, a)
+		mul(u, u, a)
+		if !equal(u, one) {
+			t.Fatalf("(r*a) * r*(a^-1) == r)")
+		}
+		v := new(fe)
+		p := modulus.Big()
+		exp(u, a, p.Sub(p, big.NewInt(2)))
+		inverse(v, a)
+		if !equal(v, u) {
+			t.Fatalf("a^(p-2) == a^-1")
+		}
+	}
+}
+
+func TestFpSquareRoot(t *testing.T) {
+	r := new(fe)
+	if sqrt(r, nonResidue1) {
+		t.Fatalf("non residue cannot have a sqrt")
+	}
+	for i := 0; i < fuz; i++ {
+		a, _ := newRand(rand.Reader)
+		aa, rr, r := &fe{}, &fe{}, &fe{}
+		square(aa, a)
+		if !sqrt(r, aa) {
 			t.Fatalf("bad sqrt 1")
 		}
-		for j := 0; j < n; j++ {
-			a, _ := field.randElement(&fe{}, rand.Reader)
-			aa, rr, r := &fe{}, &fe{}, &fe{}
-			field.square(aa, a)
-			if !field.sqrt(r, aa) {
-				t.Fatalf("bad sqrt 2")
-			}
-			field.square(rr, r)
-			if !field.equal(rr, aa) {
-				t.Fatalf("bad sqrt 3")
-			}
+		square(rr, r)
+		if !equal(rr, aa) {
+			t.Fatalf("bad sqrt 2")
 		}
-	})
+	}
 }
-func TestFpTwo(t *testing.T) {
-	t.Run("Encoding & Decoding", func(t *testing.T) {
-		field := newFp2(nil)
-		in := make([]byte, 96)
-		for i := 0; i < 96; i++ {
-			in[i] = 1
+func TestFp2Serialization(t *testing.T) {
+	field := newFp2()
+	for i := 0; i < fuz; i++ {
+		a, _ := field.rand(rand.Reader)
+		b, err := field.fromBytes(field.toBytes(a))
+		if err != nil {
+			t.Fatal(err)
 		}
-		fe := &fe2{}
-		if err := field.newElementFromBytes(fe, in); err != nil {
-			panic(err)
+		if !field.equal(a, b) {
+			t.Fatalf("bad serialization\n")
 		}
-		if !bytes.Equal(in, field.toBytes(fe)) {
-			t.Errorf("bad encoding\n")
+	}
+}
+
+func TestFp2AdditionProperties(t *testing.T) {
+	field := newFp2()
+	for i := 0; i < fuz; i++ {
+		zero := field.zero()
+		a, _ := field.rand(rand.Reader)
+		b, _ := field.rand(rand.Reader)
+		c_1 := field.new()
+		c_2 := field.new()
+		field.add(c_1, a, zero)
+		if !field.equal(c_1, a) {
+			t.Fatalf("a + 0 == a")
 		}
-	})
-	t.Run("Multiplication", func(t *testing.T) {
-		field := newFp2(nil)
-		var a, b, c, u, v, w *fe2
-		for j := 0; j < n; j++ {
-			u = &fe2{}
-			v = &fe2{}
-			w = &fe2{}
-			a, _ = field.randElement(&fe2{}, rand.Reader)
-			b, _ = field.randElement(&fe2{}, rand.Reader)
-			c, _ = field.randElement(&fe2{}, rand.Reader)
-			field.mul(u, a, b)
-			field.mul(u, u, c)
-			field.mul(v, b, c)
-			field.mul(v, v, a)
-			if !field.equal(u, v) {
-				t.Fatalf("multiplicative associativity does not hold")
-			}
-			field.add(u, a, b)
-			field.mul(u, c, u)
-			field.mul(w, a, c)
-			field.mul(v, b, c)
-			field.add(v, v, w)
-			if !field.equal(u, v) {
-				t.Fatalf("distributivity does not hold")
-			}
-			field.square(u, a)
-			field.mul(v, a, a)
-			if !field.equal(u, v) {
-				t.Fatalf("bad squaring")
-			}
-			field.mul(u, a, b)
-			field.copy(v, a)
-			field.mulAssign(v, b)
-			if !field.equal(u, v) {
-				t.Fatalf("bad mul assign")
-			}
+		field.sub(c_1, a, zero)
+		if !field.equal(c_1, a) {
+			t.Fatalf("a - 0 == a")
 		}
-	})
-	t.Run("Exponentiation", func(t *testing.T) {
-		field := newFp2(nil)
-		var a, u, v *fe2
-		for j := 0; j < n; j++ {
-			u = &fe2{}
-			v = &fe2{}
-			a, _ = field.randElement(&fe2{}, rand.Reader)
-			field.exp(u, a, big.NewInt(0))
-			if !field.equal(u, field.one()) {
-				t.Fatalf("bad exponentiation, expected to equal r1")
-			}
-			_ = v
-			field.exp(u, a, big.NewInt(1))
-			if !field.equal(u, a) {
-				t.Fatalf("bad exponentiation, expected to equal a")
-			}
-			field.mul(u, a, a)
-			field.mul(u, u, u)
-			field.mul(u, u, u)
-			field.exp(v, a, big.NewInt(8))
-			if !field.equal(u, v) {
-				t.Fatalf("bad exponentiation")
-			}
-			// p := new(big.Int).SetBytes(modulus.Bytes())
-			// field.exp(u, a, p)
-			// if !field.equal(u, a) {
-			// 	t.Fatalf("bad exponentiation, expected to equal itself")
-			// }
-			// field.exp(u, a, p.Sub(p, big.NewInt(1)))
-			// if !field.equal(u, field.one()) {
-			// 	t.Fatalf("bad exponentiation, expected to equal one")
-			// }
+		field.double(c_1, zero)
+		if !field.equal(c_1, zero) {
+			t.Fatalf("2 * 0 == 0")
 		}
-	})
-	t.Run("Inversion", func(t *testing.T) {
-		field := newFp2(nil)
-		var a, u *fe2
-		for j := 0; j < n; j++ {
-			u = &fe2{}
-			a, _ = field.randElement(&fe2{}, rand.Reader)
-			field.inverse(u, a)
-			field.mul(u, u, a)
-			if !field.equal(u, field.one()) {
-				t.Fatalf("bad inversion, expected to equal r1")
-			}
+		field.neg(c_1, zero)
+		if !field.equal(c_1, zero) {
+			t.Fatalf("-0 == 0")
 		}
-	})
-	t.Run("Sqrt", func(t *testing.T) {
-		field := newFp2(nil)
-		r := &fe2{}
-		if field.sqrt(r, nonResidue2) {
+		field.sub(c_1, zero, a)
+		field.neg(c_2, a)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("0-a == -a")
+		}
+		field.double(c_1, a)
+		field.add(c_2, a, a)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("2 * a == a + a")
+		}
+		field.add(c_1, a, b)
+		field.add(c_2, b, a)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("a + b = b + a")
+		}
+		field.sub(c_1, a, b)
+		field.sub(c_2, b, a)
+		field.neg(c_2, c_2)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("a - b = - ( b - a )")
+		}
+		c_x, _ := field.rand(rand.Reader)
+		field.add(c_1, a, b)
+		field.add(c_1, c_1, c_x)
+		field.add(c_2, a, c_x)
+		field.add(c_2, c_2, b)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("(a + b) + c == (a + c ) + b")
+		}
+		field.sub(c_1, a, b)
+		field.sub(c_1, c_1, c_x)
+		field.sub(c_2, a, c_x)
+		field.sub(c_2, c_2, b)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("(a - b) - c == (a - c ) -b")
+		}
+	}
+}
+
+func TestFp2MultiplicationProperties(t *testing.T) {
+	field := newFp2()
+	for i := 0; i < fuz; i++ {
+		a, _ := field.rand(rand.Reader)
+		b, _ := field.rand(rand.Reader)
+		zero := field.zero()
+		one := field.one()
+		c_1, c_2 := field.new(), field.new()
+		field.mul(c_1, a, zero)
+		if !field.equal(c_1, zero) {
+			t.Fatalf("a * 0 == 0")
+		}
+		field.mul(c_1, a, one)
+		if !field.equal(c_1, a) {
+			t.Fatalf("a * 1 == a")
+		}
+		field.mul(c_1, a, b)
+		field.mul(c_2, b, a)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("a * b == b * a")
+		}
+		c_x, _ := field.rand(rand.Reader)
+		field.mul(c_1, a, b)
+		field.mul(c_1, c_1, c_x)
+		field.mul(c_2, c_x, b)
+		field.mul(c_2, c_2, a)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("(a * b) * c == (a * c) * b")
+		}
+	}
+}
+
+func TestFp2Exponentiation(t *testing.T) {
+	field := newFp2()
+	for i := 0; i < fuz; i++ {
+		a, _ := field.rand(rand.Reader)
+		u := field.new()
+		field.exp(u, a, big.NewInt(0))
+		if !field.equal(u, field.one()) {
+			t.Fatalf("a^0 == 1")
+		}
+		field.exp(u, a, big.NewInt(1))
+		if !field.equal(u, a) {
+			t.Fatalf("a^1 == a")
+		}
+		v := field.new()
+		field.mul(u, a, a)
+		field.mul(u, u, u)
+		field.mul(u, u, u)
+		field.exp(v, a, big.NewInt(8))
+		if !field.equal(u, v) {
+			t.Fatalf("((a^2)^2)^2 == a^8")
+		}
+		// p := modulus.Big()
+		// field.exp(u, a, p)
+		// if !field.equal(u, a) {
+		// 	t.Fatalf("a^p == a")
+		// }
+		// field.exp(u, a, p.Sub(p, big.NewInt(1)))
+		// if !field.equal(u, field.one()) {
+		// 	t.Fatalf("a^(p-1) == 1")
+		// }
+	}
+}
+
+func TestFp2Inversion(t *testing.T) {
+	field := newFp2()
+	u := field.new()
+	zero := field.zero()
+	one := field.one()
+	field.inverse(u, zero)
+	if !field.equal(u, zero) {
+		t.Fatalf("(0 ^ -1) == 0)")
+	}
+	field.inverse(u, one)
+	if !field.equal(u, one) {
+		t.Fatalf("(1 ^ -1) == 1)")
+	}
+	for i := 0; i < fuz; i++ {
+		a, _ := field.rand(rand.Reader)
+		field.inverse(u, a)
+		field.mul(u, u, a)
+		if !field.equal(u, one) {
+			t.Fatalf("(r * a) * r * (a ^ -1) == r)")
+		}
+		// v := field.new()
+		// p := modulus.Big()
+		// field.exp(u, a, p.Sub(p, big.NewInt(2)))
+		// field.inverse(v, a)
+		// if !field.equal(v, u) {
+		// 	t.Fatalf("a^(p-2) == a^-1")
+		// }
+	}
+}
+
+func TestFp2SquareRoot(t *testing.T) {
+	field := newFp2()
+	r := field.new()
+	if field.sqrt(r, nonResidue2) {
+		t.Fatalf("non residue cannot have a sqrt")
+	}
+	for i := 0; i < fuz; i++ {
+		a, _ := field.rand(rand.Reader)
+		aa, rr, r := field.new(), field.new(), field.new()
+		field.square(aa, a)
+		if !field.sqrt(r, aa) {
 			t.Fatalf("bad sqrt 1")
 		}
-		for j := 0; j < n; j++ {
-			a, _ := field.randElement(&fe2{}, rand.Reader)
-			aa, rr, r := &fe2{}, &fe2{}, &fe2{}
-			field.square(aa, a)
-			if !field.sqrt(r, aa) {
-				t.Fatalf("bad sqrt 2")
-			}
-			field.square(rr, r)
-			if !field.equal(rr, aa) {
-				t.Fatalf("bad sqrt 3")
-			}
+		field.square(rr, r)
+		if !field.equal(rr, aa) {
+			t.Fatalf("bad sqrt 2")
 		}
-	})
+	}
 }
 
-func TestFpSix(t *testing.T) {
-	t.Run("Encoding & Decoding", func(t *testing.T) {
-		field := newFp6(nil)
-		in := make([]byte, 288)
-		for i := 0; i < 288; i++ {
-			in[i] = 1
+func TestFp6Serialization(t *testing.T) {
+	field := newFp6(nil)
+	for i := 0; i < fuz; i++ {
+		a, _ := field.rand(rand.Reader)
+		b, err := field.fromBytes(field.toBytes(a))
+		if err != nil {
+			t.Fatal(err)
 		}
-		fe := &fe6{}
-		if err := field.newElementFromBytes(fe, in); err != nil {
-			panic(err)
+		if !field.equal(a, b) {
+			t.Fatalf("bad serialization\n")
 		}
-		if !bytes.Equal(in, field.toBytes(fe)) {
-			t.Errorf("bad encoding\n")
-		}
-	})
-	t.Run("Multiplication", func(t *testing.T) {
-		field := newFp6(nil)
-		var a, b, c, u, v, w *fe6
-		for j := 0; j < n; j++ {
-			u = &fe6{}
-			v = &fe6{}
-			w = &fe6{}
-			a, _ = field.randElement(&fe6{}, rand.Reader)
-			b, _ = field.randElement(&fe6{}, rand.Reader)
-			c, _ = field.randElement(&fe6{}, rand.Reader)
-			field.mul(u, a, b)
-			field.mul(u, u, c)
-			field.mul(v, b, c)
-			field.mul(v, v, a)
-			if !field.equal(u, v) {
-				t.Fatalf("multiplicative associativity does not hold")
-			}
-			field.add(u, a, b)
-			field.mul(u, c, u)
-			field.mul(w, a, c)
-			field.mul(v, b, c)
-			field.add(v, v, w)
-			if !field.equal(u, v) {
-				t.Fatalf("distributivity does not hold")
-			}
-			field.square(u, a)
-			field.mul(v, a, a)
-			if !field.equal(u, v) {
-				t.Fatalf("bad squaring")
-			}
-		}
-	})
-	t.Run("Exponentiation", func(t *testing.T) {
-		field := newFp6(nil)
-		var a, u, v *fe6
-		for j := 0; j < n; j++ {
-			u = &fe6{}
-			v = &fe6{}
-			a, _ = field.randElement(&fe6{}, rand.Reader)
-			field.exp(u, a, big.NewInt(0))
-			if !field.equal(u, field.one()) {
-				t.Fatalf("bad exponentiation, expected to equal r1")
-			}
-			_ = v
-			field.exp(u, a, big.NewInt(1))
-			if !field.equal(u, a) {
-				t.Fatalf("bad exponentiation, expected to equal a")
-			}
-			field.mul(u, a, a)
-			field.mul(u, u, u)
-			field.mul(u, u, u)
-			field.exp(v, a, big.NewInt(8))
-			if !field.equal(u, v) {
-				t.Fatalf("bad exponentiation")
-			}
-			// p := new(big.Int).SetBytes(modulus.Bytes())
-			// field.exp(u, a, p)
-			// if !field.equal(u, a) {
-			// 	t.Fatalf("bad exponentiation, expected to equal itself")
-			// }
-			// field.exp(u, a, p.Sub(p, big.NewInt(1)))
-			// if !field.equal(u, field.one()) {
-			// 	t.Fatalf("bad exponentiation, expected to equal one")
-			// }
-		}
-	})
-	t.Run("Inversion", func(t *testing.T) {
-		field := newFp6(nil)
-		var a, u *fe6
-		for j := 0; j < n; j++ {
-			u = &fe6{}
-			a, _ = field.randElement(&fe6{}, rand.Reader)
-			field.inverse(u, a)
-			field.mul(u, u, a)
-			if !field.equal(u, field.one()) {
-				t.Fatalf("bad inversion, expected to equal r1")
-			}
-		}
-	})
-	t.Run("MulBy01", func(t *testing.T) {
-		field := newFp6(nil)
-		fq2 := field.f
-		var a, b, u *fe6
-		c := &fe6{}
-		for j := 0; j < n; j++ {
-			a, _ = field.randElement(&fe6{}, rand.Reader)
-			b, _ = field.randElement(&fe6{}, rand.Reader)
-			u, _ = field.randElement(&fe6{}, rand.Reader)
-			fq2.copy(&b[2], fq2.zero())
-			field.mul(u, a, b)
-			field.mulBy01(a, a, &b[0], &b[1])
-			if !field.equal(a, u) {
-				t.Fatal("bad mul by 01")
-			}
-		}
-		_ = c
-	})
-	t.Run("MulBy1", func(t *testing.T) {
-		field := newFp6(nil)
-
-		fq2 := field.f
-		var a, b, u *fe6
-		for j := 0; j < n; j++ {
-			a, _ = field.randElement(&fe6{}, rand.Reader)
-			b, _ = field.randElement(&fe6{}, rand.Reader)
-			u, _ = field.randElement(&fe6{}, rand.Reader)
-			fq2.copy(&b[2], fq2.zero())
-			fq2.copy(&b[0], fq2.zero())
-			field.mul(u, a, b)
-			field.mulBy1(a, a, &b[1])
-			if !field.equal(a, u) {
-				t.Fatal("bad mul by 1")
-			}
-		}
-	})
+	}
 }
 
-func TestFpTwelve(t *testing.T) {
-	t.Run("Encoding & Decoding", func(t *testing.T) {
-		field := newFp12(nil)
-		in := make([]byte, 576)
-		for i := 0; i < 288; i++ {
-			in[i] = 1
+func TestFp6AdditionProperties(t *testing.T) {
+	field := newFp6(nil)
+	for i := 0; i < fuz; i++ {
+		zero := field.zero()
+		a, _ := field.rand(rand.Reader)
+		b, _ := field.rand(rand.Reader)
+		c_1 := field.new()
+		c_2 := field.new()
+		field.add(c_1, a, zero)
+		if !field.equal(c_1, a) {
+			t.Fatalf("a + 0 == a")
 		}
-		fe := &fe12{}
-		if err := field.newElementFromBytes(fe, in); err != nil {
-			panic(err)
+		field.sub(c_1, a, zero)
+		if !field.equal(c_1, a) {
+			t.Fatalf("a - 0 == a")
 		}
-		if !bytes.Equal(in, field.toBytes(fe)) {
-			t.Errorf("bad encoding\n")
+		field.double(c_1, zero)
+		if !field.equal(c_1, zero) {
+			t.Fatalf("2 * 0 == 0")
 		}
-	})
-	t.Run("Multiplication", func(t *testing.T) {
-		var a, b, c, u, v, w *fe12
-		field := newFp12(nil)
-		for j := 0; j < n; j++ {
-			u = &fe12{}
-			v = &fe12{}
-			w = &fe12{}
-			a, _ = field.randElement(&fe12{}, rand.Reader)
-			b, _ = field.randElement(&fe12{}, rand.Reader)
-			c, _ = field.randElement(&fe12{}, rand.Reader)
-			field.mul(u, a, b)
-			field.mul(u, u, c)
-			field.mul(v, b, c)
-			field.mul(v, v, a)
-			if !field.equal(u, v) {
-				t.Fatalf("multiplicative associativity does not hold")
-			}
-			field.add(u, a, b)
-			field.mul(u, c, u)
-			field.mul(w, a, c)
-			field.mul(v, b, c)
-			field.add(v, v, w)
-			if !field.equal(u, v) {
-				t.Fatalf("distributivity does not hold")
-			}
-			field.square(u, a)
-			field.mul(v, a, a)
-			if !field.equal(u, v) {
-				t.Fatalf("bad squaring")
-			}
+		field.neg(c_1, zero)
+		if !field.equal(c_1, zero) {
+			t.Fatalf("-0 == 0")
 		}
-	})
-	t.Run("Exponentiation", func(t *testing.T) {
-		var a, u, v *fe12
-		field := newFp12(nil)
-		for j := 0; j < n; j++ {
-			u = &fe12{}
-			v = &fe12{}
-			a, _ = field.randElement(&fe12{}, rand.Reader)
-			field.exp(u, a, big.NewInt(0))
-			if !field.equal(u, field.one()) {
-				t.Fatalf("bad exponentiation, expected to equal r1")
-			}
-			_ = v
-			field.exp(u, a, big.NewInt(1))
-			if !field.equal(u, a) {
-				t.Fatalf("bad exponentiation, expected to equal a")
-			}
-			field.mul(u, a, a)
-			field.mul(u, u, u)
-			field.mul(u, u, u)
-			field.exp(v, a, big.NewInt(8))
-			if !field.equal(u, v) {
-				t.Fatalf("bad exponentiation")
-			}
-			// p := new(big.Int).SetBytes(modulus.Bytes())
-			// field.exp(u, a, p)
-			// if !field.equal(u, a) {
-			// 	t.Fatalf("bad exponentiation, expected to equal itself")
-			// }
-			// field.exp(u, a, p.Sub(p, big.NewInt(1)))
-			// if !field.equal(u, field.one()) {
-			// 	t.Fatalf("bad exponentiation, expected to equal one")
-			// }
+		field.sub(c_1, zero, a)
+		field.neg(c_2, a)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("0-a == -a")
 		}
-	})
-	t.Run("Inversion", func(t *testing.T) {
-		field := newFp12(nil)
-		var a, u *fe12
-		for j := 0; j < n; j++ {
-			u = &fe12{}
-			a, _ = field.randElement(&fe12{}, rand.Reader)
-			field.inverse(u, a)
-			field.mul(u, u, a)
-			if !field.equal(u, field.one()) {
-				t.Fatalf("bad inversion, expected to equal r1")
-			}
+		field.double(c_1, a)
+		field.add(c_2, a, a)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("2 * a == a + a")
 		}
-	})
-	t.Run("MulBy014", func(t *testing.T) {
-		field := newFp12(nil)
-		fq2 := field.f.f
-		var a, b, u *fe12
-		for j := 0; j < n; j++ {
-			a, _ = field.randElement(&fe12{}, rand.Reader)
-			b, _ = field.randElement(&fe12{}, rand.Reader)
-			u, _ = field.randElement(&fe12{}, rand.Reader)
-			fq2.copy(&b[0][2], fq2.zero())
-			fq2.copy(&b[1][0], fq2.zero())
-			fq2.copy(&b[1][2], fq2.zero())
-			field.mul(u, a, b)
-			field.mulBy014Assign(a, &b[0][0], &b[0][1], &b[1][1])
-			if !field.equal(a, u) {
-				t.Fatal("bad mul by 014")
-			}
+		field.add(c_1, a, b)
+		field.add(c_2, b, a)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("a + b = b + a")
 		}
-	})
+		field.sub(c_1, a, b)
+		field.sub(c_2, b, a)
+		field.neg(c_2, c_2)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("a - b = - ( b - a )")
+		}
+		c_x, _ := field.rand(rand.Reader)
+		field.add(c_1, a, b)
+		field.add(c_1, c_1, c_x)
+		field.add(c_2, a, c_x)
+		field.add(c_2, c_2, b)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("(a + b) + c == (a + c ) + b")
+		}
+		field.sub(c_1, a, b)
+		field.sub(c_1, c_1, c_x)
+		field.sub(c_2, a, c_x)
+		field.sub(c_2, c_2, b)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("(a - b) - c == (a - c ) -b")
+		}
+	}
 }
 
-func BenchmarkFp1(t *testing.B) {
-	var a, b, c fe
-	var field = newFp()
-	field.randElement(&a, rand.Reader)
-	field.randElement(&b, rand.Reader)
-	field.randElement(&c, rand.Reader)
-	t.Run("Addition", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.add(&c, &a, &b)
+func TestFp6SparseMultiplication(t *testing.T) {
+	fp6 := newFp6(nil)
+	fq2 := fp6.fp2
+	var a, b, u *fe6
+	for j := 0; j < fuz; j++ {
+		a, _ = fp6.rand(rand.Reader)
+		b, _ = fp6.rand(rand.Reader)
+		u, _ = fp6.rand(rand.Reader)
+		fq2.copy(&b[2], fq2.zero())
+		fp6.mul(u, a, b)
+		fp6.mulBy01(a, a, &b[0], &b[1])
+		if !fp6.equal(a, u) {
+			t.Fatal("bad mul by 01")
 		}
-	})
-	t.Run("Subtraction", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.sub(&c, &a, &b)
+	}
+	for j := 0; j < fuz; j++ {
+		a, _ = fp6.rand(rand.Reader)
+		b, _ = fp6.rand(rand.Reader)
+		u, _ = fp6.rand(rand.Reader)
+		fq2.copy(&b[2], fq2.zero())
+		fq2.copy(&b[0], fq2.zero())
+		fp6.mul(u, a, b)
+		fp6.mulBy1(a, a, &b[1])
+		if !fp6.equal(a, u) {
+			t.Fatal("bad mul by 1")
 		}
-	})
-	t.Run("Doubling", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.double(&c, &a)
-		}
-	})
-	t.Run("Multiplication", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.mul(&c, &a, &b)
-		}
-	})
-	t.Run("Squaring", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.square(&c, &a)
-		}
-	})
-	t.Run("Inversion", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.inverse(&c, &a)
-		}
-	})
-	t.Run("Exponentiation", func(t *testing.B) {
-		e := new(big.Int).SetBytes(modulus.Bytes())
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.exp(&c, &a, e)
-		}
-	})
-	t.Run("Copy", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.copy(&c, &a)
-		}
-	})
+	}
 }
 
-func BenchmarkFp2(t *testing.B) {
-	var a, b, c fe2
-	var field = newFp2(nil)
-	field.randElement(&a, rand.Reader)
-	field.randElement(&b, rand.Reader)
-	t.Run("Addition", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.add(&c, &a, &b)
+func TestFp6MultiplicationProperties(t *testing.T) {
+	field := newFp6(nil)
+	for i := 0; i < fuz; i++ {
+		a, _ := field.rand(rand.Reader)
+		b, _ := field.rand(rand.Reader)
+		zero := field.zero()
+		one := field.one()
+		c_1, c_2 := field.new(), field.new()
+		field.mul(c_1, a, zero)
+		if !field.equal(c_1, zero) {
+			t.Fatalf("a * 0 == 0")
 		}
-	})
-	t.Run("Subtraction", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.sub(&c, &a, &b)
+		field.mul(c_1, a, one)
+		if !field.equal(c_1, a) {
+			t.Fatalf("a * 1 == a")
 		}
-	})
-	t.Run("Doubling", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.double(&c, &a)
+		field.mul(c_1, a, b)
+		field.mul(c_2, b, a)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("a * b == b * a")
 		}
-	})
-	t.Run("Multiplication", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.mul(&c, &a, &b)
+		c_x, _ := field.rand(rand.Reader)
+		field.mul(c_1, a, b)
+		field.mul(c_1, c_1, c_x)
+		field.mul(c_2, c_x, b)
+		field.mul(c_2, c_2, a)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("(a * b) * c == (a * c) * b")
 		}
-	})
-	t.Run("Squaring", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.square(&c, &a)
-		}
-	})
-	t.Run("Inversion", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.inverse(&c, &a)
-		}
-	})
-	t.Run("Exponentiation", func(t *testing.B) {
-		e := new(big.Int).SetBytes(modulus.Bytes())
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.exp(&c, &a, e)
-		}
-	})
-	t.Run("Copy", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.copy(&c, &a)
-		}
-	})
+	}
 }
 
-func BenchmarkFp6(t *testing.B) {
-	var a, b, c fe6
-	var field = newFp6(nil)
-	field.randElement(&a, rand.Reader)
-	field.randElement(&b, rand.Reader)
-	t.Run("Addition", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.add(&c, &a, &b)
+func TestFp6Exponentiation(t *testing.T) {
+	field := newFp6(nil)
+	for i := 0; i < fuz; i++ {
+		a, _ := field.rand(rand.Reader)
+		u := field.new()
+		field.exp(u, a, big.NewInt(0))
+		if !field.equal(u, field.one()) {
+			t.Fatalf("a^0 == 1")
 		}
-	})
-	t.Run("Subtraction", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.sub(&c, &a, &b)
+		field.exp(u, a, big.NewInt(1))
+		if !field.equal(u, a) {
+			t.Fatalf("a^1 == a")
 		}
-	})
-	t.Run("Doubling", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.double(&c, &a)
+		v := field.new()
+		field.mul(u, a, a)
+		field.mul(u, u, u)
+		field.mul(u, u, u)
+		field.exp(v, a, big.NewInt(8))
+		if !field.equal(u, v) {
+			t.Fatalf("((a^2)^2)^2 == a^8")
 		}
-	})
-	t.Run("Multiplication", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.mul(&c, &a, &b)
-		}
-	})
-	t.Run("Squaring", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.square(&c, &a)
-		}
-	})
-	t.Run("Inversion", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.inverse(&c, &a)
-		}
-	})
-	t.Run("Exponentiation", func(t *testing.B) {
-		e := new(big.Int).SetBytes(modulus.Bytes())
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.exp(&c, &a, e)
-		}
-	})
-	t.Run("Copy", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.copy(&c, &a)
-		}
-	})
+		// p := modulus.Big()
+		// field.exp(u, a, p)
+		// if !field.equal(u, a) {
+		// 	t.Fatalf("a^p == a")
+		// }
+		// field.exp(u, a, p.Sub(p, big.NewInt(1)))
+		// if !field.equal(u, field.one()) {
+		// 	t.Fatalf("a^(p-1) == 1")
+		// }
+	}
 }
 
-func BenchmarkFp12(t *testing.B) {
-	var a, b, c fe12
-	var field = newFp12(nil)
-	field.randElement(&a, rand.Reader)
-	field.randElement(&b, rand.Reader)
-	t.Run("Addition", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.add(&c, &a, &b)
+func TestFp6Inversion(t *testing.T) {
+	field := newFp6(nil)
+	for i := 0; i < fuz; i++ {
+		u := field.new()
+		zero := field.zero()
+		one := field.one()
+		field.inverse(u, zero)
+		if !field.equal(u, zero) {
+			t.Fatalf("(0^-1) == 0)")
 		}
-	})
-	t.Run("Subtraction", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.sub(&c, &a, &b)
+		field.inverse(u, one)
+		if !field.equal(u, one) {
+			t.Fatalf("(1^-1) == 1)")
 		}
-	})
-	t.Run("Doubling", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.double(&c, &a)
+		a, _ := field.rand(rand.Reader)
+		field.inverse(u, a)
+		field.mul(u, u, a)
+		if !field.equal(u, one) {
+			t.Fatalf("(r*a) * r*(a^-1) == r)")
 		}
-	})
-	t.Run("Multiplication", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.mul(&c, &a, &b)
+		// v := field.new()
+		// p := modulus.Big()
+		// field.exp(u, a, p.Sub(p, big.NewInt(2)))
+		// field.inverse(v, a)
+		// if !field.equal(v, u) {
+		// 	t.Fatalf("a^(p-2) == a^-1")
+		// }
+	}
+}
+
+func TestFp12Serialization(t *testing.T) {
+	field := newFp12(nil)
+	for i := 0; i < fuz; i++ {
+		a, _ := field.rand(rand.Reader)
+		b, err := field.fromBytes(field.toBytes(a))
+		if err != nil {
+			t.Fatal(err)
 		}
-	})
-	t.Run("Squaring", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.square(&c, &a)
+		if !field.equal(a, b) {
+			t.Fatalf("bad serialization\n")
 		}
-	})
-	t.Run("Cyclotomic Squaring", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.cyclotomicSquare(&c, &a)
+	}
+}
+
+func TestFp12AdditionProperties(t *testing.T) {
+	field := newFp12(nil)
+	for i := 0; i < fuz; i++ {
+		zero := field.zero()
+		a, _ := field.rand(rand.Reader)
+		b, _ := field.rand(rand.Reader)
+		c_1 := field.new()
+		c_2 := field.new()
+		field.add(c_1, a, zero)
+		if !field.equal(c_1, a) {
+			t.Fatalf("a + 0 == a")
 		}
-	})
-	t.Run("Inversion", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.inverse(&c, &a)
+		field.sub(c_1, a, zero)
+		if !field.equal(c_1, a) {
+			t.Fatalf("a - 0 == a")
 		}
-	})
-	t.Run("Exponentiation", func(t *testing.B) {
-		e := new(big.Int).SetBytes(modulus.Bytes())
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.exp(&c, &a, e)
+		field.double(c_1, zero)
+		if !field.equal(c_1, zero) {
+			t.Fatalf("2 * 0 == 0")
 		}
-	})
-	t.Run("Cyclotomic Exponentiation", func(t *testing.B) {
-		e := new(big.Int).SetBytes(modulus.Bytes())
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.cyclotomicExp(&c, &a, e)
+		field.neg(c_1, zero)
+		if !field.equal(c_1, zero) {
+			t.Fatalf("-0 == 0")
 		}
-	})
-	t.Run("Copy", func(t *testing.B) {
-		t.ResetTimer()
-		for i := 0; i < t.N; i++ {
-			field.copy(&c, &a)
+		field.sub(c_1, zero, a)
+		field.neg(c_2, a)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("0-a == -a")
 		}
-	})
+		field.double(c_1, a)
+		field.add(c_2, a, a)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("2 * a == a + a")
+		}
+		field.add(c_1, a, b)
+		field.add(c_2, b, a)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("a + b = b + a")
+		}
+		field.sub(c_1, a, b)
+		field.sub(c_2, b, a)
+		field.neg(c_2, c_2)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("a - b = - ( b - a )")
+		}
+		c_x, _ := field.rand(rand.Reader)
+		field.add(c_1, a, b)
+		field.add(c_1, c_1, c_x)
+		field.add(c_2, a, c_x)
+		field.add(c_2, c_2, b)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("(a + b) + c == (a + c ) + b")
+		}
+		field.sub(c_1, a, b)
+		field.sub(c_1, c_1, c_x)
+		field.sub(c_2, a, c_x)
+		field.sub(c_2, c_2, b)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("(a - b) - c == (a - c ) -b")
+		}
+	}
+}
+
+func TestFp12MultiplicationProperties(t *testing.T) {
+	field := newFp12(nil)
+	for i := 0; i < fuz; i++ {
+		a, _ := field.rand(rand.Reader)
+		b, _ := field.rand(rand.Reader)
+		zero := field.zero()
+		one := field.one()
+		c_1, c_2 := field.new(), field.new()
+		field.mul(c_1, a, zero)
+		if !field.equal(c_1, zero) {
+			t.Fatalf("a * 0 == 0")
+		}
+		field.mul(c_1, a, one)
+		if !field.equal(c_1, a) {
+			t.Fatalf("a * 1 == a")
+		}
+		field.mul(c_1, a, b)
+		field.mul(c_2, b, a)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("a * b == b * a")
+		}
+		c_x, _ := field.rand(rand.Reader)
+		field.mul(c_1, a, b)
+		field.mul(c_1, c_1, c_x)
+		field.mul(c_2, c_x, b)
+		field.mul(c_2, c_2, a)
+		if !field.equal(c_1, c_2) {
+			t.Fatalf("(a * b) * c == (a * c) * b")
+		}
+	}
+}
+
+func TestFp12SparseMultiplication(t *testing.T) {
+	fp12 := newFp12(nil)
+	fp2 := fp12.fp2()
+	var a, b, u *fe12
+	for j := 0; j < fuz; j++ {
+		a, _ = fp12.rand(rand.Reader)
+		b, _ = fp12.rand(rand.Reader)
+		u, _ = fp12.rand(rand.Reader)
+		fp2.copy(&b[0][2], fp2.zero())
+		fp2.copy(&b[1][0], fp2.zero())
+		fp2.copy(&b[1][2], fp2.zero())
+		fp12.mul(u, a, b)
+		fp12.mulBy014Assign(a, &b[0][0], &b[0][1], &b[1][1])
+		if !fp12.equal(a, u) {
+			t.Fatal("bad mul by 01")
+		}
+	}
+}
+
+func TestFp12Exponentiation(t *testing.T) {
+	field := newFp12(nil)
+	for i := 0; i < fuz; i++ {
+		a, _ := field.rand(rand.Reader)
+		u := field.new()
+		field.exp(u, a, big.NewInt(0))
+		if !field.equal(u, field.one()) {
+			t.Fatalf("a^0 == 1")
+		}
+		field.exp(u, a, big.NewInt(1))
+		if !field.equal(u, a) {
+			t.Fatalf("a^1 == a")
+		}
+		v := field.new()
+		field.mul(u, a, a)
+		field.mul(u, u, u)
+		field.mul(u, u, u)
+		field.exp(v, a, big.NewInt(8))
+		if !field.equal(u, v) {
+			t.Fatalf("((a^2)^2)^2 == a^8")
+		}
+		// p := modulus.Big()
+		// field.exp(u, a, p)
+		// if !field.equal(u, a) {
+		// 	t.Fatalf("a^p == a")
+		// }
+		// field.exp(u, a, p.Sub(p, big.NewInt(1)))
+		// if !field.equal(u, field.one()) {
+		// 	t.Fatalf("a^(p-1) == 1")
+		// }
+	}
+}
+
+func TestFp12Inversion(t *testing.T) {
+	field := newFp12(nil)
+	for i := 0; i < fuz; i++ {
+		u := field.new()
+		zero := field.zero()
+		one := field.one()
+		field.inverse(u, zero)
+		if !field.equal(u, zero) {
+			t.Fatalf("(0^-1) == 0)")
+		}
+		field.inverse(u, one)
+		if !field.equal(u, one) {
+			t.Fatalf("(1^-1) == 1)")
+		}
+		a, _ := field.rand(rand.Reader)
+		field.inverse(u, a)
+		field.mul(u, u, a)
+		if !field.equal(u, one) {
+			t.Fatalf("(r*a) * r*(a^-1) == r)")
+		}
+		// v := field.new()
+		// p := modulus.Big()
+		// field.exp(u, a, p.Sub(p, big.NewInt(2)))
+		// field.inverse(v, a)
+		// if !field.equal(v, u) {
+		// 	t.Fatalf("a^(p-2) == a^-1")
+		// }
+	}
+}
+
+func BenchmarkMultiplication(t *testing.B) {
+	a, _ := newRand(rand.Reader)
+	b, _ := newRand(rand.Reader)
+	c, _ := newRand(rand.Reader)
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		mul(c, a, b)
+	}
+}
+
+func padBytes(in []byte, size int) []byte {
+	out := make([]byte, size)
+	if len(in) > size {
+		panic("bad input for padding")
+	}
+	copy(out[size-len(in):], in)
+	return out
 }

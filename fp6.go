@@ -1,142 +1,378 @@
-// +build nolazy
-
 package bls
 
-type fp6 struct {
-	f *fp2
+import (
+	"fmt"
+	"io"
+	"math/big"
+)
+
+type fp6Temp struct {
 	t [6]*fe2
 }
 
-func newFp6(f *fp2) *fp6 {
+type fp6 struct {
+	fp2 *fp2
+	fp6Temp
+}
+
+func newFp6Temp() fp6Temp {
 	t := [6]*fe2{}
 	for i := 0; i < len(t); i++ {
 		t[i] = &fe2{}
 	}
+	return fp6Temp{t}
+}
+
+func newFp6(f *fp2) *fp6 {
+	t := newFp6Temp()
 	if f == nil {
-		return &fp6{newFp2(nil), t}
+		return &fp6{newFp2(), t}
 	}
 	return &fp6{f, t}
 }
 
-func (fp *fp6) mont(c *fe6, a *fe6) {
-	fp.f.mont(&c[0], &a[0])
-	fp.f.mont(&c[1], &a[1])
-	fp.f.mont(&c[2], &a[2])
+func (e *fp6) fromBytes(b []byte) (*fe6, error) {
+	if len(b) < 288 {
+		return nil, fmt.Errorf("input string should be larger than 288 bytes")
+	}
+	fp2 := e.fp2
+	u2, err := fp2.fromBytes(b[:96])
+	if err != nil {
+		return nil, err
+	}
+	u1, err := fp2.fromBytes(b[96:192])
+	if err != nil {
+		return nil, err
+	}
+	u0, err := fp2.fromBytes(b[192:])
+	if err != nil {
+		return nil, err
+	}
+	return &fe6{*u0, *u1, *u2}, nil
 }
 
-func (fp *fp6) mul(c, a, b *fe6) {
-	t := fp.t
-	fp.f.mul(t[0], &a[0], &b[0])
-	fp.f.mul(t[1], &a[1], &b[1])
-	fp.f.mul(t[2], &a[2], &b[2])
-	fp.f.add(t[3], &a[1], &a[2])
-	fp.f.add(t[4], &b[1], &b[2])
-	fp.f.mulAssign(t[3], t[4])
-	fp.f.add(t[4], t[1], t[2])
-	fp.f.subAssign(t[3], t[4])
-	fp.f.mulByNonResidue(t[3], t[3])
-	fp.f.add(t[5], t[0], t[3])
-	fp.f.add(t[3], &a[0], &a[1])
-	fp.f.add(t[4], &b[0], &b[1])
-	fp.f.mulAssign(t[3], t[4])
-	fp.f.add(t[4], t[0], t[1])
-	fp.f.subAssign(t[3], t[4])
-	fp.f.mulByNonResidue(t[4], t[2])
-	fp.f.add(&c[1], t[3], t[4])
-	fp.f.add(t[3], &a[0], &a[2])
-	fp.f.add(t[4], &b[0], &b[2])
-	fp.f.mulAssign(t[3], t[4])
-	fp.f.add(t[4], t[0], t[2])
-	fp.f.subAssign(t[3], t[4])
-	fp.f.add(&c[2], t[1], t[3])
-	fp.f.copy(&c[0], t[5])
+func (e *fp6) toBytes(a *fe6) []byte {
+	fp2 := e.fp2
+	out := make([]byte, 288)
+	copy(out[:96], fp2.toBytes(&a[2]))
+	copy(out[96:192], fp2.toBytes(&a[1]))
+	copy(out[192:], fp2.toBytes(&a[0]))
+	return out
 }
 
-func (fp *fp6) mulAssign(a, b *fe6) {
-	t := fp.t
-	fp.f.mul(t[0], &a[0], &b[0])
-	fp.f.mul(t[1], &a[1], &b[1])
-	fp.f.mul(t[2], &a[2], &b[2])
-	fp.f.add(t[3], &a[1], &a[2])
-	fp.f.add(t[4], &b[1], &b[2])
-	fp.f.mulAssign(t[3], t[4])
-	fp.f.add(t[4], t[1], t[2])
-	fp.f.subAssign(t[3], t[4])
-	fp.f.mulByNonResidue(t[3], t[3])
-	fp.f.add(t[5], t[0], t[3])
-	fp.f.add(t[3], &a[0], &a[1])
-	fp.f.add(t[4], &b[0], &b[1])
-	fp.f.mulAssign(t[3], t[4])
-	fp.f.add(t[4], t[0], t[1])
-	fp.f.subAssign(t[3], t[4])
-	fp.f.mulByNonResidue(t[4], t[2])
-	fp.f.add(&a[1], t[3], t[4])
-	fp.f.add(t[3], &a[0], &a[2])
-	fp.f.add(t[4], &b[0], &b[2])
-	fp.f.mulAssign(t[3], t[4])
-	fp.f.add(t[4], t[0], t[2])
-	fp.f.subAssign(t[3], t[4])
-	fp.f.add(&a[2], t[1], t[3])
-	fp.f.copy(&a[0], t[5])
+func (e *fp6) new() *fe6 {
+	return &fe6{}
 }
 
-func (fp *fp6) square(c, a *fe6) {
-	t := fp.t
-	fp.f.square(t[0], &a[0])
-	fp.f.mul(t[1], &a[0], &a[1])
-	fp.f.doubleAssign(t[1])
-	fp.f.sub(t[2], &a[0], &a[1])
-	fp.f.addAssign(t[2], &a[2])
-	fp.f.squareAssign(t[2])
-	fp.f.mul(t[3], &a[1], &a[2])
-	fp.f.doubleAssign(t[3])
-	fp.f.square(t[4], &a[2])
-	fp.f.mulByNonResidue(t[5], t[3])
-	fp.f.add(&c[0], t[0], t[5])
-	fp.f.mulByNonResidue(t[5], t[4])
-	fp.f.add(&c[1], t[1], t[5])
-	fp.f.addAssign(t[1], t[2])
-	fp.f.addAssign(t[1], t[3])
-	fp.f.addAssign(t[0], t[4])
-	fp.f.sub(&c[2], t[1], t[0])
+func (e *fp6) zero() *fe6 {
+	return &fe6{}
 }
 
-func (fp *fp6) mulBy01Assign(a *fe6, b0, b1 *fe2) {
-	t := fp.t
-	fp.f.mul(t[0], &a[0], b0)
-	fp.f.mul(t[1], &a[1], b1)
-	fp.f.add(t[5], &a[1], &a[2])
-	fp.f.mul(t[2], b1, t[5])
-	fp.f.subAssign(t[2], t[1])
-	fp.f.mulByNonResidue(t[2], t[2])
-	fp.f.add(t[5], &a[0], &a[2])
-	fp.f.mul(t[3], b0, t[5])
-	fp.f.subAssign(t[3], t[0])
-	fp.f.add(&a[2], t[3], t[1])
-	fp.f.add(t[4], b0, b1)
-	fp.f.add(t[5], &a[0], &a[1])
-	fp.f.mulAssign(t[4], t[5])
-	fp.f.subAssign(t[4], t[0])
-	fp.f.sub(&a[1], t[4], t[1])
-	fp.f.add(&a[0], t[2], t[0])
+func (e *fp6) one() *fe6 {
+	fp2 := e.fp2
+	return &fe6{*fp2.one()}
 }
 
-func (fp *fp6) mulBy01(c, a *fe6, b0, b1 *fe2) {
-	t := fp.t
-	fp.f.mul(t[0], &a[0], b0)
-	fp.f.mul(t[1], &a[1], b1)
-	fp.f.add(t[2], &a[1], &a[2])
-	fp.f.mulAssign(t[2], b1)
-	fp.f.subAssign(t[2], t[1])
-	fp.f.mulByNonResidue(t[2], t[2])
-	fp.f.add(t[3], &a[0], &a[2])
-	fp.f.mulAssign(t[3], b0)
-	fp.f.subAssign(t[3], t[0])
-	fp.f.add(&c[2], t[3], t[1])
-	fp.f.add(t[4], b0, b1)
-	fp.f.add(t[3], &a[0], &a[1])
-	fp.f.mulAssign(t[4], t[3])
-	fp.f.subAssign(t[4], t[0])
-	fp.f.sub(&c[1], t[4], t[1])
-	fp.f.add(&c[0], t[2], t[0])
+func (e *fp6) rand(r io.Reader) (*fe6, error) {
+	fp2 := e.fp2
+	a0, err := fp2.rand(r)
+	if err != nil {
+		return nil, err
+	}
+	a1, err := fp2.rand(r)
+	if err != nil {
+		return nil, err
+	}
+	a2, err := fp2.rand(r)
+	if err != nil {
+		return nil, err
+	}
+	return &fe6{*a0, *a1, *a2}, nil
+}
+
+func (e *fp6) isZero(a *fe6) bool {
+	fp2 := e.fp2
+	return fp2.isZero(&a[0]) && fp2.isZero(&a[1]) && fp2.isZero(&a[2])
+}
+
+func (e *fp6) equal(a, b *fe6) bool {
+	fp2 := e.fp2
+	return fp2.equal(&a[0], &b[0]) && fp2.equal(&a[1], &b[1]) && fp2.equal(&a[2], &b[2])
+}
+
+func (e *fp6) copy(c, a *fe6) {
+	fp2 := e.fp2
+	fp2.copy(&c[0], &a[0])
+	fp2.copy(&c[1], &a[1])
+	fp2.copy(&c[2], &a[2])
+}
+
+func (e *fp6) add(c, a, b *fe6) {
+	fp2 := e.fp2
+	fp2.add(&c[0], &a[0], &b[0])
+	fp2.add(&c[1], &a[1], &b[1])
+	fp2.add(&c[2], &a[2], &b[2])
+}
+
+func (e *fp6) addAssign(a, b *fe6) {
+	fp2 := e.fp2
+	fp2.addAssign(&a[0], &b[0])
+	fp2.addAssign(&a[1], &b[1])
+	fp2.addAssign(&a[2], &b[2])
+}
+
+func (e *fp6) double(c, a *fe6) {
+	fp2 := e.fp2
+	fp2.double(&c[0], &a[0])
+	fp2.double(&c[1], &a[1])
+	fp2.double(&c[2], &a[2])
+}
+
+func (e *fp6) doubleAssign(a *fe6) {
+	fp2 := e.fp2
+	fp2.doubleAssign(&a[0])
+	fp2.doubleAssign(&a[1])
+	fp2.doubleAssign(&a[2])
+}
+
+func (e *fp6) sub(c, a, b *fe6) {
+	fp2 := e.fp2
+	fp2.sub(&c[0], &a[0], &b[0])
+	fp2.sub(&c[1], &a[1], &b[1])
+	fp2.sub(&c[2], &a[2], &b[2])
+}
+
+func (e *fp6) subAssign(a, b *fe6) {
+	fp2 := e.fp2
+	fp2.subAssign(&a[0], &b[0])
+	fp2.subAssign(&a[1], &b[1])
+	fp2.subAssign(&a[2], &b[2])
+}
+
+func (e *fp6) neg(c, a *fe6) {
+	fp2 := e.fp2
+	fp2.neg(&c[0], &a[0])
+	fp2.neg(&c[1], &a[1])
+	fp2.neg(&c[2], &a[2])
+}
+
+func (e *fp6) conjugate(c, a *fe6) {
+	fp2 := e.fp2
+	fp2.copy(&c[0], &a[0])
+	fp2.neg(&c[1], &a[1])
+	fp2.copy(&c[2], &a[2])
+}
+
+func (e *fp6) mul(c, a, b *fe6) {
+	fp2, t := e.fp2, e.t
+	fp2.mul(t[0], &a[0], &b[0])
+	fp2.mul(t[1], &a[1], &b[1])
+	fp2.mul(t[2], &a[2], &b[2])
+	fp2.add(t[3], &a[1], &a[2])
+	fp2.add(t[4], &b[1], &b[2])
+	fp2.mulAssign(t[3], t[4])
+	fp2.add(t[4], t[1], t[2])
+	fp2.subAssign(t[3], t[4])
+	fp2.mulByNonResidue(t[3], t[3])
+	fp2.add(t[5], t[0], t[3])
+	fp2.add(t[3], &a[0], &a[1])
+	fp2.add(t[4], &b[0], &b[1])
+	fp2.mulAssign(t[3], t[4])
+	fp2.add(t[4], t[0], t[1])
+	fp2.subAssign(t[3], t[4])
+	fp2.mulByNonResidue(t[4], t[2])
+	fp2.add(&c[1], t[3], t[4])
+	fp2.add(t[3], &a[0], &a[2])
+	fp2.add(t[4], &b[0], &b[2])
+	fp2.mulAssign(t[3], t[4])
+	fp2.add(t[4], t[0], t[2])
+	fp2.subAssign(t[3], t[4])
+	fp2.add(&c[2], t[1], t[3])
+	fp2.copy(&c[0], t[5])
+}
+
+func (e *fp6) mulAssign(a, b *fe6) {
+	fp2, t := e.fp2, e.t
+	fp2.mul(t[0], &a[0], &b[0])
+	fp2.mul(t[1], &a[1], &b[1])
+	fp2.mul(t[2], &a[2], &b[2])
+	fp2.add(t[3], &a[1], &a[2])
+	fp2.add(t[4], &b[1], &b[2])
+	fp2.mulAssign(t[3], t[4])
+	fp2.add(t[4], t[1], t[2])
+	fp2.subAssign(t[3], t[4])
+	fp2.mulByNonResidue(t[3], t[3])
+	fp2.add(t[5], t[0], t[3])
+	fp2.add(t[3], &a[0], &a[1])
+	fp2.add(t[4], &b[0], &b[1])
+	fp2.mulAssign(t[3], t[4])
+	fp2.add(t[4], t[0], t[1])
+	fp2.subAssign(t[3], t[4])
+	fp2.mulByNonResidue(t[4], t[2])
+	fp2.add(&a[1], t[3], t[4])
+	fp2.add(t[3], &a[0], &a[2])
+	fp2.add(t[4], &b[0], &b[2])
+	fp2.mulAssign(t[3], t[4])
+	fp2.add(t[4], t[0], t[2])
+	fp2.subAssign(t[3], t[4])
+	fp2.add(&a[2], t[1], t[3])
+	fp2.copy(&a[0], t[5])
+}
+
+func (e *fp6) square(c, a *fe6) {
+	fp2, t := e.fp2, e.t
+	fp2.square(t[0], &a[0])
+	fp2.mul(t[1], &a[0], &a[1])
+	fp2.doubleAssign(t[1])
+	fp2.sub(t[2], &a[0], &a[1])
+	fp2.addAssign(t[2], &a[2])
+	fp2.squareAssign(t[2])
+	fp2.mul(t[3], &a[1], &a[2])
+	fp2.doubleAssign(t[3])
+	fp2.square(t[4], &a[2])
+	fp2.mulByNonResidue(t[5], t[3])
+	fp2.add(&c[0], t[0], t[5])
+	fp2.mulByNonResidue(t[5], t[4])
+	fp2.add(&c[1], t[1], t[5])
+	fp2.addAssign(t[1], t[2])
+	fp2.addAssign(t[1], t[3])
+	fp2.addAssign(t[0], t[4])
+	fp2.sub(&c[2], t[1], t[0])
+}
+
+func (e *fp6) mulBy01Assign(a *fe6, b0, b1 *fe2) {
+	fp2, t := e.fp2, e.t
+	fp2.mul(t[0], &a[0], b0)
+	fp2.mul(t[1], &a[1], b1)
+	fp2.add(t[5], &a[1], &a[2])
+	fp2.mul(t[2], b1, t[5])
+	fp2.subAssign(t[2], t[1])
+	fp2.mulByNonResidue(t[2], t[2])
+	fp2.add(t[5], &a[0], &a[2])
+	fp2.mul(t[3], b0, t[5])
+	fp2.subAssign(t[3], t[0])
+	fp2.add(&a[2], t[3], t[1])
+	fp2.add(t[4], b0, b1)
+	fp2.add(t[5], &a[0], &a[1])
+	fp2.mulAssign(t[4], t[5])
+	fp2.subAssign(t[4], t[0])
+	fp2.sub(&a[1], t[4], t[1])
+	fp2.add(&a[0], t[2], t[0])
+}
+
+func (e *fp6) mulBy01(c, a *fe6, b0, b1 *fe2) {
+	fp2, t := e.fp2, e.t
+	fp2.mul(t[0], &a[0], b0)
+	fp2.mul(t[1], &a[1], b1)
+	fp2.add(t[2], &a[1], &a[2])
+	fp2.mulAssign(t[2], b1)
+	fp2.subAssign(t[2], t[1])
+	fp2.mulByNonResidue(t[2], t[2])
+	fp2.add(t[3], &a[0], &a[2])
+	fp2.mulAssign(t[3], b0)
+	fp2.subAssign(t[3], t[0])
+	fp2.add(&c[2], t[3], t[1])
+	fp2.add(t[4], b0, b1)
+	fp2.add(t[3], &a[0], &a[1])
+	fp2.mulAssign(t[4], t[3])
+	fp2.subAssign(t[4], t[0])
+	fp2.sub(&c[1], t[4], t[1])
+	fp2.add(&c[0], t[2], t[0])
+}
+
+func (e *fp6) mulBy1(c, a *fe6, b1 *fe2) {
+	fp2, t := e.fp2, e.t
+	fp2.mul(t[0], &a[2], b1)
+	fp2.mul(&c[2], &a[1], b1)
+	fp2.mul(&c[1], &a[0], b1)
+	fp2.mulByNonResidue(&c[0], t[0])
+}
+
+func (e *fp6) mulByNonResidue(c, a *fe6) {
+	fp2, t := e.fp2, e.t
+	fp2.copy(t[0], &a[0])
+	fp2.mulByNonResidue(&c[0], &a[2])
+	fp2.copy(&c[2], &a[1])
+	fp2.copy(&c[1], t[0])
+}
+
+func (e *fp6) mulByBaseField(c, a *fe6, b *fe2) {
+	fp2 := e.fp2
+	fp2.mul(&c[0], &a[0], b)
+	fp2.mul(&c[1], &a[1], b)
+	fp2.mul(&c[2], &a[2], b)
+}
+
+func (e *fp6) exp(c, a *fe6, s *big.Int) {
+	z := e.one()
+	for i := s.BitLen() - 1; i >= 0; i-- {
+		e.square(z, z)
+		if s.Bit(i) == 1 {
+			e.mul(z, z, a)
+		}
+	}
+	e.copy(c, z)
+}
+
+func (e *fp6) inverse(c, a *fe6) {
+	fp2, t := e.fp2, e.t
+	fp2.square(t[0], &a[0])
+	fp2.mul(t[1], &a[1], &a[2])
+	fp2.mulByNonResidue(t[1], t[1])
+	fp2.subAssign(t[0], t[1])
+	fp2.square(t[1], &a[1])
+	fp2.mul(t[2], &a[0], &a[2])
+	fp2.subAssign(t[1], t[2])
+	fp2.square(t[2], &a[2])
+	fp2.mulByNonResidue(t[2], t[2])
+	fp2.mul(t[3], &a[0], &a[1])
+	fp2.subAssign(t[2], t[3])
+	fp2.mul(t[3], &a[2], t[2])
+	fp2.mul(t[4], &a[1], t[1])
+	fp2.addAssign(t[3], t[4])
+	fp2.mulByNonResidue(t[3], t[3])
+	fp2.mul(t[4], &a[0], t[0])
+	fp2.addAssign(t[3], t[4])
+	fp2.inverse(t[3], t[3])
+	fp2.mul(&c[0], t[0], t[3])
+	fp2.mul(&c[1], t[2], t[3])
+	fp2.mul(&c[2], t[1], t[3])
+}
+
+func (e *fp6) frobeniusMap(c, a *fe6, power uint) {
+	fp2 := e.fp2
+	fp2.frobeniousMap(&c[0], &a[0], power)
+	fp2.frobeniousMap(&c[1], &a[1], power)
+	fp2.frobeniousMap(&c[2], &a[2], power)
+	switch power % 6 {
+	case 0:
+		return
+	case 3:
+		neg(&c[0][0], &a[1][1])
+		c[1][1].Set(&a[1][0])
+		fp2.neg(&a[2], &a[2])
+	default:
+		fp2.mul(&c[1], &c[1], &frobeniusCoeffs61[power%6])
+		fp2.mul(&c[2], &c[2], &frobeniusCoeffs62[power%6])
+	}
+}
+
+func (e *fp6) frobeniusMapAssign(a *fe6, power uint) {
+	fp2 := e.fp2
+	fp2.frobeniousMapAssign(&a[0], power)
+	fp2.frobeniousMapAssign(&a[1], power)
+	fp2.frobeniousMapAssign(&a[2], power)
+	t := e.t
+	switch power % 6 {
+	case 0:
+		return
+	case 3:
+		neg(&t[0][0], &a[1][1])
+		a[1][1].Set(&a[1][0])
+		a[1][0].Set(&t[0][0])
+		fp2.neg(&a[2], &a[2])
+	default:
+		fp2.mulAssign(&a[1], &frobeniusCoeffs61[power%6])
+		fp2.mulAssign(&a[2], &frobeniusCoeffs62[power%6])
+	}
 }
