@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"io"
 
-	blsmap "github.com/drand/bls12381rs"
 	"github.com/drand/kyber"
 	"github.com/drand/kyber/group/mod"
 )
@@ -26,15 +25,15 @@ func newKyberG1(p *PointG1) *KyberG1 {
 }
 
 func (k *KyberG1) Equal(k2 kyber.Point) bool {
-	return NewG1(nil).Equal(k.p, k2.(*KyberG1).p)
+	return NewG1().Equal(k.p, k2.(*KyberG1).p)
 }
 
 func (k *KyberG1) Null() kyber.Point {
-	return newKyberG1(NewG1(nil).Zero())
+	return newKyberG1(NewG1().Zero())
 }
 
 func (k *KyberG1) Base() kyber.Point {
-	return newKyberG1(NewG1(nil).One())
+	return newKyberG1(NewG1().One())
 }
 
 func (k *KyberG1) Pick(rand cipher.Stream) kyber.Point {
@@ -70,20 +69,20 @@ func (k *KyberG1) Data() ([]byte, error) {
 func (k *KyberG1) Add(a, b kyber.Point) kyber.Point {
 	aa := a.(*KyberG1)
 	bb := b.(*KyberG1)
-	NewG1(nil).Add(k.p, aa.p, bb.p)
+	NewG1().Add(k.p, aa.p, bb.p)
 	return k
 }
 
 func (k *KyberG1) Sub(a, b kyber.Point) kyber.Point {
 	aa := a.(*KyberG1)
 	bb := b.(*KyberG1)
-	NewG1(nil).Sub(k.p, aa.p, bb.p)
+	NewG1().Sub(k.p, aa.p, bb.p)
 	return k
 }
 
 func (k *KyberG1) Neg(a kyber.Point) kyber.Point {
 	aa := a.(*KyberG1)
-	NewG1(nil).Neg(k.p, aa.p)
+	NewG1().Neg(k.p, aa.p)
 	return k
 }
 
@@ -91,17 +90,17 @@ func (k *KyberG1) Mul(s kyber.Scalar, q kyber.Point) kyber.Point {
 	if q == nil {
 		q = nullKyberG1().Base()
 	}
-	NewG1(nil).MulScalar(k.p, q.(*KyberG1).p, &s.(*mod.Int).V)
+	NewG1().MulScalar(k.p, q.(*KyberG1).p, &s.(*mod.Int).V)
 	return k
 }
 
 func (k *KyberG1) MarshalBinary() ([]byte, error) {
-	return NewG1(nil).ToCompressed(k.p), nil
+	return NewG1().ToCompressed(k.p), nil
 }
 
 func (k *KyberG1) UnmarshalBinary(buff []byte) error {
 	var err error
-	k.p, err = NewG1(nil).FromCompressed(buff)
+	k.p, err = NewG1().FromCompressed(buff)
 	return err
 }
 
@@ -132,15 +131,15 @@ func (k *KyberG1) String() string {
 }
 
 func (k *KyberG1) Hash(m []byte) kyber.Point {
-	/*if len(m) != 32 {*/
-	//m = sha256Hash(m)
-	//}
-	//var s [32]byte
-	//copy(s[:], m)
-	//pg1 := hashWithDomainG1(NewG1(nil), s, domainG2)
-	/*k.p = pg1*/
-	buff := blsmap.MapToG1(m, nil)
-	_ = k.UnmarshalBinary(buff)
+	if len(m) != 32 {
+		m = sha256Hash(m)
+	}
+	var s [32]byte
+	copy(s[:], m)
+	pg1 := hashWithDomainG1(NewG1(), s, domainG1)
+	k.p = pg1
+	//buff := blsmap.MapToG1(m, nil)
+	//_ = k.UnmarshalBinary(buff)
 	return k
 
 }

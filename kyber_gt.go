@@ -14,7 +14,7 @@ type KyberGT struct {
 }
 
 func newEmptyGT() *KyberGT {
-	return newKyberGT(newFp12(nil).newElement())
+	return newKyberGT(newFp12(nil).new())
 }
 func newKyberGT(f *fe12) *KyberGT {
 	return &KyberGT{
@@ -33,7 +33,7 @@ func (k *KyberGT) Null() kyber.Point {
 
 func (k *KyberGT) Base() kyber.Point {
 	var baseReader, _ = blake2b.NewXOF(0, []byte("Quand il y a à manger pour huit, il y en a bien pour dix."))
-	_, err := newFp12(nil).randElement(k.f, baseReader)
+	_, err := newFp12(nil).rand(baseReader)
 	if err != nil {
 		panic(err)
 	}
@@ -99,7 +99,9 @@ func (k *KyberGT) MarshalTo(w io.Writer) (int, error) {
 }
 
 func (k *KyberGT) UnmarshalBinary(buf []byte) error {
-	return newFp12(nil).newElementFromBytes(k.f, buf)
+	fe12, err := newFp12(nil).fromBytes(buf)
+	k.f = fe12
+	return err
 }
 
 func (k *KyberGT) UnmarshalFrom(r io.Reader) (int, error) {
