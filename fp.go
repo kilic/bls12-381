@@ -20,6 +20,37 @@ func fromBytes(in []byte) (*fe, error) {
 	return fe, nil
 }
 
+func from64Bytes(in []byte) (*fe, error) {
+	if len(in) != 64 {
+		return nil, fmt.Errorf("input string should be equal 64 bytes")
+	}
+	a0 := make([]byte, 48)
+	copy(a0[16:48], in[:32])
+	a1 := make([]byte, 48)
+	copy(a1[16:48], in[32:])
+	e0, err := fromBytes(a0)
+	if err != nil {
+		return nil, err
+	}
+	e1, err := fromBytes(a1)
+	if err != nil {
+		return nil, err
+	}
+	// F = 2 ^ 256 * R
+	F := fe{
+		0x75b3cd7c5ce820f,
+		0x3ec6ba621c3edb0b,
+		0x168a13d82bff6bce,
+		0x87663c4bf8c449d2,
+		0x15f34c83ddc8d830,
+		0xf9628b49caa2e85,
+	}
+
+	mul(e0, e0, &F)
+	add(e1, e1, e0)
+	return e1, nil
+}
+
 func fromBig(in *big.Int) (*fe, error) {
 	fe := new(fe).SetBig(in)
 	if !valid(fe) {
