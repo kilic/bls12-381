@@ -311,3 +311,27 @@ func TestKyberThresholdG1(t *testing.T) {
 	tscheme := tbls.NewThresholdSchemeOnG2(suite)
 	test.ThresholdTest(t, suite.G1(), tscheme)
 }
+
+func TestKyberMap(t *testing.T) {
+	// TEST compatibility with pairing_plus v19 hash-to-curve
+	type Hashable interface {
+		Hash(msg []byte) kyber.Point
+	}
+	suite := NewBLS12381Suite()
+	msg := []byte{1, 2, 3, 4}
+	domain := []byte("BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_")
+	expDomain := []byte{66, 76, 83, 95, 83, 73, 71, 95, 66, 76, 83, 49, 50, 51, 56, 49, 71, 50, 95, 88, 77, 68, 58, 83, 72, 65, 45, 50, 53, 54, 95, 83, 83, 87, 85, 95, 82, 79, 95, 78, 85, 76, 95}
+	require.Equal(t, expDomain, domain)
+
+	DomainG1 = domain
+	DomainG2 = domain
+	g2 := suite.G2().Point().(Hashable).Hash(msg)
+	g2Buff, _ := g2.MarshalBinary()
+	expBuff := []byte{181, 210, 28, 109, 17, 179, 69, 136, 116, 26, 243, 48, 174, 161, 221, 170, 166, 117, 230, 82, 140, 126, 110, 159, 57, 19, 243, 7, 38, 137, 81, 34, 174, 180, 182, 210, 238, 114, 101, 200, 81, 127, 63, 170, 73, 213, 21, 85, 18, 61, 232, 226, 86, 7, 172, 113, 197, 213, 56, 135, 54, 170, 169, 14, 222, 79, 241, 126, 195, 10, 81, 174, 166, 210, 93, 156, 49, 6, 180, 236, 64, 89, 160, 46, 10, 167, 130, 6, 164, 183, 65, 210, 206, 221, 206, 246}
+	require.Equal(t, expBuff, g2Buff)
+
+	g1 := suite.G1().Point().(Hashable).Hash(msg)
+	g1Buff, _ := g1.MarshalBinary()
+	expBuff = []byte{150, 231, 171, 210, 107, 209, 224, 216, 101, 98, 109, 77, 204, 113, 126, 73, 8, 124, 185, 124, 96, 92, 42, 107, 94, 144, 249, 53, 19, 125, 129, 233, 243, 253, 146, 1, 74, 38, 20, 245, 206, 63, 87, 254, 52, 237, 14, 1, 227}
+	require.Equal(t, expBuff, g1Buff)
+}

@@ -151,13 +151,8 @@ func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 	if ok := g.f.sqrt(y, y); !ok {
 		return nil, fmt.Errorf("point is not on curve")
 	}
-	// select lexicographically, should be in normalized form
-	negYn, negY, yn := &fe2{}, &fe2{}, &fe2{}
-	g.f.fromMont(yn, y)
-	g.f.neg(negY, y)
-	g.f.neg(negYn, yn)
-	if (yn[1].Cmp(&negYn[1]) > 0 != a) || (yn[1].IsZero() && yn[0].Cmp(&negYn[0]) > 0 != a) {
-		g.f.copy(y, negY)
+	if y.signBE() == a {
+		g.f.neg(y, y)
 	}
 	z := g.f.one()
 	p := &PointG2{*x, *y, *z}
@@ -178,10 +173,7 @@ func (g *G2) ToCompressed(p *PointG2) []byte {
 		out[0] |= 1 << 6
 	} else {
 		copy(out[:], g.f.toBytes(&p[0]))
-		y, negY := &fe2{}, &fe2{}
-		g.f.fromMont(y, &p[1])
-		g.f.neg(negY, y)
-		if (y[1].Cmp(&negY[1]) > 0) || (y[1].IsZero() && y[1].Cmp(&negY[1]) > 0) {
+		if !p[1].signBE() {
 			out[0] |= 1 << 5
 		}
 	}
@@ -517,76 +509,43 @@ func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG
 	return r, nil
 }
 
-// MapToPointTI given a byte slice returns a valid G2 point.
-// This mapping function implements the 'try and increment' method.
-func (g *G2) MapToPointTI(in []byte) (*PointG2, error) {
-	fp2 := g.f
-	x, err := fp2.fromBytes(in)
+// EncodeToCurve given a message and domain seperator tag returns the hash result
+// which is a valid curve point.
+// Implementation follows BLS12381G1_XMD:SHA-256_SSWU_NU_ suite at
+// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06
+func (g *G2) EncodeToCurve(msg, domain []byte) (*PointG2, error) {
+	hashRes, err := hashToFpXMDSHA256(msg, domain, 2)
 	if err != nil {
 		return nil, err
 	}
-	y := &fe2{}
-	one := fp2.one()
-	for {
-		fp2.square(y, x)
-		fp2.mul(y, y, x)
-		fp2.add(y, y, b2)
-		if ok := fp2.sqrt(y, y); ok {
-			// favour negative y
-			negYn, negY, yn := &fe2{}, &fe2{}, &fe2{}
-			fp2.fromMont(yn, y)
-			fp2.neg(negY, y)
-			fp2.neg(negYn, yn)
-			if yn[1].Cmp(&negYn[1]) > 0 || (yn[1].IsZero() && yn[0].Cmp(&negYn[0]) > 0) {
-				// fp2.copy(y, y)
-			} else {
-				fp2.copy(y, negY)
-			}
-			p := &PointG2{*x, *y, *one}
-			g.ClearCofactor(p)
-			return p, nil
-		}
-		fp2.add(x, x, one)
-		//fp2.add(x, x, &fp2One)
-	}
-}
-
-func hashWithDomainG2(g2 *G2, msg [32]byte, domain [8]byte) *PointG2 {
-	xReBytes := [41]byte{}
-	xImBytes := [41]byte{}
-	xBytes := make([]byte, 96)
-	copy(xReBytes[:32], msg[:])
-	copy(xReBytes[32:40], domain[:])
-	xReBytes[40] = 0x01
-	copy(xImBytes[:32], msg[:])
-	copy(xImBytes[32:40], domain[:])
-	xImBytes[40] = 0x02
-	copy(xBytes[16:48], sha256Hash(xImBytes[:]))
-	copy(xBytes[64:], sha256Hash(xReBytes[:]))
-	p2, err := g2.MapToPointTI(xBytes)
-	if err != nil {
-		panic(err)
-	}
-	return p2
-}
-
-// MapToPointSWU given a byte slice returns a valid G2 point.
-// This mapping function implements the Simplified Shallue-van de Woestijne-Ulas method.
-// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
-// Input byte slice should be a valid field element, otherwise an error is returned.
-func (g *G2) MapToPointSWU(in []byte) (*PointG2, error) {
 	fp2 := g.f
-	u, err := fp2.fromBytes(in)
-	if err != nil {
-		return nil, err
-	}
-	x, y := fp2.swuMap(u)
-	fp2.isogenyMap(x, y)
+	u := &fe2{*hashRes[0], *hashRes[1]}
+	x, y := swuMapG2(fp2, u)
+	isogenyMapG2(fp2, x, y)
 	one := fp2.one()
 	q := &PointG2{*x, *y, *one}
-	if !g.IsOnCurve(q) {
-		return nil, fmt.Errorf("Found point is not on curve")
-	}
-	g.MulScalar(q, q, cofactorEFFG2)
+	g.ClearCofactor(q)
 	return g.Affine(q), nil
+}
+
+// HashToCurve given a message and domain seperator tag returns the hash result
+// which is a valid curve point.
+// Implementation follows BLS12381G1_XMD:SHA-256_SSWU_RO_ suite at
+// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06
+func (g *G2) HashToCurve(msg, domain []byte) (*PointG2, error) {
+	hashRes, err := hashToFpXMDSHA256(msg, domain, 4)
+	if err != nil {
+		return nil, err
+	}
+	fp2 := g.f
+	u0, u1 := &fe2{*hashRes[0], *hashRes[1]}, &fe2{*hashRes[2], *hashRes[3]}
+	x0, y0 := swuMapG2(fp2, u0)
+	x1, y1 := swuMapG2(fp2, u1)
+	one := fp2.one()
+	p0, p1 := &PointG2{*x0, *y0, *one}, &PointG2{*x1, *y1, *one}
+	g.Add(p0, p0, p1)
+	g.Affine(p0)
+	isogenyMapG2(fp2, &p0[0], &p0[1])
+	g.ClearCofactor(p0)
+	return g.Affine(p0), nil
 }

@@ -127,35 +127,12 @@ func (fe *fe) IsOne() bool {
 }
 
 func (fe *fe) Cmp(fe2 *fe) int {
-	if fe[5] > fe2[5] {
-		return 1
-	} else if fe[5] < fe2[5] {
-		return -1
-	}
-	if fe[4] > fe2[4] {
-		return 1
-	} else if fe[4] < fe2[4] {
-		return -1
-	}
-	if fe[3] > fe2[3] {
-		return 1
-	} else if fe[3] < fe2[3] {
-		return -1
-	}
-	if fe[2] > fe2[2] {
-		return 1
-	} else if fe[2] < fe2[2] {
-		return -1
-	}
-	if fe[1] > fe2[1] {
-		return 1
-	} else if fe[1] < fe2[1] {
-		return -1
-	}
-	if fe[0] > fe2[0] {
-		return 1
-	} else if fe[0] < fe2[0] {
-		return -1
+	for i := 5; i > -1; i-- {
+		if fe[i] > fe2[i] {
+			return 1
+		} else if fe[i] < fe2[i] {
+			return -1
+		}
 	}
 	return 0
 }
@@ -164,11 +141,17 @@ func (fe *fe) Equals(fe2 *fe) bool {
 	return fe2[0] == fe[0] && fe2[1] == fe[1] && fe2[2] == fe[2] && fe2[3] == fe[3] && fe2[4] == fe[4] && fe2[5] == fe[5]
 }
 
-func (e *fe) sign() int {
+func (e *fe) signBE() bool {
 	negZ, z := new(fe), new(fe)
 	fromMont(z, e)
 	neg(negZ, z)
-	return negZ.Cmp(z)
+	return negZ.Cmp(z) > -1
+}
+
+func (e *fe) sign() bool {
+	r := new(fe)
+	fromMont(r, e)
+	return r[0]&1 == 0
 }
 
 func (fe *fe) div2(e uint64) {
@@ -191,10 +174,19 @@ func (fe *fe) mul2() uint64 {
 	return e
 }
 
-func (fe *fe2) sign() int {
-	cmp := fe[1].sign()
-	if cmp != 0 {
-		return cmp
+func (fe *fe2) signBE() bool {
+	if !fe[1].IsZero() {
+		return fe[1].signBE()
 	}
-	return fe[0].sign()
+	return fe[0].signBE()
+}
+
+func (e *fe2) sign() bool {
+	r := new(fe)
+	if !e[0].IsZero() {
+		fromMont(r, &e[0])
+		return r[0]&1 == 0
+	}
+	fromMont(r, &e[1])
+	return r[0]&1 == 0
 }

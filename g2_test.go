@@ -1,6 +1,7 @@
 package bls
 
 import (
+	"bytes"
 	"crypto/rand"
 	"io/ioutil"
 	"math/big"
@@ -102,6 +103,7 @@ func TestG2AdditiveProperties(t *testing.T) {
 	zero := g.Zero()
 	for i := 0; i < fuz; i++ {
 		a, b := g.rand(), g.rand()
+		_, _, _ = b, t1, zero
 		g.Add(t0, a, zero)
 		if !g.Equal(t0, a) {
 			t.Fatalf("a + 0 == a")
@@ -216,6 +218,10 @@ func TestZKCryptoVectorsG2UncompressedValid(t *testing.T) {
 		if err != nil {
 			t.Fatal("decoing fails", err, i)
 		}
+		uncompressed := g.ToUncompressed(p2)
+		if !bytes.Equal(vector, uncompressed) {
+			t.Fatalf("bad serialization")
+		}
 		if !g.Equal(p1, p2) {
 			t.Fatalf("\nwant: %s\nhave: %s\n", p1, p2)
 		}
@@ -236,6 +242,10 @@ func TestZKCryptoVectorsG2CompressedValid(t *testing.T) {
 		if err != nil {
 			t.Fatal("decoing fails", err, i)
 		}
+		compressed := g.ToCompressed(p2)
+		if !bytes.Equal(vector, compressed) {
+			t.Fatalf("bad serialization")
+		}
 		if !g.Equal(p1, p2) {
 			t.Fatalf("\nwant: %s\nhave: %s\n", p1, p2)
 		}
@@ -255,7 +265,7 @@ func TestG2MultiExpExpected(t *testing.T) {
 	g.Copy(bases[1], one)
 	expected, result := g.New(), g.New()
 	g.MulScalar(expected, one, big.NewInt(5))
-	g.MultiExp(result, bases[:], scalars[:])
+	_, _ = g.MultiExp(result, bases[:], scalars[:])
 	if !g.Equal(expected, result) {
 		t.Fatalf("bad multi-exponentiation")
 	}
@@ -281,44 +291,116 @@ func TestG2MultiExpBatch(t *testing.T) {
 		g.Add(expected, expected, tmp)
 	}
 	result := g.New()
-	g.MultiExp(result, bases, scalars)
+	_, _ = g.MultiExp(result, bases, scalars)
 	if !g.Equal(expected, result) {
 		t.Fatalf("bad multi-exponentiation")
 	}
 }
 
-func TestG2SWUMap(t *testing.T) {
-	// G.10.2.  BLS12381G2_XMD:SHA-256_SSWU_NU_
-	// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06#appendix-G.10.2
+func TestG2EncodeToCurve(t *testing.T) {
+	domain := []byte("BLS12381G2_XMD:SHA-256_SSWU_NU_TESTGEN")
 	for i, v := range []struct {
-		U []byte
-		P []byte
+		msg      []byte
+		expected []byte
 	}{
 		{
-			U: fromHex(-1, "094376a68cdc8f64bd981d59bf762f9b2960df6b135f6e09ceada2fe8d0000bbf04023492796c09f8ef04016a2e8365f09367e3b485dda3925e82cc458e5009051281d3e442e94f9ef9feec44ee26375d6dc904dc1aa1f831f2aebd7b437ad12"),
-			P: fromHex(-1, "04264ddf941f7c9ea5ad62027c72b194c6c3f62a92fcdb56ddc9de7990489af1f81c576e7f451c2cd416102253e040f0170919c7845a9e623cef297e17484606a3eb2ae21ed8a21ff2b258861daefa3ac36955c0b374c6f4925868920d9c5f0b02d03d852629f70563e3a653ccc2e114439f551a2fd87c8136eb205b84e22c3f40507beccdcdc52c921b69a57968ec7c0ce03abe6c55ff0640b2b303440d88bd1a2b0cbfe3274b2802c1f58b1085e4dd8795c9c4d9c166d2f033e3c438e7f8a9"),
+			msg: []byte(""),
+			expected: fromHex(-1,
+				"0d4333b77becbf9f9dfa3ca928002233d1ecc854b1447e5a71f751c9042d000f42db91c1d6649a5e0ad22bd7bf7398b8",
+				"027e4bfada0b47f9f07e04aec463c7371e68f2fd0c738cd517932ea3801a35acf09db018deda57387b0f270f7a219e4d",
+				"0cc76dc777ea0d447e02a41004f37a0a7b1fafb6746884e8d9fc276716ccf47e4e0899548a2ec71c2bdf1a2a50e876db",
+				"053674cba9ef516ddc218fedb37324e6c47de27f88ab7ef123b006127d738293c0277187f7e2f80a299a24d84ed03da7",
+			),
 		},
 		{
-			U: fromHex(-1, "0f105595e14847cc9a41fd70deb3240337678b266304100ec261add2585b991c7268bb1a325d2f871b327e8d04fd579b17ecd5d41a860b8886cb1210874b254f59945b089f774dcc14bc1aca7d4e3c975bce0d28510c442e9a932be5880ee5b1"),
-			P: fromHex(-1, "019a3b47aa956b2b548cc04d9e109dec06642d6e28814f7e35f807e1ce609e2eae3a155af406c842529776d8192f562e16d830a4e12fddfbdaf9a667f94f21e490879fd3ccc5ee6f039cd7c2174fb47ea8027af78779a978d2a921612844587f15adde069459ab2012b44c7703119185b96b7f04ad59b39f4f6aea35fdbb9c5c7d876b5f89afb55b67e7da96ad489dc315930174c11aa9b51a5cc3ebfa1ab6377e2318c4ea2df387bdb84b28687a02c86e6401b195bbcabb6e95d6ae43669e12"),
+			msg: []byte("abc"),
+			expected: fromHex(-1,
+				"18f0f87b40af67c056915dbaf48534c592524e82c1c2b50c3734d02c0172c80df780a60b5683759298a3303c5d942778",
+				"09349f1cb5b2e55489dcd45a38545343451cc30a1681c57acd4fb0a6db125f8352c09f4a67eb7d1d8242cb7d3405f97b",
+				"10a2ba341bc689ab947b7941ce6ef39be17acaab067bd32bd652b471ab0792c53a2bd03bdac47f96aaafe96e441f63c0",
+				"02f2d9deb2c7742512f5b8230bf0fd83ea42279d7d39779543c1a43b61c885982b611f6a7a24b514995e8a098496b811",
+			),
 		},
 		{
-			U: fromHex(-1, "1107a6f450c6c9580c720190b577f52c633cf5f3defb528ae873d3723bccc8fa433014e9120a1da31abc27c674f37ae4032ae17a23a76c94745a5460cd9f1191c0ebeec7adfc4df28b0833e536b7dbabf498dc076ff16cc11c6a6ef5105df693"),
-			P: fromHex(-1, "0910b2d55e210122fab2d2dae81e6a440fd22e925e422aaf16a8fd28477bacb12aa888de0faeea203e372a1c1cd9578c1498937f0ed18c49ebbcdee579b58ce235f3ab03be5dc809e1df25e2e0b4eb4c672f4eaf26df91f3755d6367df55d5be102631eb4e684d759312d7eab78598f487c2c10ad3d3552cb43ce6f09a11eb46e551864863077906d3ecfd921f1fe541033b1948575e70fed67fb4f7bd86b5452dfc0afeb74ecf5cab4a6872e33f0eade9564d3d5b9fcb9d4c498afda0bc037d"),
+			msg: []byte("abcdef0123456789"),
+			expected: fromHex(-1,
+				"19808ec5930a53c7cf5912ccce1cc33f1b3dcff24a53ce1cc4cba41fd6996dbed4843ccdd2eaf6a0cd801e562718d163",
+				"149fe43777d34f0d25430dea463889bd9393bdfb4932946db23671727081c629ebb98a89604f3433fba1c67d356a4af7",
+				"04783e391c30c83f805ca271e353582fdf19d159f6a4c39b73acbb637a9b8ac820cfbe2738d683368a7c07ad020e3e33",
+				"04c0d6793a766233b2982087b5f4a254f261003ccb3262ea7c50903eecef3e871d1502c293f9e063d7d293f6384f4551",
+			),
 		},
 		{
-			U: fromHex(-1, "0306162d24592a18fa8de2007d7b69d04bb7a71a5a7965d15bdcbaa4ddf9b599079fbdae9f67d55ab6dba044f9daf1790cda6b874f8c41862c078099aa76d607be51d913a2e3f997539a0993bda31892292818c74aa9be035f234df2576fe49a"),
-			P: fromHex(-1, "021f7faa0550e5a5d08338b4c0a5d30240dec7989fc7c77b6ffba9bfd5d64ce45af5aad8da8482bf0da91af4f29d371f18af6eedb7ed3be66c5a1d998ad4d9640f557b189558baec41f6e712ff2a39f795a35494b4b12343b7a1a2b17686d793166c1abec65af593d291dbd05e5d7d28f1a9ffb73751d65f49d76084493f3da707ee2bbf54cf6de5bbaac2ffa0028c310cc46cea229960bfbe25831162c27f96cf8bb14c017938e35b636987a306521915456fbd40633c6d5a30f61bce52a3f5"),
+			msg: []byte("a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+			expected: fromHex(-1,
+				"0b8e0094c886487870372eb6264613a6a087c7eb9804fab789be4e47a57b29eb19b1983a51165a1b5eb025865e9fc63a",
+				"0804152cbf8474669ad7d1796ab92d7ca21f32d8bed70898a748ed4e4e0ec557069003732fc86866d938538a2ae95552",
+				"14c80f068ece15a3936bb00c3c883966f75b4e8d9ddde809c11f781ab92d23a2d1d103ad48f6f3bb158bf3e3a4063449",
+				"09e5c8242dd7281ad32c03fe4af3f19167770016255fb25ad9b67ec51d62fade31a1af101e8f6172ec2ee8857662be3a",
+			),
 		},
 	} {
 		g := NewG2(nil)
-		p0, err := g.MapToPointSWU(v.U)
-		p1, _ := g.fromBytesUnchecked(v.P)
+		p0, err := g.EncodeToCurve(v.msg, domain)
 		if err != nil {
-			t.Fatal("swu mapping fails", i, err)
+			t.Fatal("encode to point fails", i, err)
 		}
-		if !g.Equal(p0, p1) {
-			t.Fatal("bad swu mapping", i, p1)
+		if !bytes.Equal(g.ToBytes(p0), v.expected) {
+			t.Fatal("encode to point fails x", i)
+		}
+	}
+}
+
+func TestG2HashToCurve(t *testing.T) {
+	domain := []byte("BLS12381G2_XMD:SHA-256_SSWU_RO_TESTGEN")
+	for i, v := range []struct {
+		msg      []byte
+		expected []byte
+	}{
+		{
+			msg: []byte(""),
+			expected: fromHex(-1,
+				"0fbdae26f9f9586a46d4b0b70390d09064ef2afe5c99348438a3c7d9756471e015cb534204c1b6824617a85024c772dc",
+				"0a650bd36ae7455cb3fe5d8bb1310594551456f5c6593aec9ee0c03d2f6cb693bd2c5e99d4e23cbaec767609314f51d3",
+				"02e5cf8f9b7348428cc9e66b9a9b36fe45ba0b0a146290c3a68d92895b1af0e1f2d9f889fb412670ae8478d8abd4c5aa",
+				"0d8d49e7737d8f9fc5cef7c4b8817633103faf2613016cb86a1f3fc29968fe2413e232d9208d2d74a89bf7a48ac36f83",
+			),
+		},
+		{
+			msg: []byte("abc"),
+			expected: fromHex(-1,
+				"03578447618463deb106b60e609c6f7cc446dc6035f84a72801ba17c94cd800583b493b948eff0033f09086fdd7f6175",
+				"1953ce6d4267939c7360756d9cca8eb34aac4633ef35369a7dc249445069888e7d1b3f9d2e75fbd468fbcbba7110ea02",
+				"0184d26779ae9d4670aca9b267dbd4d3b30443ad05b8546d36a195686e1ccc3a59194aea05ed5bce7c3144a29ec047c4",
+				"0882ab045b8fe4d7d557ebb59a63a35ac9f3d312581b509af0f8eaa2960cbc5e1e36bb969b6e22980b5cbdd0787fcf4e",
+			),
+		},
+		{
+			msg: []byte("abcdef0123456789"),
+			expected: fromHex(-1,
+				"195fad48982e186ce3c5c82133aefc9b26d55979b6f530992a8849d4263ec5d57f7a181553c8799bcc83da44847bdc8d",
+				"17b461fc3b96a30c2408958cbfa5f5927b6063a8ad199d5ebf2d7cdeffa9c20c85487204804fab53f950b2f87db365aa",
+				"005cdf3d984e3391e7e969276fb4bc02323c5924a4449af167030d855acc2600cf3d4fab025432c6d868c79571a95bef",
+				"174a3473a3af2d0302b9065e895ca4adba4ece6ce0b41148ba597001abb152f852dd9a96fb45c9de0a43d944746f833e",
+			),
+		},
+		{
+			msg: []byte("a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+			expected: fromHex(-1,
+				"123b6bd9feeba26dd4ad00f8bfda2718c9700dc093ea5287d7711844644eb981848316d3f3f57d5d3a652c6cdc816aca",
+				"0a162306f3b0f2bb326f0c4fb0e1fea020019c3af796dcd1d7264f50ddae94cacf3cade74603834d44b9ab3d5d0a6c98",
+				"05483f3b96d9252dd4fc0868344dfaf3c9d145e3387db23fa8e449304fab6a7b6ec9c15f05c0a1ea66ff0efcc03e001a",
+				"15c1d4f1a685bb63ee67ca1fd96155e3d091e852a684b78d085fd34f6091e5249ddddbdcf2e7ec82ce6c04c63647eeb7",
+			),
+		},
+	} {
+		g := NewG2(nil)
+		p0, err := g.HashToCurve(v.msg, domain)
+		if err != nil {
+			t.Fatal("encode to point fails", i, err)
+		}
+		if !bytes.Equal(g.ToBytes(p0), v.expected) {
+			t.Fatal("encode to point fails x", i)
 		}
 	}
 }
@@ -338,17 +420,5 @@ func BenchmarkG2Mul(t *testing.B) {
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
 		g2.MulScalar(&c, a, e)
-	}
-}
-
-func BenchmarkG2SWUMap(t *testing.B) {
-	a := fromHex(96, "0x1234")
-	g2 := NewG2(nil)
-	t.ResetTimer()
-	for i := 0; i < t.N; i++ {
-		_, err := g2.MapToPointSWU(a)
-		if err != nil {
-			t.Fatal(err)
-		}
 	}
 }

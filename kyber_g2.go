@@ -10,10 +10,9 @@ import (
 	"github.com/drand/kyber/group/mod"
 )
 
-var domainG2 = [8]byte{1, 9, 6, 9, 9, 6, 9, 2}
-
-// BLS_SIG_BLS12381G2-SHA256-SSWU-RO-_NUL_
-var csuite = []byte{66, 76, 83, 95, 83, 73, 71, 95, 66, 76, 83, 49, 50, 51, 56, 49, 71, 50, 45, 83, 72, 65, 50, 53, 54, 45, 83, 83, 87, 85, 45, 82, 79, 45, 95, 78, 85, 76, 95}
+// Domain comes from the ciphersuite used by the RFC of this name compatible
+// with the paired library > v18
+var Domain = []byte("BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_")
 
 // KyberG2 is a kyber.Point holding a G2 point on BLS12-381 curve
 type KyberG2 struct {
@@ -133,30 +132,10 @@ func (k *KyberG2) String() string {
 	return "bls12-381.G1: " + hex.EncodeToString(b)
 }
 
-/*func hashWithDomainG2(g2 *G2, msg [32]byte, domain [8]byte) *PointG2 {*/
-//xReBytes := [41]byte{}
-//xImBytes := [41]byte{}
-//xBytes := make([]byte, 96)
-//copy(xReBytes[:32], msg[:])
-//copy(xReBytes[32:40], domain[:])
-//xReBytes[40] = 0x01
-//copy(xImBytes[:32], msg[:])
-//copy(xImBytes[32:40], domain[:])
-//xImBytes[40] = 0x02
-//copy(xBytes[16:48], sha256Hash(xImBytes[:]))
-//copy(xBytes[64:], sha256Hash(xReBytes[:]))
-//return g2.MapToPoint(xBytes)
-/*}*/
 func (k *KyberG2) Hash(m []byte) kyber.Point {
-	if len(m) != 32 {
-		m = sha256Hash(m)
-	}
-	var s [32]byte
-	copy(s[:], m)
-	pg2 := hashWithDomainG2(NewG2(nil), s, domainG2)
-	//buff := blsmap.MapToG2(m, nil)
-	//_ = k.UnmarshalBinary(buff)
-	return newKyberG2(pg2)
+	pg2, _ := NewG2(nil).HashToCurve(m, DomainG2)
+	k.p = pg2
+	return k
 }
 
 func sha256Hash(in []byte) []byte {
