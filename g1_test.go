@@ -326,7 +326,7 @@ func TestG1EncodeToCurve(t *testing.T) {
 		},
 	} {
 		g := NewG1()
-		p0, err := g.EncodeToPoint(v.msg, domain)
+		p0, err := g.EncodeToCurve(v.msg, domain)
 		if err != nil {
 			t.Fatal("encode to point fails", i, err)
 		}

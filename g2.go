@@ -33,7 +33,11 @@ type G2 struct {
 }
 
 // NewG2 constructs a new G2 instance.
-func NewG2(f *fp2) *G2 {
+func NewG2() *G2 {
+	return newG2(nil)
+}
+
+func newG2(f *fp2) *G2 {
 	cfgArch()
 	if f == nil {
 		f = newFp2()

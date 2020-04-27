@@ -39,7 +39,7 @@ func (g *G2) new() *PointG2 {
 
 func TestG2Serialization(t *testing.T) {
 	var err error
-	g2 := NewG2(nil)
+	g2 := NewG2()
 	zero := g2.Zero()
 	b0 := g2.ToUncompressed(zero)
 	p0, err := g2.FromUncompressed(b0)
@@ -98,7 +98,7 @@ func TestG2Serialization(t *testing.T) {
 }
 
 func TestG2AdditiveProperties(t *testing.T) {
-	g := NewG2(newFp2())
+	g := NewG2()
 	t0, t1 := g.new(), g.new()
 	zero := g.Zero()
 	for i := 0; i < fuz; i++ {
@@ -168,7 +168,7 @@ func TestG2AdditiveProperties(t *testing.T) {
 }
 
 func TestG2MultiplicativeProperties(t *testing.T) {
-	g := NewG2(newFp2())
+	g := NewG2()
 	t0, t1 := g.new(), g.new()
 	zero := g.Zero()
 	for i := 0; i < fuz; i++ {
@@ -210,7 +210,7 @@ func TestZKCryptoVectorsG2UncompressedValid(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	g := NewG2(nil)
+	g := NewG2()
 	p1 := g.Zero()
 	for i := 0; i < 1000; i++ {
 		vector := data[i*192 : (i+1)*192]
@@ -234,7 +234,7 @@ func TestZKCryptoVectorsG2CompressedValid(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	g := NewG2(nil)
+	g := NewG2()
 	p1 := g.Zero()
 	for i := 0; i < 1000; i++ {
 		vector := data[i*96 : (i+1)*96]
@@ -254,7 +254,7 @@ func TestZKCryptoVectorsG2CompressedValid(t *testing.T) {
 }
 
 func TestG2MultiExpExpected(t *testing.T) {
-	g := NewG2(nil)
+	g := NewG2()
 	one := g.one()
 	var scalars [2]*big.Int
 	var bases [2]*PointG2
@@ -272,7 +272,7 @@ func TestG2MultiExpExpected(t *testing.T) {
 }
 
 func TestG2MultiExpBatch(t *testing.T) {
-	g := NewG2(nil)
+	g := NewG2()
 	one := g.one()
 	n := 1000
 	bases := make([]*PointG2, n)
@@ -340,7 +340,7 @@ func TestG2EncodeToCurve(t *testing.T) {
 			),
 		},
 	} {
-		g := NewG2(nil)
+		g := NewG2()
 		p0, err := g.EncodeToCurve(v.msg, domain)
 		if err != nil {
 			t.Fatal("encode to point fails", i, err)
@@ -394,7 +394,7 @@ func TestG2HashToCurve(t *testing.T) {
 			),
 		},
 	} {
-		g := NewG2(nil)
+		g := NewG2()
 		p0, err := g.HashToCurve(v.msg, domain)
 		if err != nil {
 			t.Fatal("encode to point fails", i, err)
@@ -406,7 +406,7 @@ func TestG2HashToCurve(t *testing.T) {
 }
 
 func BenchmarkG2Add(t *testing.B) {
-	g2 := NewG2(newFp2())
+	g2 := NewG2()
 	a, b, c := g2.rand(), g2.rand(), PointG2{}
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
@@ -415,7 +415,7 @@ func BenchmarkG2Add(t *testing.B) {
 }
 
 func BenchmarkG2Mul(t *testing.B) {
-	g2 := NewG2(newFp2())
+	g2 := NewG2()
 	a, e, c := g2.rand(), q, PointG2{}
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
@@ -425,7 +425,7 @@ func BenchmarkG2Mul(t *testing.B) {
 
 func BenchmarkG2SWUMap(t *testing.B) {
 	a := fromHex(96, "0x1234")
-	g2 := NewG2(nil)
+	g2 := NewG2()
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
 		_, err := g2.MapToCurve(a)
