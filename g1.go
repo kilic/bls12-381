@@ -522,7 +522,7 @@ func (g *G1) MapToCurve(in []byte) (*PointG1, error) {
 // which is a valid curve point.
 // Implementation follows BLS12381G1_XMD:SHA-256_SSWU_NU_ suite at
 // https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06
-func (g *G1) EncodeToPoint(msg, domain []byte) (*PointG1, error) {
+func (g *G1) EncodeToCurve(msg, domain []byte) (*PointG1, error) {
 	hashRes, err := hashToFpXMDSHA256(msg, domain, 1)
 	if err != nil {
 		return nil, err
