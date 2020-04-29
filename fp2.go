@@ -91,8 +91,8 @@ func (e *fp2) equal(a, b *fe2) bool {
 }
 
 func (e *fp2) copy(c, a *fe2) {
-	c[0].Set(&a[0])
-	c[1].Set(&a[1])
+	c[0].set(&a[0])
+	c[1].set(&a[1])
 }
 
 func (e *fp2) add(c, a, b *fe2) {
@@ -142,7 +142,7 @@ func (e *fp2) neg(c, a *fe2) {
 }
 
 func (e *fp2) conjugate(c, a *fe2) {
-	c[0].Set(&a[0])
+	c[0].set(&a[0])
 	neg(&c[1], &a[1])
 }
 
@@ -192,7 +192,7 @@ func (e *fp2) mulByNonResidue(c, a *fe2) {
 	t := e.t
 	sub(t[0], &a[0], &a[1])
 	add(&c[1], &a[0], &a[1])
-	c[0].Set(t[0])
+	c[0].set(t[0])
 }
 
 func (e *fp2) mulByB(c, a *fe2) {
@@ -239,12 +239,12 @@ func (e *fp2) div(c, a, b *fe2) {
 }
 
 func (e *fp2) frobeniousMap(c, a *fe2, power uint) {
-	c[0].Set(&a[0])
+	c[0].set(&a[0])
 	if power%2 == 1 {
 		neg(&c[1], &a[1])
 		return
 	}
-	c[1].Set(&a[1])
+	c[1].set(&a[1])
 }
 
 func (e *fp2) frobeniousMapAssign(a *fe2, power uint) {
@@ -263,7 +263,7 @@ func (e *fp2) sqrt(c, a *fe2) bool {
 	e.mul(x0, a1, a)
 	if e.equal(alpha, negativeOne2) {
 		neg(&c[0], &x0[1])
-		c[1].Set(&x0[0])
+		c[1].set(&x0[0])
 		return true
 	}
 	e.add(alpha, alpha, e.one())

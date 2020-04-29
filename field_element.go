@@ -11,7 +11,7 @@ type fe2 /**			***/ [2]fe
 type fe6 /**			***/ [3]fe2
 type fe12 /**			***/ [2]fe6
 
-func (fe *fe) Bytes() []byte {
+func (fe *fe) bytes() []byte {
 	out := make([]byte, 48)
 	var a int
 	for i := 0; i < 6; i++ {
@@ -28,7 +28,7 @@ func (fe *fe) Bytes() []byte {
 	return out
 }
 
-func (fe *fe) FromBytes(in []byte) *fe {
+func (fe *fe) fromBytes(in []byte) *fe {
 	size := 48
 	l := len(in)
 	if l >= size {
@@ -47,11 +47,11 @@ func (fe *fe) FromBytes(in []byte) *fe {
 	return fe
 }
 
-func (fe *fe) SetBig(a *big.Int) *fe {
-	return fe.FromBytes(a.Bytes())
+func (fe *fe) setBig(a *big.Int) *fe {
+	return fe.fromBytes(a.Bytes())
 }
 
-func (fe *fe) SetUint(a uint64) *fe {
+func (fe *fe) setUint(a uint64) *fe {
 	fe[0] = a
 	fe[1] = 0
 	fe[2] = 0
@@ -61,7 +61,7 @@ func (fe *fe) SetUint(a uint64) *fe {
 	return fe
 }
 
-func (fe *fe) SetString(s string) (*fe, error) {
+func (fe *fe) setString(s string) (*fe, error) {
 	if s[:2] == "0x" {
 		s = s[2:]
 	}
@@ -69,10 +69,10 @@ func (fe *fe) SetString(s string) (*fe, error) {
 	if err != nil {
 		return nil, err
 	}
-	return fe.FromBytes(bytes), nil
+	return fe.fromBytes(bytes), nil
 }
 
-func (fe *fe) Set(fe2 *fe) *fe {
+func (fe *fe) set(fe2 *fe) *fe {
 	fe[0] = fe2[0]
 	fe[1] = fe2[1]
 	fe[2] = fe2[2]
@@ -82,7 +82,7 @@ func (fe *fe) Set(fe2 *fe) *fe {
 	return fe
 }
 
-func (fe *fe) SetZero() *fe {
+func (fe *fe) zero() *fe {
 	fe[0] = 0
 	fe[1] = 0
 	fe[2] = 0
@@ -92,13 +92,12 @@ func (fe *fe) SetZero() *fe {
 	return fe
 }
 
-func (fe *fe) SetOne() *fe {
-	fe.Set(r1)
-	return fe
+func (fe *fe) one() *fe {
+	return fe.set(r1)
 }
 
-func (fe *fe) Big() *big.Int {
-	return new(big.Int).SetBytes(fe.Bytes())
+func (fe *fe) big() *big.Int {
+	return new(big.Int).SetBytes(fe.bytes())
 }
 
 func (fe fe) String() (s string) {
@@ -108,25 +107,25 @@ func (fe fe) String() (s string) {
 	return "0x" + s
 }
 
-func (fe *fe) IsOdd() bool {
+func (fe *fe) isOdd() bool {
 	var mask uint64 = 1
 	return fe[0]&mask != 0
 }
 
-func (fe *fe) IsEven() bool {
+func (fe *fe) isEven() bool {
 	var mask uint64 = 1
 	return fe[0]&mask == 0
 }
 
-func (fe *fe) IsZero() bool {
+func (fe *fe) isZero() bool {
 	return (fe[5] | fe[4] | fe[3] | fe[2] | fe[1] | fe[0]) == 0
 }
 
-func (fe *fe) IsOne() bool {
+func (fe *fe) isOne() bool {
 	return 1 == fe[0] && 0 == fe[1] && 0 == fe[2] && 0 == fe[3] && 0 == fe[4] && 0 == fe[5]
 }
 
-func (fe *fe) Cmp(fe2 *fe) int {
+func (fe *fe) cmp(fe2 *fe) int {
 	for i := 5; i > -1; i-- {
 		if fe[i] > fe2[i] {
 			return 1
@@ -137,7 +136,7 @@ func (fe *fe) Cmp(fe2 *fe) int {
 	return 0
 }
 
-func (fe *fe) Equals(fe2 *fe) bool {
+func (fe *fe) equal(fe2 *fe) bool {
 	return fe2[0] == fe[0] && fe2[1] == fe[1] && fe2[2] == fe[2] && fe2[3] == fe[3] && fe2[4] == fe[4] && fe2[5] == fe[5]
 }
 
@@ -145,7 +144,7 @@ func (e *fe) signBE() bool {
 	negZ, z := new(fe), new(fe)
 	fromMont(z, e)
 	neg(negZ, z)
-	return negZ.Cmp(z) > -1
+	return negZ.cmp(z) > -1
 }
 
 func (e *fe) sign() bool {
@@ -175,7 +174,7 @@ func (fe *fe) mul2() uint64 {
 }
 
 func (fe *fe2) signBE() bool {
-	if !fe[1].IsZero() {
+	if !fe[1].isZero() {
 		return fe[1].signBE()
 	}
 	return fe[0].signBE()
@@ -183,7 +182,7 @@ func (fe *fe2) signBE() bool {
 
 func (e *fe2) sign() bool {
 	r := new(fe)
-	if !e[0].IsZero() {
+	if !e[0].isZero() {
 		fromMont(r, &e[0])
 		return r[0]&1 == 0
 	}

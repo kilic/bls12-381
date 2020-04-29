@@ -349,7 +349,7 @@ func (e *fp6) frobeniusMap(c, a *fe6, power uint) {
 		return
 	case 3:
 		neg(&c[0][0], &a[1][1])
-		c[1][1].Set(&a[1][0])
+		c[1][1].set(&a[1][0])
 		fp2.neg(&a[2], &a[2])
 	default:
 		fp2.mul(&c[1], &c[1], &frobeniusCoeffs61[power%6])
@@ -368,8 +368,8 @@ func (e *fp6) frobeniusMapAssign(a *fe6, power uint) {
 		return
 	case 3:
 		neg(&t[0][0], &a[1][1])
-		a[1][1].Set(&a[1][0])
-		a[1][0].Set(&t[0][0])
+		a[1][1].set(&a[1][0])
+		a[1][0].set(&t[0][0])
 		fp2.neg(&a[2], &a[2])
 	default:
 		fp2.mulAssign(&a[1], &frobeniusCoeffs61[power%6])

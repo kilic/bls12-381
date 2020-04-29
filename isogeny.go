@@ -6,10 +6,10 @@ func isogenyMapG1(x, y *fe) {
 	params := isogenyConstansG1
 	degree := 15
 	xNum, xDen, yNum, yDen := new(fe), new(fe), new(fe), new(fe)
-	xNum.Set(params[0][degree])
-	xDen.Set(params[1][degree])
-	yNum.Set(params[2][degree])
-	yDen.Set(params[3][degree])
+	xNum.set(params[0][degree])
+	xDen.set(params[1][degree])
+	yNum.set(params[2][degree])
+	yDen.set(params[3][degree])
 	for i := degree - 1; i >= 0; i-- {
 		mul(xNum, xNum, x)
 		mul(xDen, xDen, x)
@@ -25,8 +25,8 @@ func isogenyMapG1(x, y *fe) {
 	mul(xNum, xNum, xDen)
 	mul(yNum, yNum, yDen)
 	mul(yNum, yNum, y)
-	x.Set(xNum)
-	y.Set(yNum)
+	x.set(xNum)
+	y.set(yNum)
 }
 
 // isogenyMapG2 applies 11-isogeny map for BLS12-381 G1 defined at draft-irtf-cfrg-hash-to-curve-06.

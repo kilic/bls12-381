@@ -12,9 +12,9 @@ import (
 type PointG1 [3]fe
 
 func (p *PointG1) Set(p2 *PointG1) *PointG1 {
-	p[0].Set(&p2[0])
-	p[1].Set(&p2[1])
-	p[2].Set(&p2[2])
+	p[0].set(&p2[0])
+	p[1].set(&p2[1])
+	p[2].set(&p2[2])
 	return p
 }
 
@@ -204,7 +204,7 @@ func (g *G1) FromBytes(in []byte) (*PointG1, error) {
 		return nil, err
 	}
 	// check if given input points to infinity
-	if p0.IsZero() && p1.IsZero() {
+	if p0.isZero() && p1.isZero() {
 		return g.Zero(), nil
 	}
 	p2 := one()
@@ -319,7 +319,7 @@ func (g *G1) Affine(p *PointG1) *PointG1 {
 		mul(&p[0], &p[0], t[1])
 		mul(t[0], t[0], t[1])
 		mul(&p[1], &p[1], t[0])
-		p[2].Set(one())
+		p[2].set(one())
 	}
 	return p
 }
@@ -403,15 +403,15 @@ func (g *G1) Double(r, p *PointG1) *PointG1 {
 	mul(t[0], t[0], t[1])
 	sub(t[1], t[0], t[2])
 	mul(t[0], &p[1], &p[2])
-	r[1].Set(t[1])
+	r[1].set(t[1])
 	double(&r[2], t[0])
 	return r
 }
 
 // Neg negates a G1 point p and assigns the result to the point at first argument.
 func (g *G1) Neg(r, p *PointG1) *PointG1 {
-	r[0].Set(&p[0])
-	r[2].Set(&p[2])
+	r[0].set(&p[0])
+	r[2].set(&p[2])
 	neg(&r[1], &p[1])
 	return r
 }

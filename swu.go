@@ -17,7 +17,7 @@ func swuMapG1(u *fe) (*fe, *fe) {
 	e1 := isZero(x1)
 	add(x1, x1, one())
 	if e1 {
-		x1.Set(params.zInv)
+		x1.set(params.zInv)
 	}
 	mul(x1, x1, params.minusBOverA)
 	gx1 := new(fe)
@@ -33,15 +33,15 @@ func swuMapG1(u *fe) (*fe, *fe) {
 	e2 := !isQuadraticNonResidue(gx1)
 	x := new(fe)
 	if e2 {
-		x.Set(x1)
+		x.set(x1)
 	} else {
-		x.Set(x2)
+		x.set(x2)
 	}
 	y2 := new(fe)
 	if e2 {
-		y2.Set(gx1)
+		y2.set(gx1)
 	} else {
-		y2.Set(gx2)
+		y2.set(gx2)
 	}
 	y := new(fe)
 	sqrt(y, y2)

@@ -13,12 +13,12 @@ type PointG2 [3]fe2
 
 // Set copies valeus of one point to another.
 func (p *PointG2) Set(p2 *PointG2) *PointG2 {
-	p[0][0].Set(&p2[0][0])
-	p[1][1].Set(&p2[1][1])
-	p[2][0].Set(&p2[2][0])
-	p[0][1].Set(&p2[0][1])
-	p[1][0].Set(&p2[1][0])
-	p[2][1].Set(&p2[2][1])
+	p[0][0].set(&p2[0][0])
+	p[1][1].set(&p2[1][1])
+	p[2][0].set(&p2[2][0])
+	p[0][1].set(&p2[0][1])
+	p[1][0].set(&p2[1][0])
+	p[2][1].set(&p2[2][1])
 	return p
 }
 
