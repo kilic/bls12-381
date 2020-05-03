@@ -1,4 +1,4 @@
-### High Speed BLS12-381 Implementation in Go  
+### High Speed BLS12-381 Implementation in Go
 
 #### Pairing Instance
 
@@ -16,13 +16,11 @@ Standart big.Int module is currently used for scalar field implementation. x86 o
 
 Point serialization is in line with [zkcrypto library](https://github.com/zkcrypto/pairing/tree/master/src/bls12_381#serialization).
 
-#### Mapping to G1 and G2 Point
+#### Hashing to Curve
 
-[Simplified SWU method](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06) and _try and increment_ method are available for both G1 and G2.
+Hashing to curve implementations for both G1 and G2 follows `_XMD:SHA-256_SSWU_RO_` and `_XMD:SHA-256_SSWU_NU_` suites as defined in `v7` of [irtf hash to curve draft](https://github.com/cfrg/draft-irtf-cfrg-hash-to-curve/).
 
 #### Benchmarks
-
-![test results badge](https://github.com/kilic/bls12-381/workflows/Test/badge.svg)
 
 on _3.1 GHz i5_
 

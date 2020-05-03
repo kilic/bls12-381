@@ -1,4 +1,4 @@
-// +build amd64, !generic
+// +build amd64,!generic
 
 package bls12381
 
@@ -24,8 +24,8 @@ func square(c, a *fe) {
 }
 
 func neg(c, a *fe) {
-	if a.IsZero() {
-		c.Set(a)
+	if a.isZero() {
+		c.set(a)
 	} else {
 		_neg(c, a)
 	}

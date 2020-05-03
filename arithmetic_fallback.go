@@ -215,8 +215,8 @@ func lsubAssign(z, x *fe) {
 }
 
 func neg(z *fe, x *fe) {
-	if x.IsZero() {
-		z.SetZero()
+	if x.isZero() {
+		z.zero()
 		return
 	}
 	var borrow uint64

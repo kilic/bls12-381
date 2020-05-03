@@ -70,25 +70,25 @@ func TestFpAdditionCrossAgainstBigInt(t *testing.T) {
 		big_c := new(big.Int)
 		add(c, a, b)
 		out_1 := toBytes(c)
-		out_2 := padBytes(big_c.Add(big_a, big_b).Mod(big_c, modulus.Big()).Bytes(), 48)
+		out_2 := padBytes(big_c.Add(big_a, big_b).Mod(big_c, modulus.big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatalf("cross test against big.Int is not satisfied A")
 		}
 		double(c, a)
 		out_1 = toBytes(c)
-		out_2 = padBytes(big_c.Add(big_a, big_a).Mod(big_c, modulus.Big()).Bytes(), 48)
+		out_2 = padBytes(big_c.Add(big_a, big_a).Mod(big_c, modulus.big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatalf("cross test against big.Int is not satisfied B")
 		}
 		sub(c, a, b)
 		out_1 = toBytes(c)
-		out_2 = padBytes(big_c.Sub(big_a, big_b).Mod(big_c, modulus.Big()).Bytes(), 48)
+		out_2 = padBytes(big_c.Sub(big_a, big_b).Mod(big_c, modulus.big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatalf("cross test against big.Int is not satisfied C")
 		}
 		neg(c, a)
 		out_1 = toBytes(c)
-		out_2 = padBytes(big_c.Neg(big_a).Mod(big_c, modulus.Big()).Bytes(), 48)
+		out_2 = padBytes(big_c.Neg(big_a).Mod(big_c, modulus.big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatalf("cross test against big.Int is not satisfied D")
 		}
@@ -167,7 +167,7 @@ func TestFpMultiplicationCrossAgainstBigInt(t *testing.T) {
 		big_c := new(big.Int)
 		mul(c, a, b)
 		out_1 := toBytes(c)
-		out_2 := padBytes(big_c.Mul(big_a, big_b).Mod(big_c, modulus.Big()).Bytes(), 48)
+		out_2 := padBytes(big_c.Mul(big_a, big_b).Mod(big_c, modulus.big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatalf("cross test against big.Int is not satisfied")
 		}
@@ -225,7 +225,7 @@ func TestFpExponentiation(t *testing.T) {
 		if !equal(u, v) {
 			t.Fatalf("((a^2)^2)^2 == a^8")
 		}
-		p := modulus.Big()
+		p := modulus.big()
 		exp(u, a, p)
 		if !equal(u, a) {
 			t.Fatalf("a^p == a")
@@ -257,7 +257,7 @@ func TestFpInversion(t *testing.T) {
 			t.Fatalf("(r*a) * r*(a^-1) == r)")
 		}
 		v := new(fe)
-		p := modulus.Big()
+		p := modulus.big()
 		exp(u, a, p.Sub(p, big.NewInt(2)))
 		inverse(v, a)
 		if !equal(v, u) {
@@ -414,7 +414,7 @@ func TestFp2Exponentiation(t *testing.T) {
 		if !field.equal(u, v) {
 			t.Fatalf("((a^2)^2)^2 == a^8")
 		}
-		// p := modulus.Big()
+		// p := modulus.big()
 		// field.exp(u, a, p)
 		// if !field.equal(u, a) {
 		// 	t.Fatalf("a^p == a")
@@ -447,7 +447,7 @@ func TestFp2Inversion(t *testing.T) {
 			t.Fatalf("(r * a) * r * (a ^ -1) == r)")
 		}
 		// v := field.new()
-		// p := modulus.Big()
+		// p := modulus.big()
 		// field.exp(u, a, p.Sub(p, big.NewInt(2)))
 		// field.inverse(v, a)
 		// if !field.equal(v, u) {
@@ -635,7 +635,7 @@ func TestFp6Exponentiation(t *testing.T) {
 		if !field.equal(u, v) {
 			t.Fatalf("((a^2)^2)^2 == a^8")
 		}
-		// p := modulus.Big()
+		// p := modulus.big()
 		// field.exp(u, a, p)
 		// if !field.equal(u, a) {
 		// 	t.Fatalf("a^p == a")
@@ -668,7 +668,7 @@ func TestFp6Inversion(t *testing.T) {
 			t.Fatalf("(r*a) * r*(a^-1) == r)")
 		}
 		// v := field.new()
-		// p := modulus.Big()
+		// p := modulus.big()
 		// field.exp(u, a, p.Sub(p, big.NewInt(2)))
 		// field.inverse(v, a)
 		// if !field.equal(v, u) {
@@ -826,7 +826,7 @@ func TestFp12Exponentiation(t *testing.T) {
 		if !field.equal(u, v) {
 			t.Fatalf("((a^2)^2)^2 == a^8")
 		}
-		// p := modulus.Big()
+		// p := modulus.big()
 		// field.exp(u, a, p)
 		// if !field.equal(u, a) {
 		// 	t.Fatalf("a^p == a")
@@ -859,7 +859,7 @@ func TestFp12Inversion(t *testing.T) {
 			t.Fatalf("(r*a) * r*(a^-1) == r)")
 		}
 		// v := field.new()
-		// p := modulus.Big()
+		// p := modulus.big()
 		// field.exp(u, a, p.Sub(p, big.NewInt(2)))
 		// field.inverse(v, a)
 		// if !field.equal(v, u) {

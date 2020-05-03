@@ -13,12 +13,12 @@ type PointG2 [3]fe2
 
 // Set copies valeus of one point to another.
 func (p *PointG2) Set(p2 *PointG2) *PointG2 {
-	p[0][0].Set(&p2[0][0])
-	p[1][1].Set(&p2[1][1])
-	p[2][0].Set(&p2[2][0])
-	p[0][1].Set(&p2[0][1])
-	p[1][0].Set(&p2[1][0])
-	p[2][1].Set(&p2[2][1])
+	p[0][0].set(&p2[0][0])
+	p[1][1].set(&p2[1][1])
+	p[2][0].set(&p2[2][0])
+	p[0][1].set(&p2[0][1])
+	p[1][0].set(&p2[1][0])
+	p[2][1].set(&p2[2][1])
 	return p
 }
 
@@ -33,7 +33,11 @@ type G2 struct {
 }
 
 // NewG2 constructs a new G2 instance.
-func NewG2(f *fp2) *G2 {
+func NewG2() *G2 {
+	return newG2(nil)
+}
+
+func newG2(f *fp2) *G2 {
 	cfgArch()
 	if f == nil {
 		f = newFp2()
@@ -151,13 +155,8 @@ func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 	if ok := g.f.sqrt(y, y); !ok {
 		return nil, fmt.Errorf("point is not on curve")
 	}
-	// select lexicographically, should be in normalized form
-	negYn, negY, yn := &fe2{}, &fe2{}, &fe2{}
-	g.f.fromMont(yn, y)
-	g.f.neg(negY, y)
-	g.f.neg(negYn, yn)
-	if (yn[1].Cmp(&negYn[1]) > 0 != a) || (yn[1].IsZero() && yn[0].Cmp(&negYn[0]) > 0 != a) {
-		g.f.copy(y, negY)
+	if y.signBE() == a {
+		g.f.neg(y, y)
 	}
 	z := g.f.one()
 	p := &PointG2{*x, *y, *z}
@@ -178,10 +177,7 @@ func (g *G2) ToCompressed(p *PointG2) []byte {
 		out[0] |= 1 << 6
 	} else {
 		copy(out[:], g.f.toBytes(&p[0]))
-		y, negY := &fe2{}, &fe2{}
-		g.f.fromMont(y, &p[1])
-		g.f.neg(negY, y)
-		if (y[1].Cmp(&negY[1]) > 0) || (y[1].IsZero() && y[1].Cmp(&negY[1]) > 0) {
+		if !p[1].signBE() {
 			out[0] |= 1 << 5
 		}
 	}
@@ -560,69 +556,61 @@ func (g *G2) wnafMul(c, p *PointG2, e []uint64) *PointG2 {
 	return c
 }
 
-// MapToPointTI given a byte slice returns a valid G2 point.
-// This mapping function implements the 'try and increment' method.
-func (g *G2) MapToPointTI(in []byte) (*PointG2, error) {
-	fp2 := g.f
-	x, err := fp2.fromBytes(in)
-	if err != nil {
-		return nil, err
-	}
-	y := &fe2{}
-	one := fp2.one()
-	for {
-		fp2.square(y, x)
-		fp2.mul(y, y, x)
-		fp2.add(y, y, b2)
-		if ok := fp2.sqrt(y, y); ok {
-			// favour negative y
-			negYn, negY, yn := &fe2{}, &fe2{}, &fe2{}
-			fp2.fromMont(yn, y)
-			fp2.neg(negY, y)
-			fp2.neg(negYn, yn)
-			if yn[1].Cmp(&negYn[1]) > 0 || (yn[1].IsZero() && yn[0].Cmp(&negYn[0]) > 0) {
-				// fp2.copy(y, y)
-			} else {
-				fp2.copy(y, negY)
-			}
-			p := &PointG2{*x, *y, *one}
-			g.ClearCofactor(p)
-			return p, nil
-		}
-		fp2.add(x, x, one)
-	}
-}
-
-// MapToPointSWU given a byte slice returns a valid G2 point.
+// MapToCurve given a byte slice returns a valid G2 point.
 // This mapping function implements the Simplified Shallue-van de Woestijne-Ulas method.
 // https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.2
 // Input byte slice should be a valid field element, otherwise an error is returned.
-// Clearing cofactor h is done with wnaf multiplication with windows size 6.
-func (g *G2) MapToPointSWU(in []byte) (*PointG2, error) {
+func (g *G2) MapToCurve(in []byte) (*PointG2, error) {
 	fp2 := g.f
 	u, err := fp2.fromBytes(in)
 	if err != nil {
 		return nil, err
 	}
-	x, y := fp2.swuMap(u)
-	fp2.isogenyMap(x, y)
+	x, y := swuMapG2(fp2, u)
+	isogenyMapG2(fp2, x, y)
 	one := fp2.one()
 	q := &PointG2{*x, *y, *one}
-	if !g.IsOnCurve(q) {
-		return nil, fmt.Errorf("Found point is not on curve")
-	}
-	cofactor := []uint64{
-		0xe8020005aaa95551,
-		0x59894c0adebbf6b4,
-		0xe954cbc06689f6a3,
-		0x2ec0ec69d7477c1a,
-		0x6d82bf015d1212b0,
-		0x329c2f178731db95,
-		0x9986ff031508ffe1,
-		0x88e2a8e9145ad768,
-		0x584c6a0ea91b3528,
-		0x0bc69f08f2ee75b3,
-	}
-	g.wnafMul(q, q, cofactor)
+	g.ClearCofactor(q)
 	return g.Affine(q), nil
+}
+
+// EncodeToCurve given a message and domain seperator tag returns the hash result
+// which is a valid curve point.
+// Implementation follows BLS12381G1_XMD:SHA-256_SSWU_NU_ suite at
+// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06
+func (g *G2) EncodeToCurve(msg, domain []byte) (*PointG2, error) {
+	hashRes, err := hashToFpXMDSHA256(msg, domain, 2)
+	if err != nil {
+		return nil, err
+	}
+	fp2 := g.f
+	u := &fe2{*hashRes[0], *hashRes[1]}
+	x, y := swuMapG2(fp2, u)
+	isogenyMapG2(fp2, x, y)
+	one := fp2.one()
+	q := &PointG2{*x, *y, *one}
+	g.ClearCofactor(q)
+	return g.Affine(q), nil
+}
+
+// HashToCurve given a message and domain seperator tag returns the hash result
+// which is a valid curve point.
+// Implementation follows BLS12381G1_XMD:SHA-256_SSWU_RO_ suite at
+// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06
+func (g *G2) HashToCurve(msg, domain []byte) (*PointG2, error) {
+	hashRes, err := hashToFpXMDSHA256(msg, domain, 4)
+	if err != nil {
+		return nil, err
+	}
+	fp2 := g.f
+	u0, u1 := &fe2{*hashRes[0], *hashRes[1]}, &fe2{*hashRes[2], *hashRes[3]}
+	x0, y0 := swuMapG2(fp2, u0)
+	x1, y1 := swuMapG2(fp2, u1)
+	one := fp2.one()
+	p0, p1 := &PointG2{*x0, *y0, *one}, &PointG2{*x1, *y1, *one}
+	g.Add(p0, p0, p1)
+	g.Affine(p0)
+	isogenyMapG2(fp2, &p0[0], &p0[1])
+	g.ClearCofactor(p0)
+	return g.Affine(p0), nil
 }

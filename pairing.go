@@ -26,7 +26,7 @@ func NewEngine() *Engine {
 	fp6 := newFp6(fp2)
 	fp12 := newFp12(fp6)
 	g1 := NewG1()
-	g2 := NewG2(fp2)
+	g2 := newG2(fp2)
 	return &Engine{
 		fp2:               fp2,
 		fp12:              fp12,
