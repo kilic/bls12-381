@@ -29,6 +29,16 @@ func (g *G2) rand() *PointG2 {
 	return g.MulScalar(&PointG2{}, g.one(), k)
 }
 
+func (g *G2) randCorrect() *PointG2 {
+	k, err := rand.Int(rand.Reader, q)
+	if err != nil {
+		panic(err)
+	}
+	a := g.new()
+	g.MulScalar(a, g.one(), k)
+	return g.ClearCofactor(a)
+}
+
 func (g *G2) randAffine() *PointG2 {
 	return g.Affine(g.rand())
 }
@@ -205,6 +215,58 @@ func TestG2MultiplicativeProperties(t *testing.T) {
 	}
 }
 
+func TestWNAFMulAgainstNaive(t *testing.T) {
+	g2 := NewG2()
+	for i := 0; i < fuz; i++ {
+		a := g2.randCorrect()
+		c0, c1 := g2.new(), g2.new()
+		e := randScalar(g2.Q())
+		g2.MulScalar(c0, a, e)
+		g2.wnafMul(c1, a, e)
+		if !g2.Equal(c0, c1) {
+			t.Fatal("wnaf against naive failed")
+		}
+	}
+}
+
+func TestG2MultiplicativePropertiesWNAF(t *testing.T) {
+	g := NewG2()
+	t0, t1 := g.new(), g.new()
+	zero := g.Zero()
+	for i := 0; i < fuz; i++ {
+		a := g.randCorrect()
+		s1, s2, s3 := randScalar(q), randScalar(q), randScalar(q)
+		sone := big.NewInt(1)
+		g.wnafMul(t0, zero, s1)
+		if !g.Equal(t0, zero) {
+			t.Fatalf(" 0 ^ s == 0")
+		}
+		g.wnafMul(t0, a, sone)
+		if !g.Equal(t0, a) {
+			t.Fatalf(" a ^ 1 == a")
+		}
+		g.wnafMul(t0, zero, s1)
+		if !g.Equal(t0, zero) {
+			t.Fatalf(" 0 ^ s == a")
+		}
+		g.wnafMul(t0, a, s1)
+		g.wnafMul(t0, t0, s2)
+		s3.Mul(s1, s2)
+		g.wnafMul(t1, a, s3)
+		if !g.Equal(t0, t1) {
+			t.Errorf(" (a ^ s1) ^ s2 == a ^ (s1 * s2)")
+		}
+		g.wnafMul(t0, a, s1)
+		g.wnafMul(t1, a, s2)
+		g.Add(t0, t0, t1)
+		s3.Add(s1, s2)
+		g.wnafMul(t1, a, s3)
+		if !g.Equal(t0, t1) {
+			t.Errorf(" (a ^ s1) + (a ^ s2) == a ^ (s1 + s2)")
+		}
+	}
+}
+
 func TestZKCryptoVectorsG2UncompressedValid(t *testing.T) {
 	data, err := ioutil.ReadFile("tests/g2_uncompressed_valid_test_vectors.dat")
 	if err != nil {
@@ -294,6 +356,17 @@ func TestG2MultiExpBatch(t *testing.T) {
 	_, _ = g.MultiExp(result, bases, scalars)
 	if !g.Equal(expected, result) {
 		t.Fatalf("bad multi-exponentiation")
+	}
+}
+
+func TestClearCofactor(t *testing.T) {
+	g2 := NewG2()
+	for i := 0; i < fuz; i++ {
+		a := g2.rand()
+		g2.ClearCofactor(a)
+		if !g2.InCorrectSubgroup(a) {
+			t.Fatal("clear cofactor failed")
+		}
 	}
 }
 
@@ -420,6 +493,15 @@ func BenchmarkG2Mul(t *testing.B) {
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
 		g2.MulScalar(&c, a, e)
+	}
+}
+
+func BenchmarkG2ClearCofactor(t *testing.B) {
+	g2 := NewG2()
+	a := g2.rand()
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		g2.ClearCofactor(a)
 	}
 }
 
