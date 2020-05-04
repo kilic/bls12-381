@@ -236,3 +236,12 @@ func (e *fp2) sqrt(c, a *fe2) bool {
 	e.square(alpha, c)
 	return alpha.equal(u)
 }
+
+func (e *fp2) isQuadraticNonResidue(a *fe2) bool {
+	// https://github.com/leovt/constructible/wiki/Taking-Square-Roots-in-quadratic-extension-Fields
+	c0, c1 := new(fe), new(fe)
+	square(c0, &a[0])
+	square(c1, &a[1])
+	add(c1, c1, c0)
+	return isQuadraticNonResidue(c1)
+}

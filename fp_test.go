@@ -281,6 +281,38 @@ func TestFpSquareRoot(t *testing.T) {
 		}
 	}
 }
+
+func TestFpNonResidue(t *testing.T) {
+
+	if !isQuadraticNonResidue(nonResidue1) {
+		t.Fatalf("element is quadratic non residue, 1")
+	}
+	if isQuadraticNonResidue(new(fe).one()) {
+		t.Fatalf("one is not quadratic non residue")
+	}
+	if !isQuadraticNonResidue(new(fe).zero()) {
+		t.Fatalf("should accept zero as quadratic non residue")
+	}
+	for i := 0; i < fuz; i++ {
+		a, _ := new(fe).rand(rand.Reader)
+		square(a, a)
+		if isQuadraticNonResidue(new(fe).one()) {
+			t.Fatalf("element is not quadratic non residue")
+		}
+	}
+	for i := 0; i < fuz; i++ {
+		a, _ := new(fe).rand(rand.Reader)
+		if !sqrt(new(fe), a) {
+			if !isQuadraticNonResidue(a) {
+				t.Fatal("element is quadratic non residue, 2", i)
+			}
+		} else {
+			i -= 1
+		}
+	}
+
+}
+
 func TestFp2Serialization(t *testing.T) {
 	field := newFp2()
 	for i := 0; i < fuz; i++ {
@@ -469,6 +501,36 @@ func TestFp2SquareRoot(t *testing.T) {
 		field.square(rr, r)
 		if !rr.equal(aa) {
 			t.Fatalf("bad sqrt 2")
+		}
+	}
+}
+
+func TestFp2NonResidue(t *testing.T) {
+	field := newFp2()
+	if !field.isQuadraticNonResidue(nonResidue2) {
+		t.Fatalf("element is quadratic non residue, 1")
+	}
+	if field.isQuadraticNonResidue(new(fe2).one()) {
+		t.Fatalf("one is not quadratic non residue")
+	}
+	if !field.isQuadraticNonResidue(new(fe2).zero()) {
+		t.Fatalf("should accept zero as quadratic non residue")
+	}
+	for i := 0; i < fuz; i++ {
+		a, _ := new(fe2).rand(rand.Reader)
+		field.squareAssign(a)
+		if field.isQuadraticNonResidue(new(fe2).one()) {
+			t.Fatalf("element is not quadratic non residue")
+		}
+	}
+	for i := 0; i < fuz; i++ {
+		a, _ := new(fe2).rand(rand.Reader)
+		if !field.sqrt(new(fe2), a) {
+			if !field.isQuadraticNonResidue(a) {
+				t.Fatal("element is quadratic non residue, 2", i)
+			}
+		} else {
+			i -= 1
 		}
 	}
 }
