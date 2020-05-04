@@ -281,6 +281,51 @@ func TestG1MultiExpBatch(t *testing.T) {
 	}
 }
 
+func TestG1MapToCurve(t *testing.T) {
+	for i, v := range []struct {
+		u        []byte
+		expected []byte
+	}{
+		{
+			u: fromHex(-1, "07fdf49ea58e96015d61f6b5c9d1c8f277146a533ae7fbca2a8ef4c41055cd961fbc6e26979b5554e4b4f22330c0e16d"),
+			expected: fromHex(-1,
+				"1223effdbb2d38152495a864d78eee14cb0992d89a241707abb03819a91a6d2fd65854ab9a69e9aacb0cbebfd490732c",
+				"0f925d61e0b235ecd945cbf0309291878df0d06e5d80d6b84aa4ff3e00633b26f9a7cb3523ef737d90e6d71e8b98b2d5",
+			),
+		},
+		{
+			u: fromHex(-1, "1275ab3adbf824a169ed4b1fd669b49cf406d822f7fe90d6b2f8c601b5348436f89761bb1ad89a6fb1137cd91810e5d2"),
+			expected: fromHex(-1,
+				"179d3fd0b4fb1da43aad06cea1fb3f828806ddb1b1fa9424b1e3944dfdbab6e763c42636404017da03099af0dcca0fd6",
+				"0d037cb1c6d495c0f5f22b061d23f1be3d7fe64d3c6820cfcd99b6b36fa69f7b4c1f4addba2ae7aa46fb25901ab483e4",
+			),
+		},
+		{
+			u: fromHex(-1, "0e93d11d30de6d84b8578827856f5c05feef36083eef0b7b263e35ecb9b56e86299614a042e57d467fa20948e8564909"),
+			expected: fromHex(-1,
+				"15aa66c77eded1209db694e8b1ba49daf8b686733afaa7b68c683d0b01788dfb0617a2e2d04c0856db4981921d3004af",
+				"0952bb2f61739dd1d201dd0a79d74cda3285403d47655ee886afe860593a8a4e51c5b77a22d2133e3a4280eaaaa8b788",
+			),
+		},
+		{
+			u: fromHex(-1, "015a41481155d17074d20be6d8ec4d46632a51521cd9c916e265bd9b47343b3689979b50708c8546cbc2916b86cb1a3a"),
+			expected: fromHex(-1,
+				"06328ce5106e837935e8da84bd9af473422e62492930aa5f460369baad9545defa468d9399854c23a75495d2a80487ee",
+				"094bfdfe3e552447433b5a00967498a3f1314b86ce7a7164c8a8f4131f99333b30a574607e301d5f774172c627fd0bca",
+			),
+		},
+	} {
+		g := NewG1()
+		p0, err := g.MapToCurve(v.u)
+		if err != nil {
+			t.Fatal("map to curve fails", i, err)
+		}
+		if !bytes.Equal(g.ToBytes(p0), v.expected) {
+			t.Fatal("map to curve fails", i)
+		}
+	}
+}
+
 func TestG1EncodeToCurve(t *testing.T) {
 	domain := []byte("BLS12381G1_XMD:SHA-256_SSWU_NU_TESTGEN")
 	for i, v := range []struct {
