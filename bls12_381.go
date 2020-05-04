@@ -2,6 +2,10 @@ package bls12381
 
 import "math/big"
 
+func Init() {
+	cfgArch()
+}
+
 /*
 	Field Constants
 */
