@@ -24,10 +24,6 @@ func (g *G1) rand() *PointG1 {
 	return g.MulScalar(&PointG1{}, g.one(), k)
 }
 
-func (g *G1) randAffine() *PointG1 {
-	return g.Affine(g.rand())
-}
-
 func TestG1Serialization(t *testing.T) {
 	var err error
 	g1 := NewG1()
