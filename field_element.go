@@ -173,11 +173,29 @@ func (fe *fe) mul2() uint64 {
 	return e
 }
 
-func (fe *fe2) signBE() bool {
-	if !fe[1].isZero() {
-		return fe[1].signBE()
+func (e *fe2) zero() *fe2 {
+	e[0].zero()
+	e[1].zero()
+	return e
+}
+
+func (e *fe2) one() *fe2 {
+	e[0].one()
+	e[1].zero()
+	return e
+}
+
+func (e *fe2) set(e2 *fe2) *fe2 {
+	e[0].set(&e2[0])
+	e[1].set(&e2[1])
+	return e
+}
+
+func (e *fe2) signBE() bool {
+	if !e[1].isZero() {
+		return e[1].signBE()
 	}
-	return fe[0].signBE()
+	return e[0].signBE()
 }
 
 func (e *fe2) sign() bool {
@@ -188,4 +206,43 @@ func (e *fe2) sign() bool {
 	}
 	fromMont(r, &e[1])
 	return r[0]&1 == 0
+}
+
+func (e *fe6) zero() *fe6 {
+	e[0].zero()
+	e[1].zero()
+	e[2].zero()
+	return e
+}
+
+func (e *fe6) one() *fe6 {
+	e[0].one()
+	e[1].zero()
+	e[2].zero()
+	return e
+}
+
+func (e *fe6) set(e2 *fe6) *fe6 {
+	e[0].set(&e2[0])
+	e[1].set(&e2[1])
+	e[2].set(&e2[2])
+	return e
+}
+
+func (e *fe12) zero() *fe12 {
+	e[0].zero()
+	e[1].zero()
+	return e
+}
+
+func (e *fe12) one() *fe12 {
+	e[0].one()
+	e[1].zero()
+	return e
+}
+
+func (e *fe12) set(e2 *fe12) *fe12 {
+	e[0].set(&e2[0])
+	e[1].set(&e2[1])
+	return e
 }
