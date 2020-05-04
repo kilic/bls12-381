@@ -89,6 +89,19 @@ func TestG2Serialization(t *testing.T) {
 	}
 }
 
+func TestG2IsOnCurve(t *testing.T) {
+	g := NewG2()
+	zero := g.Zero()
+	if !g.IsOnCurve(zero) {
+		t.Fatalf("zero must be on curve")
+	}
+	one := new(fe2).one()
+	p := &PointG2{*one, *one, *one}
+	if g.IsOnCurve(p) {
+		t.Fatalf("(1, 1) is not on curve")
+	}
+}
+
 func TestG2AdditiveProperties(t *testing.T) {
 	g := NewG2()
 	t0, t1 := g.New(), g.New()
