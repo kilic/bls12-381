@@ -1,36 +1,13 @@
 package bls12381
 
 import (
-	"encoding/hex"
-	"fmt"
+	"math/big"
 )
 
-func fromHex(size int, hexStrs ...string) []byte {
-	var out []byte
-	if size > 0 {
-		out = make([]byte, size*len(hexStrs))
+func bigFromHex(hex string) *big.Int {
+	if len(hex) > 1 && hex[:2] == "0x" {
+		hex = hex[2:]
 	}
-	for i := 0; i < len(hexStrs); i++ {
-		hexStr := hexStrs[i]
-		if hexStr[:2] == "0x" {
-			hexStr = hexStr[2:]
-		}
-		if len(hexStr)%2 == 1 {
-			hexStr = "0" + hexStr
-		}
-		bytes, err := hex.DecodeString(hexStr)
-		if err != nil {
-			panic(err)
-		}
-		if size <= 0 {
-			out = append(out, bytes...)
-		} else {
-			if len(bytes) > size {
-				panic(fmt.Sprintf("bad input string\ninput: %x\nsize: %d\nlenght: %d\n", bytes, size, len(bytes)))
-			}
-			offset := i*size + (size - len(bytes))
-			copy(out[offset:], bytes)
-		}
-	}
-	return out
+	n, _ := new(big.Int).SetString(hex, 16)
+	return n
 }

@@ -1,6 +1,6 @@
 package bls12381
 
-import "math/big"
+// import "math/big"
 
 func Init() {
 	cfgArch()
@@ -23,9 +23,6 @@ var r2 = &fe{
 	0xf4df1f341c341746, 0x0a76e6a609d104f1, 0x8de5476c4c95b6d5, 0x67eb88a9939d83c0, 0x9a793e85b519952d, 0x11988fe592cae3aa,
 }
 
-// -1
-// var negativeOne = &fe{0x43f5fffffffcaaae, 0x32b7fff2ed47fffd, 0x07e83a49a2e99d69, 0xeca8f3318332bb7a, 0xef148d1ea0f4c069, 0x040ab3263eff0206}
-
 // -1 + 0*u
 var negativeOne2 = &fe2{
 	fe{0x43f5fffffffcaaae, 0x32b7fff2ed47fffd, 0x07e83a49a2e99d69, 0xeca8f3318332bb7a, 0xef148d1ea0f4c069, 0x040ab3263eff0206},
@@ -36,16 +33,13 @@ var negativeOne2 = &fe2{
 var twoInv = &fe{0x1804000000015554, 0x855000053ab00001, 0x633cb57c253c276f, 0x6e22d1ec31ebb502, 0xd3916126f2d14ca2, 0x17fbb8571a006596}
 
 // (q-3) / 4
-var pMinus3Over4 = new(big.Int).SetBytes(
-	fromHex(-1, "0x680447a8e5ff9a692c6e9ed90d2eb35d91dd2e13ce144afd9cc34a83dac3d8907aaffffac54ffffee7fbfffffffeaaa"))
+var pMinus3Over4 = bigFromHex("0x680447a8e5ff9a692c6e9ed90d2eb35d91dd2e13ce144afd9cc34a83dac3d8907aaffffac54ffffee7fbfffffffeaaa")
 
 // (q-3) / 4
-var pPlus1Over4 = new(big.Int).SetBytes(
-	fromHex(-1, "0x680447a8e5ff9a692c6e9ed90d2eb35d91dd2e13ce144afd9cc34a83dac3d8907aaffffac54ffffee7fbfffffffeaab"))
+var pPlus1Over4 = bigFromHex("0x680447a8e5ff9a692c6e9ed90d2eb35d91dd2e13ce144afd9cc34a83dac3d8907aaffffac54ffffee7fbfffffffeaab")
 
 // (q-1) / 2
-var pMinus1Over2 = new(big.Int).SetBytes(
-	fromHex(48, "0xd0088f51cbff34d258dd3db21a5d66bb23ba5c279c2895fb39869507b587b120f55ffff58a9ffffdcff7fffffffd555"))
+var pMinus1Over2 = bigFromHex("0xd0088f51cbff34d258dd3db21a5d66bb23ba5c279c2895fb39869507b587b120f55ffff58a9ffffdcff7fffffffd555")
 
 // -1
 var nonResidue1 = &fe{0x43f5fffffffcaaae, 0x32b7fff2ed47fffd, 0x07e83a49a2e99d69, 0xeca8f3318332bb7a, 0xef148d1ea0f4c069, 0x040ab3263eff0206}
@@ -55,9 +49,6 @@ var nonResidue2 = &fe2{
 	fe{0x760900000002fffd, 0xebf4000bc40c0002, 0x5f48985753c758ba, 0x77ce585370525745, 0x5c071a97a256ec6d, 0x15f65ec3fa80e493},
 	fe{0x760900000002fffd, 0xebf4000bc40c0002, 0x5f48985753c758ba, 0x77ce585370525745, 0x5c071a97a256ec6d, 0x15f65ec3fa80e493},
 }
-
-var h2 [7]uint64 = [7]uint64{0xc000000000000000, 0xee7fbfffffffeaaa, 0x07aaffffac54ffff, 0xd9cc34a83dac3d89, 0xd91dd2e13ce144af, 0x92c6e9ed90d2eb35, 0x0680447a8e5ff9a6}
-var h1 [7]uint64 = [7]uint64{0x8000000000000000, 0xdcff7fffffffd555, 0x0f55ffff58a9ffff, 0xb39869507b587b12, 0xb23ba5c279c2895f, 0x258dd3db21a5d66b, 0x0d0088f51cbff34d}
 
 /*
 	Curve Constants
@@ -73,16 +64,13 @@ var b2 = &fe2{
 }
 
 // curve order
-var q = new(big.Int).SetBytes(
-	fromHex(-1, "0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001"))
+var q = bigFromHex("0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001")
 
 // cofactor g1
-var cofactorG1 = new(big.Int).SetBytes(
-	fromHex(-1, "0x396c8c005555e1568c00aaab0000aaab"))
+var cofactorG1 = bigFromHex("0x396c8c005555e1568c00aaab0000aaab")
 
 // cofactor g2
-var cofactorG2 = new(big.Int).SetBytes(
-	fromHex(-1, "5d543a95414e7f1091d50792876a202cd91de4547085abaa68a205b2e5a7ddfa628f1cb4d9e82ef21537e293a6691ae1616ec6e786f0c70cf1c38e31c7238e5"))
+var cofactorG2 = bigFromHex("5d543a95414e7f1091d50792876a202cd91de4547085abaa68a205b2e5a7ddfa628f1cb4d9e82ef21537e293a6691ae1616ec6e786f0c70cf1c38e31c7238e5")
 
 // point at infinity in G1
 var infinity = &PointG1{
@@ -255,16 +243,14 @@ var frobeniusCoeffs12 = [12]fe2{
 	x
 */
 
-var x, _ = new(big.Int).SetString("d201000000010000", 16)
+var x = bigFromHex("0xd201000000010000")
 
 /*
 	Efficient cofactors.
 */
 
-var cofactorEFFG1 = new(big.Int).SetUint64(0xd201000000010001)
-var cofactorEFFG2 = new(big.Int).SetBytes(
-	fromHex(-1, "0x0bc69f08f2ee75b3584c6a0ea91b352888e2a8e9145ad7689986ff031508ffe1329c2f178731db956d82bf015d1212b02ec0ec69d7477c1ae954cbc06689f6a359894c0adebbf6b4e8020005aaa95551"),
-)
+var cofactorEFFG1 = bigFromHex("0xd201000000010001")
+var cofactorEFFG2 = bigFromHex("0x0bc69f08f2ee75b3584c6a0ea91b352888e2a8e9145ad7689986ff031508ffe1329c2f178731db956d82bf015d1212b02ec0ec69d7477c1ae954cbc06689f6a359894c0adebbf6b4e8020005aaa95551")
 
 /*
 	Non bls12-381 related.
