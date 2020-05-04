@@ -50,15 +50,15 @@ func (e *fp2) toBytes(a *fe2) []byte {
 }
 
 func (e *fp2) new() *fe2 {
-	return e.zero()
+	return new(fe2).zero()
 }
 
 func (e *fp2) zero() *fe2 {
-	return &fe2{}
+	return new(fe2).zero()
 }
 
 func (e *fp2) one() *fe2 {
-	return &fe2{*one(), *zero()}
+	return new(fe2).one()
 }
 
 func (e *fp2) rand(r io.Reader) (*fe2, error) {
@@ -88,11 +88,6 @@ func (e *fp2) isOne(a *fe2) bool {
 
 func (e *fp2) equal(a, b *fe2) bool {
 	return equal(&a[0], &b[0]) && equal(&a[1], &b[1])
-}
-
-func (e *fp2) copy(c, a *fe2) {
-	c[0].set(&a[0])
-	c[1].set(&a[1])
 }
 
 func (e *fp2) add(c, a, b *fe2) {
@@ -229,7 +224,7 @@ func (e *fp2) exp(c, a *fe2, s *big.Int) {
 			e.mul(z, z, a)
 		}
 	}
-	e.copy(c, z)
+	c.set(z)
 }
 
 func (e *fp2) div(c, a, b *fe2) {
@@ -256,7 +251,7 @@ func (e *fp2) frobeniousMapAssign(a *fe2, power uint) {
 
 func (e *fp2) sqrt(c, a *fe2) bool {
 	u, x0, a1, alpha := &fe2{}, &fe2{}, &fe2{}, &fe2{}
-	e.copy(u, a)
+	u.set(a)
 	e.exp(a1, a, pMinus3Over4)
 	e.square(alpha, a1)
 	e.mul(alpha, alpha, a)

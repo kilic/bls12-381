@@ -260,9 +260,7 @@ func TestG2MultiExpExpected(t *testing.T) {
 	var bases [2]*PointG2
 	scalars[0] = big.NewInt(2)
 	scalars[1] = big.NewInt(3)
-	bases[0], bases[1] = g.New(), g.New()
-	g.Copy(bases[0], one)
-	g.Copy(bases[1], one)
+	bases[0], bases[1] = new(PointG2).Set(one), new(PointG2).Set(one)
 	expected, result := g.New(), g.New()
 	g.MulScalar(expected, one, big.NewInt(5))
 	_, _ = g.MultiExp(result, bases[:], scalars[:])

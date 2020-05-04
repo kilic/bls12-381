@@ -61,16 +61,15 @@ func (e *fp6) toBytes(a *fe6) []byte {
 }
 
 func (e *fp6) new() *fe6 {
-	return &fe6{}
+	return new(fe6)
 }
 
 func (e *fp6) zero() *fe6 {
-	return &fe6{}
+	return new(fe6)
 }
 
 func (e *fp6) one() *fe6 {
-	fp2 := e.fp2
-	return &fe6{*fp2.one()}
+	return new(fe6).one()
 }
 
 func (e *fp6) rand(r io.Reader) (*fe6, error) {
@@ -98,13 +97,6 @@ func (e *fp6) isZero(a *fe6) bool {
 func (e *fp6) equal(a, b *fe6) bool {
 	fp2 := e.fp2
 	return fp2.equal(&a[0], &b[0]) && fp2.equal(&a[1], &b[1]) && fp2.equal(&a[2], &b[2])
-}
-
-func (e *fp6) copy(c, a *fe6) {
-	fp2 := e.fp2
-	fp2.copy(&c[0], &a[0])
-	fp2.copy(&c[1], &a[1])
-	fp2.copy(&c[2], &a[2])
 }
 
 func (e *fp6) add(c, a, b *fe6) {
@@ -158,9 +150,9 @@ func (e *fp6) neg(c, a *fe6) {
 
 func (e *fp6) conjugate(c, a *fe6) {
 	fp2 := e.fp2
-	fp2.copy(&c[0], &a[0])
+	c[0].set(&a[0])
 	fp2.neg(&c[1], &a[1])
-	fp2.copy(&c[2], &a[2])
+	c[0].set(&a[2])
 }
 
 func (e *fp6) mul(c, a, b *fe6) {
@@ -188,7 +180,7 @@ func (e *fp6) mul(c, a, b *fe6) {
 	fp2.add(t[4], t[0], t[2])
 	fp2.subAssign(t[3], t[4])
 	fp2.add(&c[2], t[1], t[3])
-	fp2.copy(&c[0], t[5])
+	c[0].set(t[5])
 }
 
 func (e *fp6) mulAssign(a, b *fe6) {
@@ -216,7 +208,7 @@ func (e *fp6) mulAssign(a, b *fe6) {
 	fp2.add(t[4], t[0], t[2])
 	fp2.subAssign(t[3], t[4])
 	fp2.add(&a[2], t[1], t[3])
-	fp2.copy(&a[0], t[5])
+	a[0].set(t[5])
 }
 
 func (e *fp6) square(c, a *fe6) {
@@ -290,10 +282,10 @@ func (e *fp6) mulBy1(c, a *fe6, b1 *fe2) {
 
 func (e *fp6) mulByNonResidue(c, a *fe6) {
 	fp2, t := e.fp2, e.t
-	fp2.copy(t[0], &a[0])
+	t[0].set(&a[0])
 	fp2.mulByNonResidue(&c[0], &a[2])
-	fp2.copy(&c[2], &a[1])
-	fp2.copy(&c[1], t[0])
+	c[2].set(&a[1])
+	c[1].set(t[0])
 }
 
 func (e *fp6) mulByBaseField(c, a *fe6, b *fe2) {
@@ -311,7 +303,7 @@ func (e *fp6) exp(c, a *fe6, s *big.Int) {
 			e.mul(z, z, a)
 		}
 	}
-	e.copy(c, z)
+	c.set(z)
 }
 
 func (e *fp6) inverse(c, a *fe6) {

@@ -22,6 +22,14 @@ func (p *PointG2) Set(p2 *PointG2) *PointG2 {
 	return p
 }
 
+func (p *PointG2) Zero() *PointG2 {
+	p[0].zero()
+	p[1].one()
+	p[2].zero()
+	return p
+
+}
+
 type tempG2 struct {
 	t [9]*fe2
 }
@@ -92,7 +100,7 @@ func (g *G2) FromUncompressed(uncompressed []byte) (*PointG2, error) {
 	if err != nil {
 		return nil, err
 	}
-	z := g.f.one()
+	z := new(fe2).one()
 	p := &PointG2{*x, *y, *z}
 	if !g.IsOnCurve(p) {
 		return nil, fmt.Errorf("point is not on curve")
@@ -158,7 +166,7 @@ func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 	if y.signBE() == a {
 		g.f.neg(y, y)
 	}
-	z := g.f.one()
+	z := new(fe2).one()
 	p := &PointG2{*x, *y, *z}
 	if !g.InCorrectSubgroup(p) {
 		return nil, fmt.Errorf("point is not on correct subgroup")
@@ -194,7 +202,7 @@ func (g *G2) fromBytesUnchecked(in []byte) (*PointG2, error) {
 	if err != nil {
 		return nil, err
 	}
-	p2 := g.f.one()
+	p2 := new(fe2).one()
 	return &PointG2{*p0, *p1, *p2}, nil
 }
 
@@ -219,7 +227,7 @@ func (g *G2) FromBytes(in []byte) (*PointG2, error) {
 	if g.f.isZero(p0) && g.f.isZero(p1) {
 		return g.Zero(), nil
 	}
-	p2 := g.f.one()
+	p2 := new(fe2).one()
 	p := &PointG2{*p0, *p1, *p2}
 	if !g.IsOnCurve(p) {
 		return nil, fmt.Errorf("point is not on curve")
@@ -243,26 +251,18 @@ func (g *G2) ToBytes(p *PointG2) []byte {
 
 // New creates a new G2 Point which is equal to zero in other words point at infinity.
 func (g *G2) New() *PointG2 {
-	return g.Zero()
+	return new(PointG2).Zero()
 }
 
 // Zero returns a new G2 Point which is equal to point at infinity.
 func (g *G2) Zero() *PointG2 {
-	return &PointG2{
-		*g.f.zero(),
-		*g.f.one(),
-		*g.f.zero(),
-	}
+	return new(PointG2).Zero()
 }
 
 // One returns a new G2 Point which is equal to generator point.
 func (g *G2) One() *PointG2 {
-	return g.Copy(&PointG2{}, &g2One)
-}
-
-// Copy copies source point to destination point.
-func (g *G2) Copy(dst *PointG2, src *PointG2) *PointG2 {
-	return dst.Set(src)
+	p := &PointG2{}
+	return p.Set(&g2One)
 }
 
 // IsZero returns true if given point is equal to zero.
@@ -316,7 +316,7 @@ func (g *G2) IsOnCurve(p *PointG2) bool {
 
 // IsAffine checks a G2 point whether it is in affine form.
 func (g *G2) IsAffine(p *PointG2) bool {
-	return g.f.equal(&p[2], g.f.one())
+	return g.f.equal(&p[2], new(fe2).one())
 }
 
 // Affine calculates affine form of given G2 point.
@@ -331,7 +331,7 @@ func (g *G2) Affine(p *PointG2) *PointG2 {
 		g.f.mul(&p[0], &p[0], t[1])
 		g.f.mul(t[0], t[0], t[1])
 		g.f.mul(&p[1], &p[1], t[0])
-		g.f.copy(&p[2], g.f.one())
+		p[2].one()
 	}
 	return p
 }
@@ -340,12 +340,10 @@ func (g *G2) Affine(p *PointG2) *PointG2 {
 func (g *G2) Add(r, p1, p2 *PointG2) *PointG2 {
 	// http://www.hyperelliptic.org/EFD/gp/auto-shortw-jacobian-0.html#addition-add-2007-bl
 	if g.IsZero(p1) {
-		g.Copy(r, p2)
-		return r
+		return r.Set(p2)
 	}
 	if g.IsZero(p2) {
-		g.Copy(r, p1)
-		return r
+		return r.Set(p1)
 	}
 	t := g.t
 	g.f.square(t[7], &p1[2])
@@ -360,7 +358,7 @@ func (g *G2) Add(r, p1, p2 *PointG2) *PointG2 {
 		if g.f.equal(t[0], t[2]) {
 			return g.Double(r, p1)
 		} else {
-			return g.Copy(r, infinity2)
+			return r.Set(infinity2)
 		}
 	}
 	g.f.sub(t[1], t[1], t[3])
@@ -391,8 +389,7 @@ func (g *G2) Add(r, p1, p2 *PointG2) *PointG2 {
 func (g *G2) Double(r, p *PointG2) *PointG2 {
 	// http://www.hyperelliptic.org/EFD/gp/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
 	if g.IsZero(p) {
-		g.Copy(r, p)
-		return r
+		return r.Set(p)
 	}
 	t := g.t
 	g.f.square(t[0], &p[0])
@@ -415,16 +412,16 @@ func (g *G2) Double(r, p *PointG2) *PointG2 {
 	g.f.mul(t[0], t[0], t[1])
 	g.f.sub(t[1], t[0], t[2])
 	g.f.mul(t[0], &p[1], &p[2])
-	g.f.copy(&r[1], t[1])
+	r[1].set(t[1])
 	g.f.double(&r[2], t[0])
 	return r
 }
 
 // Neg negates a G2 point p and assigns the result to the point at first argument.
 func (g *G2) Neg(r, p *PointG2) *PointG2 {
-	g.f.copy(&r[0], &p[0])
+	r[0].set(&p[0])
 	g.f.neg(&r[1], &p[1])
-	g.f.copy(&r[2], &p[2])
+	r[2].set(&p[2])
 	return r
 }
 
@@ -439,7 +436,7 @@ func (g *G2) Sub(c, a, b *PointG2) *PointG2 {
 // MulScalar multiplies a point by given scalar value in big.Int and assigns the result to point at first argument.
 func (g *G2) MulScalar(c, p *PointG2, e *big.Int) *PointG2 {
 	q, n := &PointG2{}, &PointG2{}
-	g.Copy(n, p)
+	n.Set(p)
 	l := e.BitLen()
 	for i := 0; i < l; i++ {
 		if e.Bit(i) == 1 {
@@ -447,7 +444,7 @@ func (g *G2) MulScalar(c, p *PointG2, e *big.Int) *PointG2 {
 		}
 		g.Double(n, n)
 	}
-	return g.Copy(c, q)
+	return c.Set(q)
 }
 
 // ClearCofactor maps given a G2 point to correct subgroup
@@ -478,7 +475,7 @@ func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG
 	j := 0
 	var cur uint32
 	for cur <= numBits {
-		g.Copy(acc, g.Zero())
+		acc.Zero()
 		bucket = make([]*PointG2, (1<<c)-1)
 		for i := 0; i < len(bucket); i++ {
 			bucket[i] = g.New()
@@ -491,26 +488,24 @@ func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG
 			}
 			powers[i] = new(big.Int).Rsh(powers[i], uint(c))
 		}
-
-		g.Copy(sum, g.Zero())
+		sum.Zero()
 		for i := len(bucket) - 1; i >= 0; i-- {
 			g.Add(sum, sum, bucket[i])
 			g.Add(acc, acc, sum)
 		}
 		windows[j] = g.New()
-		g.Copy(windows[j], acc)
+		windows[j].Set(acc)
 		j++
 		cur += c
 	}
-	g.Copy(acc, g.Zero())
+	acc.Zero()
 	for i := len(windows) - 1; i >= 0; i-- {
 		for j := uint32(0); j < c; j++ {
 			g.Double(acc, acc)
 		}
 		g.Add(acc, acc, windows[i])
 	}
-	g.Copy(r, acc)
-	return r, nil
+	return r.Set(acc), nil
 }
 
 // MapToCurve given a byte slice returns a valid G2 point.
@@ -525,8 +520,8 @@ func (g *G2) MapToCurve(in []byte) (*PointG2, error) {
 	}
 	x, y := swuMapG2(fp2, u)
 	isogenyMapG2(fp2, x, y)
-	one := fp2.one()
-	q := &PointG2{*x, *y, *one}
+	z := new(fe2).one()
+	q := &PointG2{*x, *y, *z}
 	g.ClearCofactor(q)
 	return g.Affine(q), nil
 }
@@ -544,8 +539,8 @@ func (g *G2) EncodeToCurve(msg, domain []byte) (*PointG2, error) {
 	u := &fe2{*hashRes[0], *hashRes[1]}
 	x, y := swuMapG2(fp2, u)
 	isogenyMapG2(fp2, x, y)
-	one := fp2.one()
-	q := &PointG2{*x, *y, *one}
+	z := new(fe2).one()
+	q := &PointG2{*x, *y, *z}
 	g.ClearCofactor(q)
 	return g.Affine(q), nil
 }
@@ -563,8 +558,9 @@ func (g *G2) HashToCurve(msg, domain []byte) (*PointG2, error) {
 	u0, u1 := &fe2{*hashRes[0], *hashRes[1]}, &fe2{*hashRes[2], *hashRes[3]}
 	x0, y0 := swuMapG2(fp2, u0)
 	x1, y1 := swuMapG2(fp2, u1)
-	one := fp2.one()
-	p0, p1 := &PointG2{*x0, *y0, *one}, &PointG2{*x1, *y1, *one}
+	z0 := new(fe2).one()
+	z1 := new(fe2).one()
+	p0, p1 := &PointG2{*x0, *y0, *z0}, &PointG2{*x1, *y1, *z1}
 	g.Add(p0, p0, p1)
 	g.Affine(p0)
 	isogenyMapG2(fp2, &p0[0], &p0[1])

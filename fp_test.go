@@ -555,13 +555,12 @@ func TestFp6AdditionProperties(t *testing.T) {
 
 func TestFp6SparseMultiplication(t *testing.T) {
 	fp6 := newFp6(nil)
-	fq2 := fp6.fp2
 	var a, b, u *fe6
 	for j := 0; j < fuz; j++ {
 		a, _ = fp6.rand(rand.Reader)
 		b, _ = fp6.rand(rand.Reader)
 		u, _ = fp6.rand(rand.Reader)
-		fq2.copy(&b[2], fq2.zero())
+		b[2].zero()
 		fp6.mul(u, a, b)
 		fp6.mulBy01(a, a, &b[0], &b[1])
 		if !fp6.equal(a, u) {
@@ -572,8 +571,8 @@ func TestFp6SparseMultiplication(t *testing.T) {
 		a, _ = fp6.rand(rand.Reader)
 		b, _ = fp6.rand(rand.Reader)
 		u, _ = fp6.rand(rand.Reader)
-		fq2.copy(&b[2], fq2.zero())
-		fq2.copy(&b[0], fq2.zero())
+		b[2].zero()
+		b[0].zero()
 		fp6.mul(u, a, b)
 		fp6.mulBy1(a, a, &b[1])
 		if !fp6.equal(a, u) {
@@ -788,15 +787,14 @@ func TestFp12MultiplicationProperties(t *testing.T) {
 
 func TestFp12SparseMultiplication(t *testing.T) {
 	fp12 := newFp12(nil)
-	fp2 := fp12.fp2()
 	var a, b, u *fe12
 	for j := 0; j < fuz; j++ {
 		a, _ = fp12.rand(rand.Reader)
 		b, _ = fp12.rand(rand.Reader)
 		u, _ = fp12.rand(rand.Reader)
-		fp2.copy(&b[0][2], fp2.zero())
-		fp2.copy(&b[1][0], fp2.zero())
-		fp2.copy(&b[1][2], fp2.zero())
+		b[0][2].zero()
+		b[1][0].zero()
+		b[1][2].zero()
 		fp12.mul(u, a, b)
 		fp12.mulBy014Assign(a, &b[0][0], &b[0][1], &b[1][1])
 		if !fp12.equal(a, u) {

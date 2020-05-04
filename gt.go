@@ -13,6 +13,10 @@ type GT struct {
 	fp12 *fp12
 }
 
+func (e *E) Set(e2 *E) *E {
+	return e.set(e2)
+}
+
 // NewGT constructs new target group instance.
 func NewGT() *GT {
 	fp12 := newFp12(nil)
@@ -62,11 +66,6 @@ func (g *GT) One() *E {
 // IsOne returns true if given element equals to one
 func (g *GT) IsOne(e *E) bool {
 	return g.Equal(e, g.fp12.one())
-}
-
-// Copy copies values of the second source element to first element
-func (g *GT) Copy(a, b *E) {
-	g.fp12.copy(a, b)
 }
 
 // Equal returns true if given two element is equal, otherwise returns false

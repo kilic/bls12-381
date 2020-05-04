@@ -9,13 +9,10 @@ import (
 )
 
 func (g *G1) one() *PointG1 {
-	one, err := g.fromBytesUnchecked(fromHex(48,
+	one, _ := g.fromBytesUnchecked(fromHex(48,
 		"0x17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb",
 		"0x08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1",
 	))
-	if err != nil {
-		panic(err)
-	}
 	return one
 }
 
@@ -253,9 +250,7 @@ func TestG1MultiExpExpected(t *testing.T) {
 	var bases [2]*PointG1
 	scalars[0] = big.NewInt(2)
 	scalars[1] = big.NewInt(3)
-	bases[0], bases[1] = g.New(), g.New()
-	g.Copy(bases[0], one)
-	g.Copy(bases[1], one)
+	bases[0], bases[1] = new(PointG1).Set(one), new(PointG1).Set(one)
 	expected, result := g.New(), g.New()
 	g.MulScalar(expected, one, big.NewInt(5))
 	_, _ = g.MultiExp(result, bases[:], scalars[:])

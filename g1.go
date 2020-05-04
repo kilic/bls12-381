@@ -18,6 +18,13 @@ func (p *PointG1) Set(p2 *PointG1) *PointG1 {
 	return p
 }
 
+func (p *PointG1) Zero() *PointG1 {
+	p[0].set(zero())
+	p[1].set(one())
+	p[2].set(zero())
+	return p
+}
+
 type tempG1 struct {
 	t [9]*fe
 }
@@ -245,12 +252,8 @@ func (g *G1) Zero() *PointG1 {
 
 // One returns a new G1 Point which is equal to generator point.
 func (g *G1) One() *PointG1 {
-	return g.Copy(&PointG1{}, &g1One)
-}
-
-// Copy copies source point to destination point.
-func (g *G1) Copy(dst *PointG1, src *PointG1) *PointG1 {
-	return dst.Set(src)
+	p := &PointG1{}
+	return p.Set(&g1One)
 }
 
 // IsZero returns true if given point is equal to zero.
@@ -328,12 +331,10 @@ func (g *G1) Affine(p *PointG1) *PointG1 {
 func (g *G1) Add(r, p1, p2 *PointG1) *PointG1 {
 	// http://www.hyperelliptic.org/EFD/gp/auto-shortw-jacobian-0.html#addition-add-2007-bl
 	if g.IsZero(p1) {
-		g.Copy(r, p2)
-		return r
+		return r.Set(p2)
 	}
 	if g.IsZero(p2) {
-		g.Copy(r, p1)
-		return r
+		return r.Set(p1)
 	}
 	t := g.t
 	square(t[7], &p1[2])
@@ -348,7 +349,7 @@ func (g *G1) Add(r, p1, p2 *PointG1) *PointG1 {
 		if equal(t[0], t[2]) {
 			return g.Double(r, p1)
 		} else {
-			return g.Copy(r, infinity)
+			return r.Set(infinity)
 		}
 	}
 	sub(t[1], t[1], t[3])
@@ -379,8 +380,7 @@ func (g *G1) Add(r, p1, p2 *PointG1) *PointG1 {
 func (g *G1) Double(r, p *PointG1) *PointG1 {
 	// http://www.hyperelliptic.org/EFD/gp/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
 	if g.IsZero(p) {
-		g.Copy(r, p)
-		return r
+		return r.Set(p)
 	}
 	t := g.t
 	square(t[0], &p[0])
@@ -427,7 +427,7 @@ func (g *G1) Sub(c, a, b *PointG1) *PointG1 {
 // MulScalar multiplies a point by given scalar value in big.Int and assigns the result to point at first argument.
 func (g *G1) MulScalar(c, p *PointG1, e *big.Int) *PointG1 {
 	q, n := &PointG1{}, &PointG1{}
-	g.Copy(n, p)
+	n.Set(p)
 	l := e.BitLen()
 	for i := 0; i < l; i++ {
 		if e.Bit(i) == 1 {
@@ -435,7 +435,7 @@ func (g *G1) MulScalar(c, p *PointG1, e *big.Int) *PointG1 {
 		}
 		g.Double(n, n)
 	}
-	return g.Copy(c, q)
+	return c.Set(q)
 }
 
 // ClearCofactor maps given a G1 point to correct subgroup
@@ -466,7 +466,7 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, powers []*big.Int) (*PointG
 	j := 0
 	var cur uint32
 	for cur <= numBits {
-		g.Copy(acc, g.Zero())
+		acc.Zero()
 		bucket = make([]*PointG1, (1<<c)-1)
 		for i := 0; i < len(bucket); i++ {
 			bucket[i] = g.New()
@@ -479,26 +479,24 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, powers []*big.Int) (*PointG
 			}
 			powers[i] = new(big.Int).Rsh(powers[i], uint(c))
 		}
-
-		g.Copy(sum, g.Zero())
+		sum.Zero()
 		for i := len(bucket) - 1; i >= 0; i-- {
 			g.Add(sum, sum, bucket[i])
 			g.Add(acc, acc, sum)
 		}
 		windows[j] = g.New()
-		g.Copy(windows[j], acc)
+		windows[j].Set(acc)
 		j++
 		cur += c
 	}
-	g.Copy(acc, g.Zero())
+	acc.Zero()
 	for i := len(windows) - 1; i >= 0; i-- {
 		for j := uint32(0); j < c; j++ {
 			g.Double(acc, acc)
 		}
 		g.Add(acc, acc, windows[i])
 	}
-	g.Copy(r, acc)
-	return r, nil
+	return r.Set(acc), nil
 }
 
 // MapToCurve given a byte slice returns a valid G1 point.

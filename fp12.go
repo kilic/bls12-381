@@ -66,16 +66,15 @@ func (e *fp12) toBytes(a *fe12) []byte {
 }
 
 func (e *fp12) new() *fe12 {
-	return &fe12{}
+	return new(fe12)
 }
 
 func (e *fp12) zero() *fe12 {
-	return &fe12{}
+	return new(fe12)
 }
 
 func (e *fp12) one() *fe12 {
-	fp6 := e.fp6
-	return &fe12{*fp6.one()}
+	return new(fe12).one()
 }
 
 func (e *fp12) rand(r io.Reader) (*fe12, error) {
@@ -99,12 +98,6 @@ func (e *fp12) isZero(a *fe12) bool {
 func (e *fp12) equal(a, b *fe12) bool {
 	fp6 := e.fp6
 	return fp6.equal(&a[0], &b[0]) && fp6.equal(&a[1], &b[1])
-}
-
-func (e *fp12) copy(c, a *fe12) {
-	fp6 := e.fp6
-	fp6.copy(&c[0], &a[0])
-	fp6.copy(&c[1], &a[1])
 }
 
 func (e *fp12) add(c, a, b *fe12) {
@@ -135,7 +128,7 @@ func (e *fp12) neg(c, a *fe12) {
 
 func (e *fp12) conjugate(c, a *fe12) {
 	fp6 := e.fp6
-	fp6.copy(&c[0], &a[0])
+	c[0].set(&a[0])
 	fp6.neg(&c[1], &a[1])
 }
 
@@ -188,7 +181,7 @@ func (e *fp12) mul(c, a, b *fe12) {
 	fp6.add(t[1], &a[0], &a[1])
 	fp6.add(t[2], &b[0], &b[1])
 	fp6.mulAssign(t[1], t[2])
-	fp6.copy(&c[0], t[3])
+	c[0].set(t[3])
 	fp6.sub(&c[1], t[1], t[0])
 }
 
@@ -202,7 +195,7 @@ func (e *fp12) mulAssign(a, b *fe12) {
 	fp6.add(t[1], &a[0], &a[1])
 	fp6.add(t[2], &b[0], &b[1])
 	fp6.mulAssign(t[1], t[2])
-	fp6.copy(&a[0], t[3])
+	a[0].set(t[3])
 	fp6.sub(&a[1], t[1], t[0])
 }
 
@@ -251,7 +244,7 @@ func (e *fp12) exp(c, a *fe12, s *big.Int) {
 			e.mul(z, z, a)
 		}
 	}
-	e.copy(c, z)
+	c.set(z)
 }
 
 func (e *fp12) cyclotomicExp(c, a *fe12, s *big.Int) {
@@ -262,7 +255,7 @@ func (e *fp12) cyclotomicExp(c, a *fe12, s *big.Int) {
 			e.mul(z, z, a)
 		}
 	}
-	e.copy(c, z)
+	c.set(z)
 }
 
 func (e *fp12) frobeniusMap(c, a *fe12, power uint) {

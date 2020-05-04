@@ -37,11 +37,10 @@ func isogenyMapG2(e *fp2, x, y *fe2) {
 	// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06#appendix-C.2
 	params := isogenyConstantsG2
 	degree := 3
-	xNum, xDen, yNum, yDen := new(fe2), new(fe2), new(fe2), new(fe2)
-	e.copy(xNum, params[0][degree])
-	e.copy(xDen, params[1][degree])
-	e.copy(yNum, params[2][degree])
-	e.copy(yDen, params[3][degree])
+	xNum := new(fe2).set(params[0][degree])
+	xDen := new(fe2).set(params[1][degree])
+	yNum := new(fe2).set(params[2][degree])
+	yDen := new(fe2).set(params[3][degree])
 	for i := degree - 1; i >= 0; i-- {
 		e.mul(xNum, xNum, x)
 		e.mul(xDen, xDen, x)
@@ -57,8 +56,8 @@ func isogenyMapG2(e *fp2, x, y *fe2) {
 	e.mul(xNum, xNum, xDen)
 	e.mul(yNum, yNum, yDen)
 	e.mul(yNum, yNum, y)
-	e.copy(x, xNum)
-	e.copy(y, yNum)
+	x.set(xNum)
+	y.set(yNum)
 }
 
 var isogenyConstansG1 = [4][16]*fe{
