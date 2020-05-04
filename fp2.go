@@ -2,7 +2,6 @@ package bls12381
 
 import (
 	"fmt"
-	"io"
 	"math/big"
 )
 
@@ -61,33 +60,9 @@ func (e *fp2) one() *fe2 {
 	return new(fe2).one()
 }
 
-func (e *fp2) rand(r io.Reader) (*fe2, error) {
-	a0, err := newRand(r)
-	if err != nil {
-		return nil, err
-	}
-	a1, err := newRand(r)
-	if err != nil {
-		return nil, err
-	}
-	return &fe2{*a0, *a1}, nil
-}
-
 func (e *fp2) fromMont(c, a *fe2) {
 	fromMont(&c[0], &a[0])
 	fromMont(&c[1], &a[1])
-}
-
-func (e *fp2) isZero(a *fe2) bool {
-	return isZero(&a[0]) && isZero(&a[1])
-}
-
-func (e *fp2) isOne(a *fe2) bool {
-	return isOne(&a[0]) && isZero(&a[1])
-}
-
-func (e *fp2) equal(a, b *fe2) bool {
-	return equal(&a[0], &b[0]) && equal(&a[1], &b[1])
 }
 
 func (e *fp2) add(c, a, b *fe2) {
@@ -256,7 +231,7 @@ func (e *fp2) sqrt(c, a *fe2) bool {
 	e.square(alpha, a1)
 	e.mul(alpha, alpha, a)
 	e.mul(x0, a1, a)
-	if e.equal(alpha, negativeOne2) {
+	if alpha.equal(negativeOne2) {
 		neg(&c[0], &x0[1])
 		c[1].set(&x0[0])
 		return true
@@ -265,5 +240,5 @@ func (e *fp2) sqrt(c, a *fe2) bool {
 	e.exp(alpha, alpha, pMinus1Over2)
 	e.mul(c, alpha, x0)
 	e.square(alpha, c)
-	return e.equal(alpha, u)
+	return alpha.equal(u)
 }

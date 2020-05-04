@@ -17,6 +17,22 @@ func (e *E) Set(e2 *E) *E {
 	return e.set(e2)
 }
 
+// One sets a new target group element to one
+func (e *E) One() *E {
+	e = new(fe12).one()
+	return e
+}
+
+// IsOne returns true if given element equals to one
+func (e *E) IsOne() bool {
+	return e.isOne()
+}
+
+// Equal returns true if given two element is equal, otherwise returns false
+func (g *E) Equal(g2 *E) bool {
+	return g.equal(g2)
+}
+
 // NewGT constructs new target group instance.
 func NewGT() *GT {
 	fp12 := newFp12(nil)
@@ -50,27 +66,12 @@ func (g *GT) ToBytes(e *E) []byte {
 func (g *GT) IsValid(e *E) bool {
 	r := g.New()
 	g.fp12.exp(r, e, q)
-	return g.Equal(r, g.fp12.one())
+	return r.isOne()
 }
 
 // New initializes a new target group element which is equal to one
 func (g *GT) New() *E {
-	return g.One()
-}
-
-// One initializes a new target group element which is equal to one
-func (g *GT) One() *E {
-	return g.fp12.one()
-}
-
-// IsOne returns true if given element equals to one
-func (g *GT) IsOne(e *E) bool {
-	return g.Equal(e, g.fp12.one())
-}
-
-// Equal returns true if given two element is equal, otherwise returns false
-func (g *GT) Equal(a, b *E) bool {
-	return g.fp12.equal(a, b)
+	return new(E).One()
 }
 
 // Add adds two field element `a` and `b` and assigns the result to the element in first argument.

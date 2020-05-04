@@ -1,8 +1,10 @@
 package bls12381
 
 import (
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"math/big"
 )
 
@@ -11,24 +13,7 @@ type fe2 /**			***/ [2]fe
 type fe6 /**			***/ [3]fe2
 type fe12 /**			***/ [2]fe6
 
-func (fe *fe) bytes() []byte {
-	out := make([]byte, 48)
-	var a int
-	for i := 0; i < 6; i++ {
-		a = 48 - i*8
-		out[a-1] = byte(fe[i])
-		out[a-2] = byte(fe[i] >> 8)
-		out[a-3] = byte(fe[i] >> 16)
-		out[a-4] = byte(fe[i] >> 24)
-		out[a-5] = byte(fe[i] >> 32)
-		out[a-6] = byte(fe[i] >> 40)
-		out[a-7] = byte(fe[i] >> 48)
-		out[a-8] = byte(fe[i] >> 56)
-	}
-	return out
-}
-
-func (fe *fe) fromBytes(in []byte) *fe {
+func (fe *fe) setBytes(in []byte) *fe {
 	size := 48
 	l := len(in)
 	if l >= size {
@@ -48,7 +33,7 @@ func (fe *fe) fromBytes(in []byte) *fe {
 }
 
 func (fe *fe) setBig(a *big.Int) *fe {
-	return fe.fromBytes(a.Bytes())
+	return fe.setBytes(a.Bytes())
 }
 
 func (fe *fe) setUint(a uint64) *fe {
@@ -69,7 +54,7 @@ func (fe *fe) setString(s string) (*fe, error) {
 	if err != nil {
 		return nil, err
 	}
-	return fe.fromBytes(bytes), nil
+	return fe.setBytes(bytes), nil
 }
 
 func (fe *fe) set(fe2 *fe) *fe {
@@ -80,6 +65,34 @@ func (fe *fe) set(fe2 *fe) *fe {
 	fe[4] = fe2[4]
 	fe[5] = fe2[5]
 	return fe
+}
+
+func (fe *fe) bytes() []byte {
+	out := make([]byte, 48)
+	var a int
+	for i := 0; i < 6; i++ {
+		a = 48 - i*8
+		out[a-1] = byte(fe[i])
+		out[a-2] = byte(fe[i] >> 8)
+		out[a-3] = byte(fe[i] >> 16)
+		out[a-4] = byte(fe[i] >> 24)
+		out[a-5] = byte(fe[i] >> 32)
+		out[a-6] = byte(fe[i] >> 40)
+		out[a-7] = byte(fe[i] >> 48)
+		out[a-8] = byte(fe[i] >> 56)
+	}
+	return out
+}
+
+func (fe *fe) big() *big.Int {
+	return new(big.Int).SetBytes(fe.bytes())
+}
+
+func (fe fe) String() (s string) {
+	for i := 5; i >= 0; i-- {
+		s = fmt.Sprintf("%s%16.16x", s, fe[i])
+	}
+	return "0x" + s
 }
 
 func (fe *fe) zero() *fe {
@@ -96,15 +109,16 @@ func (fe *fe) one() *fe {
 	return fe.set(r1)
 }
 
-func (fe *fe) big() *big.Int {
-	return new(big.Int).SetBytes(fe.bytes())
+func (fe *fe) rand(r io.Reader) (*fe, error) {
+	bi, err := rand.Int(r, modulus.big())
+	if err != nil {
+		return nil, err
+	}
+	return fe.setBig(bi), nil
 }
 
-func (fe fe) String() (s string) {
-	for i := 5; i >= 0; i-- {
-		s = fmt.Sprintf("%s%16.16x", s, fe[i])
-	}
-	return "0x" + s
+func (fe *fe) isValid() bool {
+	return fe.cmp(&modulus) == -1
 }
 
 func (fe *fe) isOdd() bool {
@@ -122,7 +136,7 @@ func (fe *fe) isZero() bool {
 }
 
 func (fe *fe) isOne() bool {
-	return 1 == fe[0] && 0 == fe[1] && 0 == fe[2] && 0 == fe[3] && 0 == fe[4] && 0 == fe[5]
+	return fe.equal(r1)
 }
 
 func (fe *fe) cmp(fe2 *fe) int {
@@ -191,6 +205,30 @@ func (e *fe2) set(e2 *fe2) *fe2 {
 	return e
 }
 
+func (e *fe2) rand(r io.Reader) (*fe2, error) {
+	a0, err := new(fe).rand(r)
+	if err != nil {
+		return nil, err
+	}
+	a1, err := new(fe).rand(r)
+	if err != nil {
+		return nil, err
+	}
+	return &fe2{*a0, *a1}, nil
+}
+
+func (e *fe2) isOne() bool {
+	return e[0].isOne() && e[1].isZero()
+}
+
+func (e *fe2) isZero() bool {
+	return e[0].isZero() && e[1].isZero()
+}
+
+func (e *fe2) equal(e2 *fe2) bool {
+	return e[0].equal(&e2[0]) && e[1].equal(&e2[1])
+}
+
 func (e *fe2) signBE() bool {
 	if !e[1].isZero() {
 		return e[1].signBE()
@@ -229,6 +267,34 @@ func (e *fe6) set(e2 *fe6) *fe6 {
 	return e
 }
 
+func (e *fe6) rand(r io.Reader) (*fe6, error) {
+	a0, err := new(fe2).rand(r)
+	if err != nil {
+		return nil, err
+	}
+	a1, err := new(fe2).rand(r)
+	if err != nil {
+		return nil, err
+	}
+	a2, err := new(fe2).rand(r)
+	if err != nil {
+		return nil, err
+	}
+	return &fe6{*a0, *a1, *a2}, nil
+}
+
+func (e *fe6) isOne() bool {
+	return e[0].isOne() && e[1].isZero() && e[2].isZero()
+}
+
+func (e *fe6) isZero() bool {
+	return e[0].isZero() && e[1].isZero() && e[2].isZero()
+}
+
+func (e *fe6) equal(e2 *fe6) bool {
+	return e[0].equal(&e2[0]) && e[1].equal(&e2[1]) && e[2].equal(&e2[2])
+}
+
 func (e *fe12) zero() *fe12 {
 	e[0].zero()
 	e[1].zero()
@@ -245,4 +311,28 @@ func (e *fe12) set(e2 *fe12) *fe12 {
 	e[0].set(&e2[0])
 	e[1].set(&e2[1])
 	return e
+}
+
+func (e *fe12) rand(r io.Reader) (*fe12, error) {
+	a0, err := new(fe6).rand(r)
+	if err != nil {
+		return nil, err
+	}
+	a1, err := new(fe6).rand(r)
+	if err != nil {
+		return nil, err
+	}
+	return &fe12{*a0, *a1}, nil
+}
+
+func (e *fe12) isOne() bool {
+	return e[0].isOne() && e[1].isZero()
+}
+
+func (e *fe12) isZero() bool {
+	return e[0].isZero() && e[1].isZero()
+}
+
+func (e *fe12) equal(e2 *fe12) bool {
+	return e[0].equal(&e2[0]) && e[1].equal(&e2[1])
 }

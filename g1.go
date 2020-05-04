@@ -19,9 +19,9 @@ func (p *PointG1) Set(p2 *PointG1) *PointG1 {
 }
 
 func (p *PointG1) Zero() *PointG1 {
-	p[0].set(zero())
-	p[1].set(one())
-	p[2].set(zero())
+	p[0].zero()
+	p[1].one()
+	p[2].zero()
 	return p
 }
 
@@ -87,7 +87,7 @@ func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 	if err != nil {
 		return nil, err
 	}
-	z := one()
+	z := new(fe).one()
 	p := &PointG1{*x, *y, *z}
 	if !g.IsOnCurve(p) {
 		return nil, fmt.Errorf("point is not on curve")
@@ -153,7 +153,7 @@ func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 	if y.signBE() == a {
 		neg(y, y)
 	}
-	z := one()
+	z := new(fe).one()
 	p := &PointG1{*x, *y, *z}
 	if !g.InCorrectSubgroup(p) {
 		return nil, fmt.Errorf("point is not on correct subgroup")
@@ -189,7 +189,7 @@ func (g *G1) fromBytesUnchecked(in []byte) (*PointG1, error) {
 	if err != nil {
 		return nil, err
 	}
-	p2 := one()
+	p2 := new(fe).one()
 	return &PointG1{*p0, *p1, *p2}, nil
 }
 
@@ -214,7 +214,7 @@ func (g *G1) FromBytes(in []byte) (*PointG1, error) {
 	if p0.isZero() && p1.isZero() {
 		return g.Zero(), nil
 	}
-	p2 := one()
+	p2 := new(fe).one()
 	p := &PointG1{*p0, *p1, *p2}
 	if !g.IsOnCurve(p) {
 		return nil, fmt.Errorf("point is not on curve")
@@ -243,11 +243,7 @@ func (g *G1) New() *PointG1 {
 
 // Zero returns a new G1 Point which is equal to point at infinity.
 func (g *G1) Zero() *PointG1 {
-	return &PointG1{
-		*zero(),
-		*one(),
-		*zero(),
-	}
+	return new(PointG1).Zero()
 }
 
 // One returns a new G1 Point which is equal to generator point.
@@ -258,7 +254,7 @@ func (g *G1) One() *PointG1 {
 
 // IsZero returns true if given point is equal to zero.
 func (g *G1) IsZero(p *PointG1) bool {
-	return isZero(&p[2])
+	return p[2].isZero()
 }
 
 // Equal checks if given two G1 point is equal in their affine form.
@@ -278,7 +274,7 @@ func (g *G1) Equal(p1, p2 *PointG1) bool {
 	mul(t[1], t[1], &p2[2])
 	mul(t[1], t[1], &p1[1])
 	mul(t[0], t[0], &p2[1])
-	return equal(t[0], t[1]) && equal(t[2], t[3])
+	return t[0].equal(t[1]) && t[2].equal(t[3])
 }
 
 // InCorrectSubgroup checks whether given point is in correct subgroup.
@@ -302,12 +298,12 @@ func (g *G1) IsOnCurve(p *PointG1) bool {
 	mul(t[2], t[2], t[3])
 	mul(t[2], b, t[2])
 	add(t[1], t[1], t[2])
-	return equal(t[0], t[1])
+	return t[0].equal(t[1])
 }
 
 // IsAffine checks a G1 point whether it is in affine form.
 func (g *G1) IsAffine(p *PointG1) bool {
-	return equal(&p[2], one())
+	return p[2].isOne()
 }
 
 // Add adds two G1 points p1, p2 and assigns the result to point at first argument.
@@ -322,7 +318,7 @@ func (g *G1) Affine(p *PointG1) *PointG1 {
 		mul(&p[0], &p[0], t[1])
 		mul(t[0], t[0], t[1])
 		mul(&p[1], &p[1], t[0])
-		p[2].set(one())
+		p[2].one()
 	}
 	return p
 }
@@ -345,8 +341,8 @@ func (g *G1) Add(r, p1, p2 *PointG1) *PointG1 {
 	mul(t[3], &p1[0], t[8])
 	mul(t[4], &p2[2], t[8])
 	mul(t[2], &p1[1], t[4])
-	if equal(t[1], t[3]) {
-		if equal(t[0], t[2]) {
+	if t[1].equal(t[3]) {
+		if t[0].equal(t[2]) {
 			return g.Double(r, p1)
 		} else {
 			return r.Set(infinity)
@@ -510,7 +506,7 @@ func (g *G1) MapToCurve(in []byte) (*PointG1, error) {
 	}
 	x, y := swuMapG1(u)
 	isogenyMapG1(x, y)
-	one := one()
+	one := new(fe).one()
 	p := &PointG1{*x, *y, *one}
 	g.ClearCofactor(p)
 	return g.Affine(p), nil
@@ -528,7 +524,7 @@ func (g *G1) EncodeToCurve(msg, domain []byte) (*PointG1, error) {
 	u := hashRes[0]
 	x, y := swuMapG1(u)
 	isogenyMapG1(x, y)
-	one := one()
+	one := new(fe).one()
 	p := &PointG1{*x, *y, *one}
 	g.ClearCofactor(p)
 	return g.Affine(p), nil
@@ -546,7 +542,7 @@ func (g *G1) HashToCurve(msg, domain []byte) (*PointG1, error) {
 	u0, u1 := hashRes[0], hashRes[1]
 	x0, y0 := swuMapG1(u0)
 	x1, y1 := swuMapG1(u1)
-	one := one()
+	one := new(fe).one()
 	p0, p1 := &PointG1{*x0, *y0, *one}, &PointG1{*x1, *y1, *one}
 	g.Add(p0, p0, p1)
 	g.Affine(p0)

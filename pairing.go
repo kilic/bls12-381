@@ -251,7 +251,7 @@ func (e *Engine) calculate() *fe12 {
 
 // Check computes pairing and checks if result is equal to one
 func (e *Engine) Check() bool {
-	return e.fp12.equal(e.fp12.one(), e.calculate())
+	return e.calculate().isOne()
 }
 
 // Result computes pairing and returns target group element as result.

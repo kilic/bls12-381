@@ -13,12 +13,9 @@ type PointG2 [3]fe2
 
 // Set copies valeus of one point to another.
 func (p *PointG2) Set(p2 *PointG2) *PointG2 {
-	p[0][0].set(&p2[0][0])
-	p[1][1].set(&p2[1][1])
-	p[2][0].set(&p2[2][0])
-	p[0][1].set(&p2[0][1])
-	p[1][0].set(&p2[1][0])
-	p[2][1].set(&p2[2][1])
+	p[0].set(&p2[0])
+	p[1].set(&p2[1])
+	p[2].set(&p2[2])
 	return p
 }
 
@@ -224,7 +221,7 @@ func (g *G2) FromBytes(in []byte) (*PointG2, error) {
 		return nil, err
 	}
 	// check if given input points to infinity
-	if g.f.isZero(p0) && g.f.isZero(p1) {
+	if p0.isZero() && p1.isZero() {
 		return g.Zero(), nil
 	}
 	p2 := new(fe2).one()
@@ -267,7 +264,7 @@ func (g *G2) One() *PointG2 {
 
 // IsZero returns true if given point is equal to zero.
 func (g *G2) IsZero(p *PointG2) bool {
-	return g.f.isZero(&p[2])
+	return p[2].isZero()
 }
 
 // Equal checks if given two G2 point is equal in their affine form.
@@ -287,7 +284,7 @@ func (g *G2) Equal(p1, p2 *PointG2) bool {
 	g.f.mul(t[1], t[1], &p2[2])
 	g.f.mul(t[1], t[1], &p1[1])
 	g.f.mul(t[0], t[0], &p2[1])
-	return g.f.equal(t[0], t[1]) && g.f.equal(t[2], t[3])
+	return t[0].equal(t[1]) && t[2].equal(t[3])
 }
 
 // InCorrectSubgroup checks whether given point is in correct subgroup.
@@ -311,12 +308,12 @@ func (g *G2) IsOnCurve(p *PointG2) bool {
 	g.f.mul(t[2], t[2], t[3])
 	g.f.mul(t[2], b2, t[2])
 	g.f.add(t[1], t[1], t[2])
-	return g.f.equal(t[0], t[1])
+	return t[0].equal(t[1])
 }
 
 // IsAffine checks a G2 point whether it is in affine form.
 func (g *G2) IsAffine(p *PointG2) bool {
-	return g.f.equal(&p[2], new(fe2).one())
+	return p[2].isOne()
 }
 
 // Affine calculates affine form of given G2 point.
@@ -354,8 +351,8 @@ func (g *G2) Add(r, p1, p2 *PointG2) *PointG2 {
 	g.f.mul(t[3], &p1[0], t[8])
 	g.f.mul(t[4], &p2[2], t[8])
 	g.f.mul(t[2], &p1[1], t[4])
-	if g.f.equal(t[1], t[3]) {
-		if g.f.equal(t[0], t[2]) {
+	if t[1].equal(t[3]) {
+		if t[0].equal(t[2]) {
 			return g.Double(r, p1)
 		} else {
 			return r.Set(infinity2)

@@ -14,8 +14,9 @@ func swuMapG1(u *fe) (*fe, *fe) {
 	x1 := new(fe)
 	add(x1, tv[0], tv[1])
 	inverse(x1, x1)
-	e1 := isZero(x1)
-	add(x1, x1, one())
+	e1 := x1.isZero()
+	one := new(fe).one()
+	add(x1, x1, one)
 	if e1 {
 		x1.set(params.zInv)
 	}
@@ -68,7 +69,7 @@ func swuMapG2(e *fp2, u *fe2) (*fe2, *fe2) {
 	x1 := e.new()
 	e.add(x1, tv[0], tv[1])
 	e.inverse(x1, x1)
-	e1 := e.isZero(x1)
+	e1 := x1.isZero()
 	e.add(x1, x1, e.one())
 	if e1 {
 		x1.set(params.zInv)

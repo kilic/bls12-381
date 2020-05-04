@@ -2,7 +2,6 @@ package bls12381
 
 import (
 	"fmt"
-	"io"
 	"math/big"
 )
 
@@ -70,33 +69,6 @@ func (e *fp6) zero() *fe6 {
 
 func (e *fp6) one() *fe6 {
 	return new(fe6).one()
-}
-
-func (e *fp6) rand(r io.Reader) (*fe6, error) {
-	fp2 := e.fp2
-	a0, err := fp2.rand(r)
-	if err != nil {
-		return nil, err
-	}
-	a1, err := fp2.rand(r)
-	if err != nil {
-		return nil, err
-	}
-	a2, err := fp2.rand(r)
-	if err != nil {
-		return nil, err
-	}
-	return &fe6{*a0, *a1, *a2}, nil
-}
-
-func (e *fp6) isZero(a *fe6) bool {
-	fp2 := e.fp2
-	return fp2.isZero(&a[0]) && fp2.isZero(&a[1]) && fp2.isZero(&a[2])
-}
-
-func (e *fp6) equal(a, b *fe6) bool {
-	fp2 := e.fp2
-	return fp2.equal(&a[0], &b[0]) && fp2.equal(&a[1], &b[1]) && fp2.equal(&a[2], &b[2])
 }
 
 func (e *fp6) add(c, a, b *fe6) {
