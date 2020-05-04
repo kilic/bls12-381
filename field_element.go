@@ -36,16 +36,6 @@ func (fe *fe) setBig(a *big.Int) *fe {
 	return fe.setBytes(a.Bytes())
 }
 
-func (fe *fe) setUint(a uint64) *fe {
-	fe[0] = a
-	fe[1] = 0
-	fe[2] = 0
-	fe[3] = 0
-	fe[4] = 0
-	fe[5] = 0
-	return fe
-}
-
 func (fe *fe) setString(s string) (*fe, error) {
 	if s[:2] == "0x" {
 		s = s[2:]
