@@ -1,7 +1,7 @@
 package bls12381
 
 import (
-	"fmt"
+	"errors"
 	"math/big"
 )
 
@@ -52,7 +52,7 @@ func (g *GT) FromBytes(in []byte) (*E, error) {
 		return nil, err
 	}
 	if !g.IsValid(e) {
-		return e, fmt.Errorf("invalid element")
+		return e, errors.New("invalid element")
 	}
 	return e, nil
 }

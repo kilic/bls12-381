@@ -1,7 +1,7 @@
 package bls12381
 
 import (
-	"fmt"
+	"errors"
 	"math/big"
 )
 
@@ -32,7 +32,7 @@ func newFp6(f *fp2) *fp6 {
 
 func (e *fp6) fromBytes(b []byte) (*fe6, error) {
 	if len(b) < 288 {
-		return nil, fmt.Errorf("input string should be larger than 288 bytes")
+		return nil, errors.New("input string should be larger than 288 bytes")
 	}
 	fp2 := e.fp2
 	u2, err := fp2.fromBytes(b[:96])

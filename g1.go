@@ -1,7 +1,7 @@
 package bls12381
 
 import (
-	"fmt"
+	"errors"
 	"math"
 	"math/big"
 )
@@ -60,20 +60,20 @@ func (g *G1) Q() *big.Int {
 // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 	if len(uncompressed) < 96 {
-		return nil, fmt.Errorf("input string should be equal or larger than 96")
+		return nil, errors.New("input string should be equal or larger than 96")
 	}
 	var in [96]byte
 	copy(in[:], uncompressed[:96])
 	if in[0]&(1<<7) != 0 {
-		return nil, fmt.Errorf("compression flag should be zero")
+		return nil, errors.New("input string should be equal or larger than 96")
 	}
 	if in[0]&(1<<5) != 0 {
-		return nil, fmt.Errorf("sort flag should be zero")
+		return nil, errors.New("input string should be equal or larger than 96")
 	}
 	if in[0]&(1<<6) != 0 {
 		for i, v := range in {
 			if (i == 0 && v != 0x40) || (i != 0 && v != 0x00) {
-				return nil, fmt.Errorf("input string should be zero when infinity flag is set")
+				return nil, errors.New("input string should be equal or larger than 96")
 			}
 		}
 		return g.Zero(), nil
@@ -90,10 +90,10 @@ func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 	z := new(fe).one()
 	p := &PointG1{*x, *y, *z}
 	if !g.IsOnCurve(p) {
-		return nil, fmt.Errorf("point is not on curve")
+		return nil, errors.New("input string should be equal or larger than 96")
 	}
 	if !g.InCorrectSubgroup(p) {
-		return nil, fmt.Errorf("point is not on correct subgroup")
+		return nil, errors.New("input string should be equal or larger than 96")
 	}
 	return p, nil
 }
@@ -120,18 +120,18 @@ func (g *G1) ToUncompressed(p *PointG1) []byte {
 // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 	if len(compressed) < 48 {
-		return nil, fmt.Errorf("input string should be equal or larger than 48")
+		return nil, errors.New("input string should be equal or larger than 48")
 	}
 	var in [48]byte
 	copy(in[:], compressed[:])
 	if in[0]&(1<<7) == 0 {
-		return nil, fmt.Errorf("compression flag should be set")
+		return nil, errors.New("compression flag should be set")
 	}
 	if in[0]&(1<<6) != 0 {
 		// in[0] == (1 << 6) + (1 << 7)
 		for i, v := range in {
 			if (i == 0 && v != 0xc0) || (i != 0 && v != 0x00) {
-				return nil, fmt.Errorf("input string should be zero when infinity flag is set")
+				return nil, errors.New("input string should be zero when infinity flag is set")
 			}
 		}
 		return g.Zero(), nil
@@ -148,7 +148,7 @@ func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 	mul(y, y, x)
 	add(y, y, b)
 	if ok := sqrt(y, y); !ok {
-		return nil, fmt.Errorf("point is not on curve")
+		return nil, errors.New("point is not on curve")
 	}
 	if y.signBE() == a {
 		neg(y, y)
@@ -156,7 +156,7 @@ func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 	z := new(fe).one()
 	p := &PointG1{*x, *y, *z}
 	if !g.InCorrectSubgroup(p) {
-		return nil, fmt.Errorf("point is not on correct subgroup")
+		return nil, errors.New("point is not on correct subgroup")
 	}
 	return p, nil
 }
@@ -200,7 +200,7 @@ func (g *G1) fromBytesUnchecked(in []byte) (*PointG1, error) {
 // Point (0, 0) is considered as infinity.
 func (g *G1) FromBytes(in []byte) (*PointG1, error) {
 	if len(in) < 96 {
-		return nil, fmt.Errorf("input string should be equal or larger than 96")
+		return nil, errors.New("input string should be equal or larger than 96")
 	}
 	p0, err := fromBytes(in[:48])
 	if err != nil {
@@ -217,7 +217,7 @@ func (g *G1) FromBytes(in []byte) (*PointG1, error) {
 	p2 := new(fe).one()
 	p := &PointG1{*p0, *p1, *p2}
 	if !g.IsOnCurve(p) {
-		return nil, fmt.Errorf("point is not on curve")
+		return nil, errors.New("point is not on curve")
 	}
 	return p, nil
 }
@@ -445,7 +445,7 @@ func (g *G1) ClearCofactor(p *PointG1) {
 // Result is assigned to point at first argument.
 func (g *G1) MultiExp(r *PointG1, points []*PointG1, powers []*big.Int) (*PointG1, error) {
 	if len(points) != len(powers) {
-		return nil, fmt.Errorf("point and scalar vectors should be in same length")
+		return nil, errors.New("point and scalar vectors should be in same length")
 	}
 	var c uint32 = 3
 	if len(powers) >= 32 {

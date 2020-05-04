@@ -1,7 +1,7 @@
 package bls12381
 
 import (
-	"fmt"
+	"errors"
 	"math/big"
 )
 
@@ -42,7 +42,7 @@ func (e *fp12) fp2() *fp2 {
 
 func (e *fp12) fromBytes(in []byte) (*fe12, error) {
 	if len(in) != 576 {
-		return nil, fmt.Errorf("input string should be larger than 96 bytes")
+		return nil, errors.New("input string should be larger than 96 bytes")
 	}
 	fp6 := e.fp6
 	c1, err := fp6.fromBytes(in[:288])

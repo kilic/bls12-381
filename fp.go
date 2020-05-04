@@ -1,18 +1,18 @@
 package bls12381
 
 import (
-	"fmt"
+	"errors"
 	"math/big"
 )
 
 func fromBytes(in []byte) (*fe, error) {
 	fe := &fe{}
 	if len(in) != 48 {
-		return nil, fmt.Errorf("input string should be equal 48 bytes")
+		return nil, errors.New("input string should be equal 48 bytes")
 	}
 	fe.setBytes(in)
 	if !fe.isValid() {
-		return nil, fmt.Errorf("must be less than modulus")
+		return nil, errors.New("must be less than modulus")
 	}
 	mul(fe, fe, r2)
 	return fe, nil
@@ -20,7 +20,7 @@ func fromBytes(in []byte) (*fe, error) {
 
 func from64Bytes(in []byte) (*fe, error) {
 	if len(in) != 64 {
-		return nil, fmt.Errorf("input string should be equal 64 bytes")
+		return nil, errors.New("input string should be equal 64 bytes")
 	}
 	a0 := make([]byte, 48)
 	copy(a0[16:48], in[:32])
@@ -52,7 +52,7 @@ func from64Bytes(in []byte) (*fe, error) {
 func fromBig(in *big.Int) (*fe, error) {
 	fe := new(fe).setBig(in)
 	if !fe.isValid() {
-		return nil, fmt.Errorf("invalid input string")
+		return nil, errors.New("invalid input string")
 	}
 	mul(fe, fe, r2)
 	return fe, nil
@@ -64,7 +64,7 @@ func fromString(in string) (*fe, error) {
 		return nil, err
 	}
 	if !fe.isValid() {
-		return nil, fmt.Errorf("invalid input string")
+		return nil, errors.New("invalid input string")
 	}
 	mul(fe, fe, r2)
 	return fe, nil
