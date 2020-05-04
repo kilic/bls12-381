@@ -355,7 +355,7 @@ func (g *G2) Add(r, p1, p2 *PointG2) *PointG2 {
 		if t[0].equal(t[2]) {
 			return g.Double(r, p1)
 		} else {
-			return r.Set(infinity2)
+			return r.Zero()
 		}
 	}
 	g.f.sub(t[1], t[1], t[3])
