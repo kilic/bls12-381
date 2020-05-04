@@ -29,10 +29,6 @@ func (g *G2) rand() *PointG2 {
 	return g.MulScalar(&PointG2{}, g.one(), k)
 }
 
-func (g *G2) new() *PointG2 {
-	return g.Zero()
-}
-
 func TestG2Serialization(t *testing.T) {
 	var err error
 	g2 := NewG2()
@@ -95,7 +91,7 @@ func TestG2Serialization(t *testing.T) {
 
 func TestG2AdditiveProperties(t *testing.T) {
 	g := NewG2()
-	t0, t1 := g.new(), g.new()
+	t0, t1 := g.New(), g.New()
 	zero := g.Zero()
 	for i := 0; i < fuz; i++ {
 		a, b := g.rand(), g.rand()
@@ -165,7 +161,7 @@ func TestG2AdditiveProperties(t *testing.T) {
 
 func TestG2MultiplicativeProperties(t *testing.T) {
 	g := NewG2()
-	t0, t1 := g.new(), g.new()
+	t0, t1 := g.New(), g.New()
 	zero := g.Zero()
 	for i := 0; i < fuz; i++ {
 		a := g.rand()
