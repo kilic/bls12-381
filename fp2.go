@@ -202,12 +202,6 @@ func (e *fp2) exp(c, a *fe2, s *big.Int) {
 	c.set(z)
 }
 
-func (e *fp2) div(c, a, b *fe2) {
-	t0 := e.new()
-	e.inverse(t0, b)
-	e.mul(c, a, t0)
-}
-
 func (e *fp2) frobeniousMap(c, a *fe2, power uint) {
 	c[0].set(&a[0])
 	if power%2 == 1 {
