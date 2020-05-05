@@ -94,6 +94,37 @@ func TestFpAdditionCrossAgainstBigInt(t *testing.T) {
 	}
 }
 
+func TestFpAdditionCrossAgainstBigIntAssigned(t *testing.T) {
+	for i := 0; i < fuz; i++ {
+		a, _ := new(fe).rand(rand.Reader)
+		b, _ := new(fe).rand(rand.Reader)
+		big_a, big_b := toBig(a), toBig(b)
+		addAssign(a, b)
+		out_1 := toBytes(a)
+		out_2 := padBytes(big_a.Add(big_a, big_b).Mod(big_a, modulus.big()).Bytes(), 48)
+		if !bytes.Equal(out_1, out_2) {
+			t.Fatalf("cross test against big.Int is not satisfied A")
+		}
+		a, _ = new(fe).rand(rand.Reader)
+		big_a = toBig(a)
+		doubleAssign(a)
+		out_1 = toBytes(a)
+		out_2 = padBytes(big_a.Add(big_a, big_a).Mod(big_a, modulus.big()).Bytes(), 48)
+		if !bytes.Equal(out_1, out_2) {
+			t.Fatalf("cross test against big.Int is not satisfied B")
+		}
+		a, _ = new(fe).rand(rand.Reader)
+		b, _ = new(fe).rand(rand.Reader)
+		big_a, big_b = toBig(a), toBig(b)
+		subAssign(a, b)
+		out_1 = toBytes(a)
+		out_2 = padBytes(big_a.Sub(big_a, big_b).Mod(big_a, modulus.big()).Bytes(), 48)
+		if !bytes.Equal(out_1, out_2) {
+			t.Fatalf("cross test against big.Int is not satisfied A")
+		}
+	}
+}
+
 func TestFpAdditionProperties(t *testing.T) {
 	for i := 0; i < fuz; i++ {
 
@@ -156,6 +187,118 @@ func TestFpAdditionProperties(t *testing.T) {
 	}
 }
 
+func TestFpAdditionPropertiesAssigned(t *testing.T) {
+	for i := 0; i < fuz; i++ {
+		zero := new(fe).zero()
+		a, b := new(fe), new(fe)
+		_, _ = a.rand(rand.Reader)
+		b.set(a)
+		addAssign(a, zero)
+		if !a.equal(b) {
+			t.Fatalf("a + 0 == a")
+		}
+		subAssign(a, zero)
+		if !a.equal(b) {
+			t.Fatalf("a - 0 == a")
+		}
+		a.set(zero)
+		doubleAssign(a)
+		if !a.equal(zero) {
+			t.Fatalf("2 * 0 == 0")
+		}
+		a.set(zero)
+		subAssign(a, b)
+		neg(b, b)
+		if !a.equal(b) {
+			t.Fatalf("0-a == -a")
+		}
+		_, _ = a.rand(rand.Reader)
+		b.set(a)
+		doubleAssign(a)
+		addAssign(b, b)
+		if !a.equal(b) {
+			t.Fatalf("2 * a == a + a")
+		}
+		_, _ = a.rand(rand.Reader)
+		_, _ = b.rand(rand.Reader)
+		c_1, c_2 := new(fe).set(a), new(fe).set(b)
+		addAssign(c_1, b)
+		addAssign(c_2, a)
+		if !c_1.equal(c_2) {
+			t.Fatalf("a + b = b + a")
+		}
+		_, _ = a.rand(rand.Reader)
+		_, _ = b.rand(rand.Reader)
+		c_1.set(a)
+		c_2.set(b)
+		subAssign(c_1, b)
+		subAssign(c_2, a)
+		neg(c_2, c_2)
+		if !c_1.equal(c_2) {
+			t.Fatalf("a - b = - ( b - a )")
+		}
+		_, _ = a.rand(rand.Reader)
+		_, _ = b.rand(rand.Reader)
+		c, _ := new(fe).rand(rand.Reader)
+		a0 := new(fe).set(a)
+		addAssign(a, b)
+		addAssign(a, c)
+		addAssign(b, c)
+		addAssign(b, a0)
+		if !a.equal(b) {
+			t.Fatalf("(a + b) + c == (b + c) + a")
+		}
+		_, _ = a.rand(rand.Reader)
+		_, _ = b.rand(rand.Reader)
+		_, _ = c.rand(rand.Reader)
+		a0.set(a)
+		subAssign(a, b)
+		subAssign(a, c)
+		subAssign(a0, c)
+		subAssign(a0, b)
+		if !a.equal(a0) {
+			t.Fatalf("(a - b) - c == (a - c) -b")
+		}
+	}
+}
+
+func TestFpLazyOperations(t *testing.T) {
+	for i := 0; i < fuz; i++ {
+		a, _ := new(fe).rand(rand.Reader)
+		b, _ := new(fe).rand(rand.Reader)
+		c, _ := new(fe).rand(rand.Reader)
+		c0 := new(fe)
+		c1 := new(fe)
+		ladd(c0, a, b)
+		add(c1, a, b)
+		mulAssign(c0, c)
+		mulAssign(c1, c)
+		if !c0.equal(c1) {
+			// l+ operator stands for lazy addition
+			t.Fatalf("(a + b) * c == (a l+ b) * c")
+		}
+		_, _ = a.rand(rand.Reader)
+		b.set(a)
+		ldouble(a, a)
+		ladd(b, b, b)
+		if !a.equal(b) {
+			t.Fatalf("2 l* a = a l+ a")
+		}
+		_, _ = a.rand(rand.Reader)
+		_, _ = b.rand(rand.Reader)
+		_, _ = c.rand(rand.Reader)
+		a0 := new(fe).set(a)
+		lsubAssign(a, b)
+		laddAssign(a, &modulus)
+		mulAssign(a, c)
+		subAssign(a0, b)
+		mulAssign(a0, c)
+		if !a.equal(a0) {
+			t.Fatalf("((a l- b) + p) * c = (a-b) * c")
+		}
+	}
+}
+
 func TestFpMultiplicationCrossAgainstBigInt(t *testing.T) {
 	for i := 0; i < fuz; i++ {
 		a, _ := new(fe).rand(rand.Reader)
@@ -167,6 +310,21 @@ func TestFpMultiplicationCrossAgainstBigInt(t *testing.T) {
 		mul(c, a, b)
 		out_1 := toBytes(c)
 		out_2 := padBytes(big_c.Mul(big_a, big_b).Mod(big_c, modulus.big()).Bytes(), 48)
+		if !bytes.Equal(out_1, out_2) {
+			t.Fatalf("cross test against big.Int is not satisfied")
+		}
+	}
+}
+
+func TestFpMultiplicationCrossAgainstBigIntAssigned(t *testing.T) {
+	for i := 0; i < fuz; i++ {
+		a, _ := new(fe).rand(rand.Reader)
+		b, _ := new(fe).rand(rand.Reader)
+		big_a := toBig(a)
+		big_b := toBig(b)
+		mulAssign(a, b)
+		out_1 := toBytes(a)
+		out_2 := padBytes(big_a.Mul(big_a, big_b).Mod(big_a, modulus.big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatalf("cross test against big.Int is not satisfied")
 		}
@@ -198,6 +356,54 @@ func TestFpMultiplicationProperties(t *testing.T) {
 		mul(c_2, c_x, b)
 		mul(c_2, c_2, a)
 		if !c_1.equal(c_2) {
+			t.Fatalf("(a * b) * c == (a * c) * b")
+		}
+		square(a, zero)
+		if !a.equal(zero) {
+			t.Fatalf("0^2 == 0")
+		}
+		square(a, one)
+		if !a.equal(one) {
+			t.Fatalf("1^2 == 1")
+		}
+		_, _ = a.rand(rand.Reader)
+		square(c_1, a)
+		mul(c_2, a, a)
+		if !c_1.equal(c_1) {
+			t.Fatalf("a^2 == a*a")
+		}
+	}
+}
+
+func TestFpMultiplicationPropertiesAssigned(t *testing.T) {
+	for i := 0; i < fuz; i++ {
+		a, _ := new(fe).rand(rand.Reader)
+		zero, one := new(fe).zero(), new(fe).one()
+		mulAssign(a, zero)
+		if !a.equal(zero) {
+			t.Fatalf("a * 0 == 0")
+		}
+		_, _ = a.rand(rand.Reader)
+		a0 := new(fe).set(a)
+		mulAssign(a, one)
+		if !a.equal(a0) {
+			t.Fatalf("a * 1 == a")
+		}
+		_, _ = a.rand(rand.Reader)
+		b, _ := new(fe).rand(rand.Reader)
+		a0.set(a)
+		mulAssign(a, b)
+		mulAssign(b, a0)
+		if !a.equal(b) {
+			t.Fatalf("a * b == b * a")
+		}
+		c, _ := new(fe).rand(rand.Reader)
+		a0.set(a)
+		mulAssign(a, b)
+		mulAssign(a, c)
+		mulAssign(a0, c)
+		mulAssign(a0, b)
+		if !a.equal(a0) {
 			t.Fatalf("(a * b) * c == (a * c) * b")
 		}
 	}
@@ -390,6 +596,108 @@ func TestFp2AdditionProperties(t *testing.T) {
 	}
 }
 
+func TestFp2AdditionPropertiesAssigned(t *testing.T) {
+	field := newFp2()
+	for i := 0; i < fuz; i++ {
+		zero := new(fe2).zero()
+		a, b := new(fe2), new(fe2)
+		_, _ = a.rand(rand.Reader)
+		b.set(a)
+		field.addAssign(a, zero)
+		if !a.equal(b) {
+			t.Fatalf("a + 0 == a")
+		}
+		field.subAssign(a, zero)
+		if !a.equal(b) {
+			t.Fatalf("a - 0 == a")
+		}
+		a.set(zero)
+		field.doubleAssign(a)
+		if !a.equal(zero) {
+			t.Fatalf("2 * 0 == 0")
+		}
+		a.set(zero)
+		field.subAssign(a, b)
+		field.neg(b, b)
+		if !a.equal(b) {
+			t.Fatalf("0-a == -a")
+		}
+		_, _ = a.rand(rand.Reader)
+		b.set(a)
+		field.doubleAssign(a)
+		field.addAssign(b, b)
+		if !a.equal(b) {
+			t.Fatalf("2 * a == a + a")
+		}
+		_, _ = a.rand(rand.Reader)
+		_, _ = b.rand(rand.Reader)
+		c_1, c_2 := new(fe2).set(a), new(fe2).set(b)
+		field.addAssign(c_1, b)
+		field.addAssign(c_2, a)
+		if !c_1.equal(c_2) {
+			t.Fatalf("a + b = b + a")
+		}
+		_, _ = a.rand(rand.Reader)
+		_, _ = b.rand(rand.Reader)
+		c_1.set(a)
+		c_2.set(b)
+		field.subAssign(c_1, b)
+		field.subAssign(c_2, a)
+		field.neg(c_2, c_2)
+		if !c_1.equal(c_2) {
+			t.Fatalf("a - b = - ( b - a )")
+		}
+		_, _ = a.rand(rand.Reader)
+		_, _ = b.rand(rand.Reader)
+		c, _ := new(fe2).rand(rand.Reader)
+		a0 := new(fe2).set(a)
+		field.addAssign(a, b)
+		field.addAssign(a, c)
+		field.addAssign(b, c)
+		field.addAssign(b, a0)
+		if !a.equal(b) {
+			t.Fatalf("(a + b) + c == (b + c) + a")
+		}
+		_, _ = a.rand(rand.Reader)
+		_, _ = b.rand(rand.Reader)
+		_, _ = c.rand(rand.Reader)
+		a0.set(a)
+		field.subAssign(a, b)
+		field.subAssign(a, c)
+		field.subAssign(a0, c)
+		field.subAssign(a0, b)
+		if !a.equal(a0) {
+			t.Fatalf("(a - b) - c == (a - c) -b")
+		}
+	}
+}
+
+func TestFp2LazyOperations(t *testing.T) {
+	field := newFp2()
+	for i := 0; i < fuz; i++ {
+		a, _ := new(fe2).rand(rand.Reader)
+		b, _ := new(fe2).rand(rand.Reader)
+		c, _ := new(fe2).rand(rand.Reader)
+		c0 := new(fe2)
+		c1 := new(fe2)
+		field.ladd(c0, a, b)
+		field.add(c1, a, b)
+		field.mulAssign(c0, c)
+		field.mulAssign(c1, c)
+		if !c0.equal(c1) {
+			// l+ operator stands for lazy addition
+			t.Fatalf("(a + b) * c == (a l+ b) * c")
+		}
+		_, _ = a.rand(rand.Reader)
+		b.set(a)
+		field.ldouble(a, a)
+		field.ladd(b, b, b)
+		if !a.equal(b) {
+			t.Fatalf("2 l* a = a l+ a")
+		}
+	}
+}
+
 func TestFp2MultiplicationProperties(t *testing.T) {
 	field := newFp2()
 	for i := 0; i < fuz; i++ {
@@ -418,6 +726,61 @@ func TestFp2MultiplicationProperties(t *testing.T) {
 		field.mul(c_2, c_2, a)
 		if !c_1.equal(c_2) {
 			t.Fatalf("(a * b) * c == (a * c) * b")
+		}
+		field.square(a, zero)
+		if !a.equal(zero) {
+			t.Fatalf("0^2 == 0")
+		}
+		field.square(a, one)
+		if !a.equal(one) {
+			t.Fatalf("1^2 == 1")
+		}
+		_, _ = a.rand(rand.Reader)
+		field.square(c_1, a)
+		field.mul(c_2, a, a)
+		if !c_2.equal(c_1) {
+			t.Fatalf("a^2 == a*a")
+		}
+	}
+}
+
+func TestFp2MultiplicationPropertiesAssigned(t *testing.T) {
+	field := newFp2()
+	for i := 0; i < fuz; i++ {
+		a, _ := new(fe2).rand(rand.Reader)
+		zero, one := new(fe2).zero(), new(fe2).one()
+		field.mulAssign(a, zero)
+		if !a.equal(zero) {
+			t.Fatalf("a * 0 == 0")
+		}
+		_, _ = a.rand(rand.Reader)
+		a0 := new(fe2).set(a)
+		field.mulAssign(a, one)
+		if !a.equal(a0) {
+			t.Fatalf("a * 1 == a")
+		}
+		_, _ = a.rand(rand.Reader)
+		b, _ := new(fe2).rand(rand.Reader)
+		a0.set(a)
+		field.mulAssign(a, b)
+		field.mulAssign(b, a0)
+		if !a.equal(b) {
+			t.Fatalf("a * b == b * a")
+		}
+		c, _ := new(fe2).rand(rand.Reader)
+		a0.set(a)
+		field.mulAssign(a, b)
+		field.mulAssign(a, c)
+		field.mulAssign(a0, c)
+		field.mulAssign(a0, b)
+		if !a.equal(a0) {
+			t.Fatalf("(a * b) * c == (a * c) * b")
+		}
+		a0.set(a)
+		field.squareAssign(a)
+		field.mulAssign(a0, a0)
+		if !a.equal(a0) {
+			t.Fatalf("a^2 == a*a")
 		}
 	}
 }
@@ -612,6 +975,82 @@ func TestFp6AdditionProperties(t *testing.T) {
 	}
 }
 
+func TestFp6AdditionPropertiesAssigned(t *testing.T) {
+	field := newFp6(nil)
+	for i := 0; i < fuz; i++ {
+		zero := new(fe6).zero()
+		a, b := new(fe6), new(fe6)
+		_, _ = a.rand(rand.Reader)
+		b.set(a)
+		field.addAssign(a, zero)
+		if !a.equal(b) {
+			t.Fatalf("a + 0 == a")
+		}
+		field.subAssign(a, zero)
+		if !a.equal(b) {
+			t.Fatalf("a - 0 == a")
+		}
+		a.set(zero)
+		field.doubleAssign(a)
+		if !a.equal(zero) {
+			t.Fatalf("2 * 0 == 0")
+		}
+		a.set(zero)
+		field.subAssign(a, b)
+		field.neg(b, b)
+		if !a.equal(b) {
+			t.Fatalf("0-a == -a")
+		}
+		_, _ = a.rand(rand.Reader)
+		b.set(a)
+		field.doubleAssign(a)
+		field.addAssign(b, b)
+		if !a.equal(b) {
+			t.Fatalf("2 * a == a + a")
+		}
+		_, _ = a.rand(rand.Reader)
+		_, _ = b.rand(rand.Reader)
+		c_1, c_2 := new(fe6).set(a), new(fe6).set(b)
+		field.addAssign(c_1, b)
+		field.addAssign(c_2, a)
+		if !c_1.equal(c_2) {
+			t.Fatalf("a + b = b + a")
+		}
+		_, _ = a.rand(rand.Reader)
+		_, _ = b.rand(rand.Reader)
+		c_1.set(a)
+		c_2.set(b)
+		field.subAssign(c_1, b)
+		field.subAssign(c_2, a)
+		field.neg(c_2, c_2)
+		if !c_1.equal(c_2) {
+			t.Fatalf("a - b = - ( b - a )")
+		}
+		_, _ = a.rand(rand.Reader)
+		_, _ = b.rand(rand.Reader)
+		c, _ := new(fe6).rand(rand.Reader)
+		a0 := new(fe6).set(a)
+		field.addAssign(a, b)
+		field.addAssign(a, c)
+		field.addAssign(b, c)
+		field.addAssign(b, a0)
+		if !a.equal(b) {
+			t.Fatalf("(a + b) + c == (b + c) + a")
+		}
+		_, _ = a.rand(rand.Reader)
+		_, _ = b.rand(rand.Reader)
+		_, _ = c.rand(rand.Reader)
+		a0.set(a)
+		field.subAssign(a, b)
+		field.subAssign(a, c)
+		field.subAssign(a0, c)
+		field.subAssign(a0, b)
+		if !a.equal(a0) {
+			t.Fatalf("(a - b) - c == (a - c) -b")
+		}
+	}
+}
+
 func TestFp6SparseMultiplication(t *testing.T) {
 	fp6 := newFp6(nil)
 	var a, b, u *fe6
@@ -667,6 +1106,55 @@ func TestFp6MultiplicationProperties(t *testing.T) {
 		field.mul(c_2, c_x, b)
 		field.mul(c_2, c_2, a)
 		if !c_1.equal(c_2) {
+			t.Fatalf("(a * b) * c == (a * c) * b")
+		}
+		field.square(a, zero)
+		if !a.equal(zero) {
+			t.Fatalf("0^2 == 0")
+		}
+		field.square(a, one)
+		if !a.equal(one) {
+			t.Fatalf("1^2 == 1")
+		}
+		_, _ = a.rand(rand.Reader)
+		field.square(c_1, a)
+		field.mul(c_2, a, a)
+		if !c_2.equal(c_1) {
+			t.Fatalf("a^2 == a*a")
+		}
+	}
+}
+
+func TestFp6MultiplicationPropertiesAssigned(t *testing.T) {
+	field := newFp6(nil)
+	for i := 0; i < fuz; i++ {
+		a, _ := new(fe6).rand(rand.Reader)
+		zero, one := new(fe6).zero(), new(fe6).one()
+		field.mulAssign(a, zero)
+		if !a.equal(zero) {
+			t.Fatalf("a * 0 == 0")
+		}
+		_, _ = a.rand(rand.Reader)
+		a0 := new(fe6).set(a)
+		field.mulAssign(a, one)
+		if !a.equal(a0) {
+			t.Fatalf("a * 1 == a")
+		}
+		_, _ = a.rand(rand.Reader)
+		b, _ := new(fe6).rand(rand.Reader)
+		a0.set(a)
+		field.mulAssign(a, b)
+		field.mulAssign(b, a0)
+		if !a.equal(b) {
+			t.Fatalf("a * b == b * a")
+		}
+		c, _ := new(fe6).rand(rand.Reader)
+		a0.set(a)
+		field.mulAssign(a, b)
+		field.mulAssign(a, c)
+		field.mulAssign(a0, c)
+		field.mulAssign(a0, b)
+		if !a.equal(a0) {
 			t.Fatalf("(a * b) * c == (a * c) * b")
 		}
 	}
@@ -839,6 +1327,55 @@ func TestFp12MultiplicationProperties(t *testing.T) {
 		field.mul(c_2, c_x, b)
 		field.mul(c_2, c_2, a)
 		if !c_1.equal(c_2) {
+			t.Fatalf("(a * b) * c == (a * c) * b")
+		}
+		field.square(a, zero)
+		if !a.equal(zero) {
+			t.Fatalf("0^2 == 0")
+		}
+		field.square(a, one)
+		if !a.equal(one) {
+			t.Fatalf("1^2 == 1")
+		}
+		_, _ = a.rand(rand.Reader)
+		field.square(c_1, a)
+		field.mul(c_2, a, a)
+		if !c_2.equal(c_1) {
+			t.Fatalf("a^2 == a*a")
+		}
+	}
+}
+
+func TestFp12MultiplicationPropertiesAssigned(t *testing.T) {
+	field := newFp12(nil)
+	for i := 0; i < fuz; i++ {
+		a, _ := new(fe12).rand(rand.Reader)
+		zero, one := new(fe12).zero(), new(fe12).one()
+		field.mulAssign(a, zero)
+		if !a.equal(zero) {
+			t.Fatalf("a * 0 == 0")
+		}
+		_, _ = a.rand(rand.Reader)
+		a0 := new(fe12).set(a)
+		field.mulAssign(a, one)
+		if !a.equal(a0) {
+			t.Fatalf("a * 1 == a")
+		}
+		_, _ = a.rand(rand.Reader)
+		b, _ := new(fe12).rand(rand.Reader)
+		a0.set(a)
+		field.mulAssign(a, b)
+		field.mulAssign(b, a0)
+		if !a.equal(b) {
+			t.Fatalf("a * b == b * a")
+		}
+		c, _ := new(fe12).rand(rand.Reader)
+		a0.set(a)
+		field.mulAssign(a, b)
+		field.mulAssign(a, c)
+		field.mulAssign(a0, c)
+		field.mulAssign(a0, b)
+		if !a.equal(a0) {
 			t.Fatalf("(a * b) * c == (a * c) * b")
 		}
 	}
