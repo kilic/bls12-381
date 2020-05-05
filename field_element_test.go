@@ -202,6 +202,32 @@ func TestFieldElementSerialization(t *testing.T) {
 	})
 }
 
+func TestFieldElementByteInputs(t *testing.T) {
+	zero := new(fe).zero()
+	in := make([]byte, 0)
+	a := new(fe).setBytes(in)
+	if !a.equal(zero) {
+		t.Fatalf("bad serialization")
+	}
+	in = make([]byte, 48)
+	a = new(fe).setBytes(in)
+	if !a.equal(zero) {
+		t.Fatalf("bad serialization")
+	}
+	in = make([]byte, 64)
+	a = new(fe).setBytes(in)
+	if !a.equal(zero) {
+		t.Fatalf("bad serialization")
+	}
+	in = make([]byte, 49)
+	in[47] = 1
+	normalOne := &fe{1, 0, 0, 0, 0, 0}
+	a = new(fe).setBytes(in)
+	if !a.equal(normalOne) {
+		t.Fatalf("bad serialization")
+	}
+}
+
 func TestFieldElementCopy(t *testing.T) {
 	a, _ := new(fe).rand(rand.Reader)
 	b := new(fe).set(a)
