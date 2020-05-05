@@ -8,9 +8,19 @@ import (
 	"math/big"
 )
 
+// fe is base field element representation
 type fe /***			***/ [6]uint64
+
+// fe2 is element representation of 'fp2' which is quadratic extention of base field 'fp'
+// Representation follows c[0] + c[1] * u encoding order.
 type fe2 /**			***/ [2]fe
+
+// fe6 is element representation of 'fp6' field which is cubic extention of 'fp2'
+// Representation follows c[0] + c[1] * v + c[2] * v^2 encoding order.
 type fe6 /**			***/ [3]fe2
+
+// fe12 is element representation of 'fp12' field which is quadratic extention of 'fp6'
+// Representation follows c[0] + c[1] * w encoding order.
 type fe12 /**			***/ [2]fe6
 
 func (fe *fe) setBytes(in []byte) *fe {
