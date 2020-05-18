@@ -13,11 +13,9 @@ var fuz int
 
 func TestMain(m *testing.M) {
 	_fuz := flag.Int("fuzz", 10, "# of iterations")
-	adx := flag.Bool("noadx", false, "to enfoce non adx arch")
 	flag.Parse()
-	forceNonADXArch = *adx
 	fuz = *_fuz
-	cfgArch()
+	Init()
 	m.Run()
 }
 
