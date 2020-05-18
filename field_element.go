@@ -88,7 +88,7 @@ func (fe *fe) big() *big.Int {
 	return new(big.Int).SetBytes(fe.bytes())
 }
 
-func (fe fe) String() (s string) {
+func (fe *fe) string() (s string) {
 	for i := 5; i >= 0; i-- {
 		s = fmt.Sprintf("%s%16.16x", s, fe[i])
 	}

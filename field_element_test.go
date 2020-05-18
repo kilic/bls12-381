@@ -191,7 +191,7 @@ func TestFieldElementSerialization(t *testing.T) {
 	t.Run("string", func(t *testing.T) {
 		for i := 0; i < fuz; i++ {
 			a, _ := new(fe).rand(rand.Reader)
-			b, err := new(fe).setString(a.String())
+			b, err := new(fe).setString(a.string())
 			if err != nil {
 				t.Fatal(err)
 			}

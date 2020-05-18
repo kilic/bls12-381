@@ -85,7 +85,7 @@ func toBig(e *fe) *big.Int {
 func toString(e *fe) (s string) {
 	e2 := new(fe)
 	fromMont(e2, e)
-	return e2.String()
+	return e2.string()
 }
 
 func toMont(c, a *fe) {

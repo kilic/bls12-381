@@ -218,12 +218,10 @@ func TestZKCryptoVectorsG1UncompressedValid(t *testing.T) {
 			t.Fatal("decoing fails", err, i)
 		}
 		uncompressed := g.ToUncompressed(p2)
-		if !bytes.Equal(vector, uncompressed) {
+		if !bytes.Equal(vector, uncompressed) || !g.Equal(p1, p2) {
 			t.Fatalf("bad serialization")
 		}
-		if !g.Equal(p1, p2) {
-			t.Fatalf("\nwant: %s\nhave: %s\n", p1, p2)
-		}
+
 		g.Add(p1, p1, &g1One)
 	}
 }
@@ -242,11 +240,8 @@ func TestZKCryptoVectorsG1CompressedValid(t *testing.T) {
 			t.Fatal("decoing fails", err, i)
 		}
 		compressed := g.ToCompressed(p2)
-		if !bytes.Equal(vector, compressed) {
+		if !bytes.Equal(vector, compressed) || !g.Equal(p1, p2) {
 			t.Fatalf("bad serialization")
-		}
-		if !g.Equal(p1, p2) {
-			t.Fatalf("\nwant: %s\nhave: %s\n", p1, p2)
 		}
 		g.Add(p1, p1, &g1One)
 	}
