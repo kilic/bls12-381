@@ -90,7 +90,6 @@ func (e *fp2) doubleAssign(a *fe2) {
 	doubleAssign(&a[1])
 }
 
-// ldouble doubles field element `a` and sets the result `c` without modular reduction
 func (e *fp2) ldouble(c, a *fe2) {
 	ldouble(&c[0], &a[0])
 	ldouble(&c[1], &a[1])

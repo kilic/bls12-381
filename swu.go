@@ -85,16 +85,6 @@ func swuMapG2(e *fp2, u *fe2) (*fe2, *fe2) {
 	e.mul(tv[1], tv[0], tv[1])
 	gx2 := e.new()
 	e.mul(gx2, gx1, tv[1])
-	// isQuadraticNonResidue := func(elem *fe2) bool {
-	// 	// https://github.com/leovt/constructible/wiki/Taking-Square-Roots-in-quadratic-extension-Fields
-	// 	c0, c1 := new(fe), new(fe)
-	// 	square(c0, &elem[0])
-	// 	square(c1, &elem[1])
-	// 	mul(c1, c1, nonResidue1)
-	// 	neg(c1, c1)
-	// 	add(c1, c1, c0)
-	// 	return isQuadraticNonResidue(c1)
-	// }
 	e2 := !e.isQuadraticNonResidue(gx1)
 	x := e.new()
 	if e2 {

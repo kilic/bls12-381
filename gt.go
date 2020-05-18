@@ -13,6 +13,7 @@ type GT struct {
 	fp12 *fp12
 }
 
+// Set copies given value into the destination
 func (e *E) Set(e2 *E) *E {
 	return e.set(e2)
 }

@@ -806,15 +806,6 @@ func TestFp2Exponentiation(t *testing.T) {
 		if !u.equal(v) {
 			t.Fatalf("((a^2)^2)^2 == a^8")
 		}
-		// p := modulus.big()
-		// field.exp(u, a, p)
-		// if !u.equal(a) {
-		// 	t.Fatalf("a^p == a")
-		// }
-		// field.exp(u, a, p.Sub(p, big.NewInt(1)))
-		// if !u.equal(field.one()) {
-		// 	t.Fatalf("a^(p-1) == 1")
-		// }
 	}
 }
 
@@ -838,32 +829,45 @@ func TestFp2Inversion(t *testing.T) {
 		if !u.equal(one) {
 			t.Fatalf("(r * a) * r * (a ^ -1) == r)")
 		}
-		// v := field.new()
-		// p := modulus.big()
-		// field.exp(u, a, p.Sub(p, big.NewInt(2)))
-		// field.inverse(v, a)
-		// if !v.equal(u) {
-		// 	t.Fatalf("a^(p-2) == a^-1")
-		// }
 	}
 }
 
 func TestFp2SquareRoot(t *testing.T) {
 	field := newFp2()
-	r := field.new()
-	if field.sqrt(r, nonResidue2) {
-		t.Fatalf("non residue cannot have a sqrt")
+	for z := 0; z < fuz; z++ {
+		zi := new(fe)
+		sub(zi, &modulus, &fe{uint64(z * z)})
+		// r = (-z*z, 0)
+		r := &fe2{*zi, fe{0}}
+		toMont(&r[0], &r[0])
+		toMont(&r[1], &r[1])
+		c := field.new()
+		// sqrt((-z*z, 0)) = (0, z)
+		if !field.sqrt(c, r) {
+			t.Fatal("z*z does have a square root")
+		}
+		e := &fe2{fe{uint64(0)}, fe{uint64(z)}}
+		toMont(&e[0], &e[0])
+		toMont(&e[1], &e[1])
+		field.square(e, e)
+		field.square(c, c)
+		if !e.equal(c) {
+			t.Fatal("square root failed")
+		}
+	}
+	if field.sqrt(field.new(), nonResidue2) {
+		t.Fatal("non residue cannot have a sqrt")
 	}
 	for i := 0; i < fuz; i++ {
 		a, _ := new(fe2).rand(rand.Reader)
 		aa, rr, r := field.new(), field.new(), field.new()
 		field.square(aa, a)
 		if !field.sqrt(r, aa) {
-			t.Fatalf("bad sqrt 1")
+			t.Fatal("bad sqrt 1")
 		}
 		field.square(rr, r)
 		if !rr.equal(aa) {
-			t.Fatalf("bad sqrt 2")
+			t.Fatal("bad sqrt 2")
 		}
 	}
 }
@@ -1181,15 +1185,6 @@ func TestFp6Exponentiation(t *testing.T) {
 		if !u.equal(v) {
 			t.Fatalf("((a^2)^2)^2 == a^8")
 		}
-		// p := modulus.big()
-		// field.exp(u, a, p)
-		// if !u.equal(a) {
-		// 	t.Fatalf("a^p == a")
-		// }
-		// field.exp(u, a, p.Sub(p, big.NewInt(1)))
-		// if !u.equal(field.one()) {
-		// 	t.Fatalf("a^(p-1) == 1")
-		// }
 	}
 }
 
@@ -1213,13 +1208,6 @@ func TestFp6Inversion(t *testing.T) {
 		if !u.equal(one) {
 			t.Fatalf("(r*a) * r*(a^-1) == r)")
 		}
-		// v := field.new()
-		// p := modulus.big()
-		// field.exp(u, a, p.Sub(p, big.NewInt(2)))
-		// field.inverse(v, a)
-		// if !v.equal(u) {
-		// 	t.Fatalf("a^(p-2) == a^-1")
-		// }
 	}
 }
 
@@ -1420,15 +1408,6 @@ func TestFp12Exponentiation(t *testing.T) {
 		if !u.equal(v) {
 			t.Fatalf("((a^2)^2)^2 == a^8")
 		}
-		// p := modulus.big()
-		// field.exp(u, a, p)
-		// if !u.equal(a) {
-		// 	t.Fatalf("a^p == a")
-		// }
-		// field.exp(u, a, p.Sub(p, big.NewInt(1)))
-		// if !u.equal(field.one()) {
-		// 	t.Fatalf("a^(p-1) == 1")
-		// }
 	}
 }
 
@@ -1452,13 +1431,6 @@ func TestFp12Inversion(t *testing.T) {
 		if !u.equal(one) {
 			t.Fatalf("(r*a) * r*(a^-1) == r)")
 		}
-		// v := field.new()
-		// p := modulus.big()
-		// field.exp(u, a, p.Sub(p, big.NewInt(2)))
-		// field.inverse(v, a)
-		// if !v.equal(u) {
-		// 	t.Fatalf("a^(p-2) == a^-1")
-		// }
 	}
 }
 
