@@ -34,7 +34,7 @@ func TestG1Serialization(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !g1.IsZero(p0) {
-		t.Fatalf("bad infinity serialization 1")
+		t.Fatal("bad infinity serialization 1")
 	}
 	b0 = g1.ToCompressed(zero)
 	p0, err = g1.FromCompressed(b0)
@@ -42,7 +42,7 @@ func TestG1Serialization(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !g1.IsZero(p0) {
-		t.Fatalf("bad infinity serialization 2")
+		t.Fatal("bad infinity serialization 2")
 	}
 	b0 = g1.ToBytes(zero)
 	p0, err = g1.FromBytes(b0)
@@ -50,7 +50,7 @@ func TestG1Serialization(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !g1.IsZero(p0) {
-		t.Fatalf("bad infinity serialization 3")
+		t.Fatal("bad infinity serialization 3")
 	}
 	for i := 0; i < fuz; i++ {
 		a := g1.rand()
@@ -60,7 +60,7 @@ func TestG1Serialization(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !g1.Equal(a, b) {
-			t.Fatalf("bad serialization 1")
+			t.Fatal("bad serialization 1")
 		}
 		compressed := g1.ToCompressed(b)
 		a, err = g1.FromCompressed(compressed)
@@ -68,7 +68,7 @@ func TestG1Serialization(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !g1.Equal(a, b) {
-			t.Fatalf("bad serialization 2")
+			t.Fatal("bad serialization 2")
 		}
 	}
 	for i := 0; i < fuz; i++ {
@@ -79,7 +79,7 @@ func TestG1Serialization(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !g1.Equal(a, b) {
-			t.Fatalf("bad serialization 3")
+			t.Fatal("bad serialization 3")
 		}
 	}
 }
@@ -88,12 +88,12 @@ func TestG1IsOnCurve(t *testing.T) {
 	g := NewG1()
 	zero := g.Zero()
 	if !g.IsOnCurve(zero) {
-		t.Fatalf("zero must be on curve")
+		t.Fatal("zero must be on curve")
 	}
 	one := new(fe).one()
 	p := &PointG1{*one, *one, *one}
 	if g.IsOnCurve(p) {
-		t.Fatalf("(1, 1) is not on curve")
+		t.Fatal("(1, 1) is not on curve")
 	}
 }
 
@@ -105,48 +105,48 @@ func TestG1AdditiveProperties(t *testing.T) {
 		a, b := g.rand(), g.rand()
 		g.Add(t0, a, zero)
 		if !g.Equal(t0, a) {
-			t.Fatalf("a + 0 == a")
+			t.Fatal("a + 0 == a")
 		}
 		g.Add(t0, zero, zero)
 		if !g.Equal(t0, zero) {
-			t.Fatalf("0 + 0 == 0")
+			t.Fatal("0 + 0 == 0")
 		}
 		g.Sub(t0, a, zero)
 		if !g.Equal(t0, a) {
-			t.Fatalf("a - 0 == a")
+			t.Fatal("a - 0 == a")
 		}
 		g.Sub(t0, zero, zero)
 		if !g.Equal(t0, zero) {
-			t.Fatalf("0 - 0 == 0")
+			t.Fatal("0 - 0 == 0")
 		}
 		g.Neg(t0, zero)
 		if !g.Equal(t0, zero) {
-			t.Fatalf("- 0 == 0")
+			t.Fatal("- 0 == 0")
 		}
 		g.Sub(t0, zero, a)
 		g.Neg(t0, t0)
 		if !g.Equal(t0, a) {
-			t.Fatalf(" - (0 - a) == a")
+			t.Fatal(" - (0 - a) == a")
 		}
 		g.Double(t0, zero)
 		if !g.Equal(t0, zero) {
-			t.Fatalf("2 * 0 == 0")
+			t.Fatal("2 * 0 == 0")
 		}
 		g.Double(t0, a)
 		g.Sub(t0, t0, a)
 		if !g.Equal(t0, a) || !g.IsOnCurve(t0) {
-			t.Fatalf(" (2 * a) - a == a")
+			t.Fatal(" (2 * a) - a == a")
 		}
 		g.Add(t0, a, b)
 		g.Add(t1, b, a)
 		if !g.Equal(t0, t1) {
-			t.Fatalf("a + b == b + a")
+			t.Fatal("a + b == b + a")
 		}
 		g.Sub(t0, a, b)
 		g.Sub(t1, b, a)
 		g.Neg(t1, t1)
 		if !g.Equal(t0, t1) {
-			t.Fatalf("a - b == - ( b - a )")
+			t.Fatal("a - b == - ( b - a )")
 		}
 		c := g.rand()
 		g.Add(t0, a, b)
@@ -154,14 +154,14 @@ func TestG1AdditiveProperties(t *testing.T) {
 		g.Add(t1, a, c)
 		g.Add(t1, t1, b)
 		if !g.Equal(t0, t1) {
-			t.Fatalf("(a + b) + c == (a + c ) + b")
+			t.Fatal("(a + b) + c == (a + c ) + b")
 		}
 		g.Sub(t0, a, b)
 		g.Sub(t0, t0, c)
 		g.Sub(t1, a, c)
 		g.Sub(t1, t1, b)
 		if !g.Equal(t0, t1) {
-			t.Fatalf("(a - b) - c == (a - c) -b")
+			t.Fatal("(a - b) - c == (a - c) -b")
 		}
 	}
 }
@@ -176,15 +176,15 @@ func TestG1MultiplicativeProperties(t *testing.T) {
 		sone := big.NewInt(1)
 		g.MulScalar(t0, zero, s1)
 		if !g.Equal(t0, zero) {
-			t.Fatalf(" 0 ^ s == 0")
+			t.Fatal(" 0 ^ s == 0")
 		}
 		g.MulScalar(t0, a, sone)
 		if !g.Equal(t0, a) {
-			t.Fatalf(" a ^ 1 == a")
+			t.Fatal(" a ^ 1 == a")
 		}
 		g.MulScalar(t0, zero, s1)
 		if !g.Equal(t0, zero) {
-			t.Fatalf(" 0 ^ s == a")
+			t.Fatal(" 0 ^ s == a")
 		}
 		g.MulScalar(t0, a, s1)
 		g.MulScalar(t0, t0, s2)
@@ -219,7 +219,7 @@ func TestZKCryptoVectorsG1UncompressedValid(t *testing.T) {
 		}
 		uncompressed := g.ToUncompressed(p2)
 		if !bytes.Equal(vector, uncompressed) || !g.Equal(p1, p2) {
-			t.Fatalf("bad serialization")
+			t.Fatal("bad serialization")
 		}
 
 		g.Add(p1, p1, &g1One)
@@ -241,7 +241,7 @@ func TestZKCryptoVectorsG1CompressedValid(t *testing.T) {
 		}
 		compressed := g.ToCompressed(p2)
 		if !bytes.Equal(vector, compressed) || !g.Equal(p1, p2) {
-			t.Fatalf("bad serialization")
+			t.Fatal("bad serialization")
 		}
 		g.Add(p1, p1, &g1One)
 	}
@@ -259,7 +259,7 @@ func TestG1MultiExpExpected(t *testing.T) {
 	g.MulScalar(expected, one, big.NewInt(5))
 	_, _ = g.MultiExp(result, bases[:], scalars[:])
 	if !g.Equal(expected, result) {
-		t.Fatalf("bad multi-exponentiation")
+		t.Fatal("bad multi-exponentiation")
 	}
 }
 
@@ -285,7 +285,7 @@ func TestG1MultiExpBatch(t *testing.T) {
 	result := g.New()
 	_, _ = g.MultiExp(result, bases, scalars)
 	if !g.Equal(expected, result) {
-		t.Fatalf("bad multi-exponentiation")
+		t.Fatal("bad multi-exponentiation")
 	}
 }
 
