@@ -8,41 +8,48 @@ func Init() {
 	Field Constants
 */
 
-var modulus fe = fe{0xb9feffffffffaaab, 0x1eabfffeb153ffff, 0x6730d2a0f6b0f624, 0x64774b84f38512bf, 0x4b1ba7b6434bacd7, 0x1a0111ea397fe69a}
+// Base field modulus
+// p = 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab
 
-// inp = -p^(-1) mod 2^64
+// Size of six words
+// r = 2 ^ 384
+
+// modulus = p
+var modulus = fe{0xb9feffffffffaaab, 0x1eabfffeb153ffff, 0x6730d2a0f6b0f624, 0x64774b84f38512bf, 0x4b1ba7b6434bacd7, 0x1a0111ea397fe69a}
+
+// -p^(-1) mod 2^64
 var inp uint64 = 0x89f3fffcfffcfffd
 
-// r1  = r mod p
+// r mod p
 var r1 = &fe{0x760900000002fffd, 0xebf4000bc40c0002, 0x5f48985753c758ba, 0x77ce585370525745, 0x5c071a97a256ec6d, 0x15f65ec3fa80e493}
 
-// r2  = r^2 mod p
+// r^2 mod p
 var r2 = &fe{
 	0xf4df1f341c341746, 0x0a76e6a609d104f1, 0x8de5476c4c95b6d5, 0x67eb88a9939d83c0, 0x9a793e85b519952d, 0x11988fe592cae3aa,
 }
 
-// -1 + 0*u
+// -1 + 0 * u
 var negativeOne2 = &fe2{
 	fe{0x43f5fffffffcaaae, 0x32b7fff2ed47fffd, 0x07e83a49a2e99d69, 0xeca8f3318332bb7a, 0xef148d1ea0f4c069, 0x040ab3263eff0206},
 	fe{0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000},
 }
 
-// 2^-1
+// 2 ^ (-1)
 var twoInv = &fe{0x1804000000015554, 0x855000053ab00001, 0x633cb57c253c276f, 0x6e22d1ec31ebb502, 0xd3916126f2d14ca2, 0x17fbb8571a006596}
 
-// (q-3) / 4
+// (p - 3) / 4
 var pMinus3Over4 = bigFromHex("0x680447a8e5ff9a692c6e9ed90d2eb35d91dd2e13ce144afd9cc34a83dac3d8907aaffffac54ffffee7fbfffffffeaaa")
 
-// (q-3) / 4
+// (p + 1) / 4
 var pPlus1Over4 = bigFromHex("0x680447a8e5ff9a692c6e9ed90d2eb35d91dd2e13ce144afd9cc34a83dac3d8907aaffffac54ffffee7fbfffffffeaab")
 
-// (q-1) / 2
+// (p - 1) / 2
 var pMinus1Over2 = bigFromHex("0xd0088f51cbff34d258dd3db21a5d66bb23ba5c279c2895fb39869507b587b120f55ffff58a9ffffdcff7fffffffd555")
 
 // -1
 var nonResidue1 = &fe{0x43f5fffffffcaaae, 0x32b7fff2ed47fffd, 0x07e83a49a2e99d69, 0xeca8f3318332bb7a, 0xef148d1ea0f4c069, 0x040ab3263eff0206}
 
-// (u + 1)
+// (1 + 1 * u)
 var nonResidue2 = &fe2{
 	fe{0x760900000002fffd, 0xebf4000bc40c0002, 0x5f48985753c758ba, 0x77ce585370525745, 0x5c071a97a256ec6d, 0x15f65ec3fa80e493},
 	fe{0x760900000002fffd, 0xebf4000bc40c0002, 0x5f48985753c758ba, 0x77ce585370525745, 0x5c071a97a256ec6d, 0x15f65ec3fa80e493},
@@ -61,15 +68,22 @@ var b2 = &fe2{
 	fe{0xaa270000000cfff3, 0x53cc0032fc34000a, 0x478fe97a6b0a807f, 0xb1d37ebee6ba24d7, 0x8ec9733bbf78ab2f, 0x09d645513d83de7e},
 }
 
-// curve order
+// Group order
 var q = bigFromHex("0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001")
 
-// cofactor g1
+// G1 cofactor
 var cofactorG1 = bigFromHex("0x396c8c005555e1568c00aaab0000aaab")
 
-// cofactor g2
+// G2 cofactor
 var cofactorG2 = bigFromHex("5d543a95414e7f1091d50792876a202cd91de4547085abaa68a205b2e5a7ddfa628f1cb4d9e82ef21537e293a6691ae1616ec6e786f0c70cf1c38e31c7238e5")
 
+// Efficient G1 cofactor
+var cofactorEFFG1 = bigFromHex("0xd201000000010001")
+
+// Efficient G2 cofactor
+var cofactorEFFG2 = bigFromHex("0x0bc69f08f2ee75b3584c6a0ea91b352888e2a8e9145ad7689986ff031508ffe1329c2f178731db956d82bf015d1212b02ec0ec69d7477c1ae954cbc06689f6a359894c0adebbf6b4e8020005aaa95551")
+
+// G1 generator
 var g1One = PointG1{
 	fe{0x5cb38790fd530c16, 0x7817fc679976fff5, 0x154f95c7143ba1c1, 0xf0ae6acdf3d0e747, 0xedce6ecc21dbf440, 0x120177419e0bfb75},
 	fe{0xbaac93d50ce72271, 0x8c22631a7918fd8e, 0xdd595f13570725ce, 0x51ac582950405194, 0x0e1c8c3fad0059c0, 0x0bbc3efc5008a26a},
@@ -78,12 +92,14 @@ var g1One = PointG1{
 
 var G1One = g1One
 
+// Negated G1 generator
 var g1NegativeOne = PointG1{
 	fe{0x5cb38790fd530c16, 0x7817fc679976fff5, 0x154f95c7143ba1c1, 0xf0ae6acdf3d0e747, 0xedce6ecc21dbf440, 0x120177419e0bfb75},
 	fe{0xff526c2af318883a, 0x92899ce4383b0270, 0x89d7738d9fa9d055, 0x12caf35ba344c12a, 0x3cff1b76964b5317, 0x0e44d2ede9774430},
 	fe{0x760900000002fffd, 0xebf4000bc40c0002, 0x5f48985753c758ba, 0x77ce585370525745, 0x5c071a97a256ec6d, 0x15f65ec3fa80e493},
 }
 
+// G2 generator
 var g2One = PointG2{
 	fe2{
 		fe{0xf5f28fa202940a10, 0xb3f5fb2687b4961a, 0xa1a893b53e2ae580, 0x9894999d1a3caee9, 0x6f67b7631863366b, 0x058191924350bcd7},
@@ -220,10 +236,3 @@ var frobeniusCoeffs12 = [12]fe2{
 */
 
 var x = bigFromHex("0xd201000000010000")
-
-/*
-	Efficient cofactors.
-*/
-
-var cofactorEFFG1 = bigFromHex("0xd201000000010001")
-var cofactorEFFG2 = bigFromHex("0x0bc69f08f2ee75b3584c6a0ea91b352888e2a8e9145ad7689986ff031508ffe1329c2f178731db956d82bf015d1212b02ec0ec69d7477c1ae954cbc06689f6a359894c0adebbf6b4e8020005aaa95551")
