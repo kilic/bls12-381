@@ -21,7 +21,6 @@ type Engine struct {
 
 // NewEngine creates new pairing engine insteace.
 func NewEngine() *Engine {
-	Init()
 	fp2 := newFp2()
 	fp6 := newFp6(fp2)
 	fp12 := newFp12(fp6)

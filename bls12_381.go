@@ -1,9 +1,5 @@
 package bls12381
 
-func Init() {
-	cfgArch()
-}
-
 /*
 	Field Constants
 */

@@ -15,7 +15,6 @@ func TestMain(m *testing.M) {
 	_fuz := flag.Int("fuzz", 10, "# of iterations")
 	flag.Parse()
 	fuz = *_fuz
-	Init()
 	m.Run()
 }
 
