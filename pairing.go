@@ -21,7 +21,6 @@ type Engine struct {
 
 // NewEngine creates new pairing engine insteace.
 func NewEngine() *Engine {
-	cfgArch()
 	fp2 := newFp2()
 	fp6 := newFp6(fp2)
 	fp12 := newFp12(fp6)
@@ -144,7 +143,7 @@ func (e *Engine) additionStep(coeff *[3]fe2, r, q *PointG2) {
 	fp2.mul(t[3], t[0], &q[0])
 	fp2.sub(&coeff[0], t[3], t[2])
 	fp2.neg(&coeff[1], t[0])
-	fp2.copy(&coeff[2], t[1])
+	coeff[2].set(t[1])
 }
 
 func (e *Engine) preCompute(ellCoeffs *[68][3]fe2, twistPoint *PointG2) {
@@ -152,8 +151,7 @@ func (e *Engine) preCompute(ellCoeffs *[68][3]fe2, twistPoint *PointG2) {
 	if e.G2.IsZero(twistPoint) {
 		return
 	}
-	r := &PointG2{}
-	e.G2.Copy(r, twistPoint)
+	r := new(PointG2).Set(twistPoint)
 	j := 0
 	for i := int(x.BitLen() - 2); i >= 0; i-- {
 		e.doublingStep(&ellCoeffs[j], r)
@@ -174,7 +172,7 @@ func (e *Engine) millerLoop(f *fe12) {
 	}
 	fp12, fp2 := e.fp12, e.fp2
 	t := e.t2
-	fp12.copy(f, fp12.one())
+	f.one()
 	j := 0
 	for i := 62; /* x.BitLen() - 2 */ i >= 0; i-- {
 		if i != 62 {
@@ -211,7 +209,7 @@ func (e *Engine) finalExp(f *fe12) {
 	fp12.frobeniusMap(&t[0], f, 6)
 	fp12.inverse(&t[1], f)
 	fp12.mul(&t[2], &t[0], &t[1])
-	fp12.copy(&t[1], &t[2])
+	t[1].set(&t[2])
 	fp12.frobeniusMapAssign(&t[2], 2)
 	fp12.mulAssign(&t[2], &t[1])
 	fp12.cyclotomicSquare(&t[1], &t[2])
@@ -252,7 +250,7 @@ func (e *Engine) calculate() *fe12 {
 
 // Check computes pairing and checks if result is equal to one
 func (e *Engine) Check() bool {
-	return e.fp12.equal(e.fp12.one(), e.calculate())
+	return e.calculate().isOne()
 }
 
 // Result computes pairing and returns target group element as result.

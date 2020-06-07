@@ -30,7 +30,7 @@ func TestPairingExpected(t *testing.T) {
 		t.Fatal(err)
 	}
 	r := bls.AddPair(G1.One(), G2.One()).Result()
-	if !GT.Equal(r, expected) {
+	if !r.Equal(expected) {
 		t.Fatal("bad pairing")
 	}
 	if !GT.IsValid(r) {
@@ -48,11 +48,11 @@ func TestPairingNonDegeneracy(t *testing.T) {
 	{
 		bls.AddPair(g1One, g2One)
 		e := bls.Result()
-		if GT.IsOne(e) {
-			t.Fatalf("pairing result is not expected to be one")
+		if e.IsOne() {
+			t.Fatal("pairing result is not expected to be one")
 		}
 		if !GT.IsValid(e) {
-			t.Fatalf("pairing result is not valid")
+			t.Fatal("pairing result is not valid")
 		}
 	}
 	// e(g1^a, 0) == 1
@@ -60,8 +60,8 @@ func TestPairingNonDegeneracy(t *testing.T) {
 	{
 		bls.AddPair(g1One, g2Zero)
 		e := bls.Result()
-		if !GT.IsOne(e) {
-			t.Fatalf("pairing result is expected to be one")
+		if !e.IsOne() {
+			t.Fatal("pairing result is expected to be one")
 		}
 	}
 	// e(0, g2^b) == 1
@@ -69,8 +69,8 @@ func TestPairingNonDegeneracy(t *testing.T) {
 	{
 		bls.AddPair(g1Zero, g2One)
 		e := bls.Result()
-		if !GT.IsOne(e) {
-			t.Fatalf("pairing result is expected to be one")
+		if !e.IsOne() {
+			t.Fatal("pairing result is expected to be one")
 		}
 	}
 	//
@@ -80,8 +80,8 @@ func TestPairingNonDegeneracy(t *testing.T) {
 		bls.AddPair(g1One, g2Zero)
 		bls.AddPair(g1Zero, g2Zero)
 		e := bls.Result()
-		if !GT.IsOne(e) {
-			t.Fatalf("pairing result is expected to be one")
+		if !e.IsOne() {
+			t.Fatal("pairing result is expected to be one")
 		}
 	}
 	//
@@ -112,8 +112,8 @@ func TestPairingNonDegeneracy(t *testing.T) {
 		bls.AddPair(g1Zero, g2Zero)
 		bls.AddPair(g1One, g2One)
 		e := bls.Result()
-		if !GT.Equal(e, expected) {
-			t.Fatalf("bad pairing")
+		if !e.Equal(expected) {
+			t.Fatal("bad pairing")
 		}
 	}
 }
@@ -133,8 +133,8 @@ func TestPairingBilinearity(t *testing.T) {
 		g2.MulScalar(P2, G2, b)
 		e1 := bls.AddPair(P1, P2).Result()
 		gt.Exp(e0, e0, c)
-		if !gt.Equal(e0, e1) {
-			t.Fatalf("bad pairing, 1")
+		if !e0.Equal(e1) {
+			t.Fatal("bad pairing, 1")
 		}
 	}
 	// e(a * G1, b * G2) = e((a + b) * G1, G2)
@@ -153,7 +153,7 @@ func TestPairingBilinearity(t *testing.T) {
 		bls.AddPairInv(P1, P2)
 		// should be one
 		if !bls.Check() {
-			t.Fatalf("bad pairing, 2")
+			t.Fatal("bad pairing, 2")
 		}
 	}
 	// e(a * G1, b * G2) = e((a + b) * G1, G2)
@@ -172,7 +172,7 @@ func TestPairingBilinearity(t *testing.T) {
 		bls.AddPairInv(H1, H2)
 		// should be one
 		if !bls.Check() {
-			t.Fatalf("bad pairing, 3")
+			t.Fatal("bad pairing, 3")
 		}
 	}
 }
@@ -203,18 +203,17 @@ func TestPairingMulti(t *testing.T) {
 	g1.MulScalar(T1, T1, targetExp)
 	bls.AddPairInv(T1, T2)
 	if !bls.Check() {
-		t.Fatalf("fail multi pairing")
+		t.Fatal("fail multi pairing")
 	}
 }
 
 func TestPairingEmpty(t *testing.T) {
 	bls := NewEngine()
-	GT := bls.GT()
 	if !bls.Check() {
-		t.Fatalf("empty check should be accepted")
+		t.Fatal("empty check should be accepted")
 	}
-	if !GT.IsOne(bls.Result()) {
-		t.Fatalf("empty pairing result should be one")
+	if !bls.Result().IsOne() {
+		t.Fatal("empty pairing result should be one")
 	}
 }
 
