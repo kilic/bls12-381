@@ -444,8 +444,8 @@ func (g *G2) MulScalar(c, p *PointG2, e *big.Int) *PointG2 {
 }
 
 // ClearCofactor maps given a G2 point to correct subgroup
-func (g *G2) ClearCofactor(p *PointG2) {
-	g.MulScalar(p, p, cofactorEFFG2)
+func (g *G2) ClearCofactor(p *PointG2) *PointG2 {
+	return g.wnafMul(p, p, cofactorEFFG2)
 }
 
 // MultiExp calculates multi exponentiation. Given pairs of G2 point and scalar values
@@ -502,6 +502,45 @@ func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG
 		g.Add(acc, acc, windows[i])
 	}
 	return r.Set(acc), nil
+}
+
+func (g *G2) wnafMul(c, p *PointG2, e *big.Int) *PointG2 {
+	windowSize := uint(6)
+	precompTable := make([]*PointG2, (1 << (windowSize - 1)))
+	for i := 0; i < len(precompTable); i++ {
+		precompTable[i] = g.New()
+	}
+	var indexForPositive uint64 = (1 << (windowSize - 2))
+	precompTable[indexForPositive].Set(p)
+	g.Neg(precompTable[indexForPositive-1], p)
+	doubled, precomp := g.New(), g.New()
+	g.Double(doubled, p)
+	precomp.Set(p)
+	for i := uint64(1); i < indexForPositive; i++ {
+		g.Add(precomp, precomp, doubled)
+		precompTable[indexForPositive+i].Set(precomp)
+		g.Neg(precompTable[indexForPositive-1-i], precomp)
+	}
+	wnaf := wnaf(e, windowSize)
+	q := g.Zero()
+	found := false
+	var idx uint64
+	for i := len(wnaf) - 1; i >= 0; i-- {
+		if found {
+			g.Double(q, q)
+		}
+		if wnaf[i] != 0 {
+			found = true
+			if wnaf[i] > 0 {
+				idx = uint64(wnaf[i] >> 1)
+				g.Add(q, q, precompTable[indexForPositive+idx])
+			} else {
+				idx = uint64(((0 - wnaf[i]) >> 1))
+				g.Add(q, q, precompTable[indexForPositive-1-idx])
+			}
+		}
+	}
+	return c.Set(q)
 }
 
 // MapToCurve given a byte slice returns a valid G2 point.
