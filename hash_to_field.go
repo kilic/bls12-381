@@ -2,7 +2,7 @@ package bls12381
 
 import (
 	"crypto/sha256"
-	"fmt"
+	"errors"
 )
 
 func hashToFpXMDSHA256(msg []byte, domain []byte, count int) ([]*fe, error) {
@@ -24,7 +24,7 @@ func expandMsgSHA256XMD(msg []byte, domain []byte, outLen int) ([]byte, error) {
 	h := sha256.New()
 	domainLen := uint8(len(domain))
 	if domainLen > 255 {
-		return nil, fmt.Errorf("invalid domain length")
+		return nil, errors.New("invalid domain length")
 	}
 	// DST_prime = DST || I2OSP(len(DST), 1)
 	// b_0 = H(Z_pad || msg || l_i_b_str || I2OSP(0, 1) || DST_prime)

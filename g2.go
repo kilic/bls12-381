@@ -1,7 +1,7 @@
 package bls12381
 
 import (
-	"fmt"
+	"errors"
 	"math"
 	"math/big"
 )
@@ -13,13 +13,18 @@ type PointG2 [3]fe2
 
 // Set copies valeus of one point to another.
 func (p *PointG2) Set(p2 *PointG2) *PointG2 {
-	p[0][0].set(&p2[0][0])
-	p[1][1].set(&p2[1][1])
-	p[2][0].set(&p2[2][0])
-	p[0][1].set(&p2[0][1])
-	p[1][0].set(&p2[1][0])
-	p[2][1].set(&p2[2][1])
+	p[0].set(&p2[0])
+	p[1].set(&p2[1])
+	p[2].set(&p2[2])
 	return p
+}
+
+func (p *PointG2) Zero() *PointG2 {
+	p[0].zero()
+	p[1].one()
+	p[2].zero()
+	return p
+
 }
 
 type tempG2 struct {
@@ -38,7 +43,6 @@ func NewG2() *G2 {
 }
 
 func newG2(f *fp2) *G2 {
-	cfgArch()
 	if f == nil {
 		f = newFp2()
 	}
@@ -65,20 +69,20 @@ func (g *G2) Q() *big.Int {
 // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G2) FromUncompressed(uncompressed []byte) (*PointG2, error) {
 	if len(uncompressed) < 192 {
-		return nil, fmt.Errorf("input string should be equal or larger than 192")
+		return nil, errors.New("input string should be equal or larger than 192")
 	}
 	var in [192]byte
 	copy(in[:], uncompressed[:192])
 	if in[0]&(1<<7) != 0 {
-		return nil, fmt.Errorf("compression flag should be zero")
+		return nil, errors.New("compression flag should be zero")
 	}
 	if in[0]&(1<<5) != 0 {
-		return nil, fmt.Errorf("sort flag should be zero")
+		return nil, errors.New("sort flag should be zero")
 	}
 	if in[0]&(1<<6) != 0 {
 		for i, v := range in {
 			if (i == 0 && v != 0x40) || (i != 0 && v != 0x00) {
-				return nil, fmt.Errorf("input string should be zero when infinity flag is set")
+				return nil, errors.New("input string should be zero when infinity flag is set")
 			}
 		}
 		return g.Zero(), nil
@@ -92,13 +96,13 @@ func (g *G2) FromUncompressed(uncompressed []byte) (*PointG2, error) {
 	if err != nil {
 		return nil, err
 	}
-	z := g.f.one()
+	z := new(fe2).one()
 	p := &PointG2{*x, *y, *z}
 	if !g.IsOnCurve(p) {
-		return nil, fmt.Errorf("point is not on curve")
+		return nil, errors.New("point is not on curve")
 	}
 	if !g.InCorrectSubgroup(p) {
-		return nil, fmt.Errorf("point is not on correct subgroup")
+		return nil, errors.New("point is not on correct subgroup")
 	}
 	return p, nil
 }
@@ -125,18 +129,18 @@ func (g *G2) ToUncompressed(p *PointG2) []byte {
 // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 	if len(compressed) < 96 {
-		return nil, fmt.Errorf("input string should be equal or larger than 96")
+		return nil, errors.New("input string should be equal or larger than 96")
 	}
 	var in [96]byte
 	copy(in[:], compressed[:])
 	if in[0]&(1<<7) == 0 {
-		return nil, fmt.Errorf("bad compression")
+		return nil, errors.New("bad compression")
 	}
 	if in[0]&(1<<6) != 0 {
 		// in[0] == (1 << 6) + (1 << 7)
 		for i, v := range in {
 			if (i == 0 && v != 0xc0) || (i != 0 && v != 0x00) {
-				return nil, fmt.Errorf("input string should be zero when infinity flag is set")
+				return nil, errors.New("input string should be zero when infinity flag is set")
 			}
 		}
 		return g.Zero(), nil
@@ -153,15 +157,15 @@ func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 	g.f.mul(y, y, x)
 	g.f.add(y, y, b2)
 	if ok := g.f.sqrt(y, y); !ok {
-		return nil, fmt.Errorf("point is not on curve")
+		return nil, errors.New("point is not on curve")
 	}
 	if y.signBE() == a {
 		g.f.neg(y, y)
 	}
-	z := g.f.one()
+	z := new(fe2).one()
 	p := &PointG2{*x, *y, *z}
 	if !g.InCorrectSubgroup(p) {
-		return nil, fmt.Errorf("point is not on correct subgroup")
+		return nil, errors.New("point is not on correct subgroup")
 	}
 	return p, nil
 }
@@ -194,7 +198,7 @@ func (g *G2) fromBytesUnchecked(in []byte) (*PointG2, error) {
 	if err != nil {
 		return nil, err
 	}
-	p2 := g.f.one()
+	p2 := new(fe2).one()
 	return &PointG2{*p0, *p1, *p2}, nil
 }
 
@@ -205,7 +209,7 @@ func (g *G2) fromBytesUnchecked(in []byte) (*PointG2, error) {
 // Point (0, 0) is considered as infinity.
 func (g *G2) FromBytes(in []byte) (*PointG2, error) {
 	if len(in) < 192 {
-		return nil, fmt.Errorf("input string should be equal or larger than 192")
+		return nil, errors.New("input string should be equal or larger than 192")
 	}
 	p0, err := g.f.fromBytes(in[:96])
 	if err != nil {
@@ -216,13 +220,13 @@ func (g *G2) FromBytes(in []byte) (*PointG2, error) {
 		return nil, err
 	}
 	// check if given input points to infinity
-	if g.f.isZero(p0) && g.f.isZero(p1) {
+	if p0.isZero() && p1.isZero() {
 		return g.Zero(), nil
 	}
-	p2 := g.f.one()
+	p2 := new(fe2).one()
 	p := &PointG2{*p0, *p1, *p2}
 	if !g.IsOnCurve(p) {
-		return nil, fmt.Errorf("point is not on curve")
+		return nil, errors.New("point is not on curve")
 	}
 	return p, nil
 }
@@ -243,31 +247,23 @@ func (g *G2) ToBytes(p *PointG2) []byte {
 
 // New creates a new G2 Point which is equal to zero in other words point at infinity.
 func (g *G2) New() *PointG2 {
-	return g.Zero()
+	return new(PointG2).Zero()
 }
 
 // Zero returns a new G2 Point which is equal to point at infinity.
 func (g *G2) Zero() *PointG2 {
-	return &PointG2{
-		*g.f.zero(),
-		*g.f.one(),
-		*g.f.zero(),
-	}
+	return new(PointG2).Zero()
 }
 
 // One returns a new G2 Point which is equal to generator point.
 func (g *G2) One() *PointG2 {
-	return g.Copy(&PointG2{}, &g2One)
-}
-
-// Copy copies source point to destination point.
-func (g *G2) Copy(dst *PointG2, src *PointG2) *PointG2 {
-	return dst.Set(src)
+	p := &PointG2{}
+	return p.Set(&g2One)
 }
 
 // IsZero returns true if given point is equal to zero.
 func (g *G2) IsZero(p *PointG2) bool {
-	return g.f.isZero(&p[2])
+	return p[2].isZero()
 }
 
 // Equal checks if given two G2 point is equal in their affine form.
@@ -287,7 +283,7 @@ func (g *G2) Equal(p1, p2 *PointG2) bool {
 	g.f.mul(t[1], t[1], &p2[2])
 	g.f.mul(t[1], t[1], &p1[1])
 	g.f.mul(t[0], t[0], &p2[1])
-	return g.f.equal(t[0], t[1]) && g.f.equal(t[2], t[3])
+	return t[0].equal(t[1]) && t[2].equal(t[3])
 }
 
 // InCorrectSubgroup checks whether given point is in correct subgroup.
@@ -311,12 +307,12 @@ func (g *G2) IsOnCurve(p *PointG2) bool {
 	g.f.mul(t[2], t[2], t[3])
 	g.f.mul(t[2], b2, t[2])
 	g.f.add(t[1], t[1], t[2])
-	return g.f.equal(t[0], t[1])
+	return t[0].equal(t[1])
 }
 
 // IsAffine checks a G2 point whether it is in affine form.
 func (g *G2) IsAffine(p *PointG2) bool {
-	return g.f.equal(&p[2], g.f.one())
+	return p[2].isOne()
 }
 
 // Affine calculates affine form of given G2 point.
@@ -331,7 +327,7 @@ func (g *G2) Affine(p *PointG2) *PointG2 {
 		g.f.mul(&p[0], &p[0], t[1])
 		g.f.mul(t[0], t[0], t[1])
 		g.f.mul(&p[1], &p[1], t[0])
-		g.f.copy(&p[2], g.f.one())
+		p[2].one()
 	}
 	return p
 }
@@ -340,12 +336,10 @@ func (g *G2) Affine(p *PointG2) *PointG2 {
 func (g *G2) Add(r, p1, p2 *PointG2) *PointG2 {
 	// http://www.hyperelliptic.org/EFD/gp/auto-shortw-jacobian-0.html#addition-add-2007-bl
 	if g.IsZero(p1) {
-		g.Copy(r, p2)
-		return r
+		return r.Set(p2)
 	}
 	if g.IsZero(p2) {
-		g.Copy(r, p1)
-		return r
+		return r.Set(p1)
 	}
 	t := g.t
 	g.f.square(t[7], &p1[2])
@@ -356,11 +350,11 @@ func (g *G2) Add(r, p1, p2 *PointG2) *PointG2 {
 	g.f.mul(t[3], &p1[0], t[8])
 	g.f.mul(t[4], &p2[2], t[8])
 	g.f.mul(t[2], &p1[1], t[4])
-	if g.f.equal(t[1], t[3]) {
-		if g.f.equal(t[0], t[2]) {
+	if t[1].equal(t[3]) {
+		if t[0].equal(t[2]) {
 			return g.Double(r, p1)
 		} else {
-			return g.Copy(r, infinity2)
+			return r.Zero()
 		}
 	}
 	g.f.sub(t[1], t[1], t[3])
@@ -391,8 +385,7 @@ func (g *G2) Add(r, p1, p2 *PointG2) *PointG2 {
 func (g *G2) Double(r, p *PointG2) *PointG2 {
 	// http://www.hyperelliptic.org/EFD/gp/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
 	if g.IsZero(p) {
-		g.Copy(r, p)
-		return r
+		return r.Set(p)
 	}
 	t := g.t
 	g.f.square(t[0], &p[0])
@@ -415,16 +408,16 @@ func (g *G2) Double(r, p *PointG2) *PointG2 {
 	g.f.mul(t[0], t[0], t[1])
 	g.f.sub(t[1], t[0], t[2])
 	g.f.mul(t[0], &p[1], &p[2])
-	g.f.copy(&r[1], t[1])
+	r[1].set(t[1])
 	g.f.double(&r[2], t[0])
 	return r
 }
 
 // Neg negates a G2 point p and assigns the result to the point at first argument.
 func (g *G2) Neg(r, p *PointG2) *PointG2 {
-	g.f.copy(&r[0], &p[0])
+	r[0].set(&p[0])
 	g.f.neg(&r[1], &p[1])
-	g.f.copy(&r[2], &p[2])
+	r[2].set(&p[2])
 	return r
 }
 
@@ -439,7 +432,7 @@ func (g *G2) Sub(c, a, b *PointG2) *PointG2 {
 // MulScalar multiplies a point by given scalar value in big.Int and assigns the result to point at first argument.
 func (g *G2) MulScalar(c, p *PointG2, e *big.Int) *PointG2 {
 	q, n := &PointG2{}, &PointG2{}
-	g.Copy(n, p)
+	n.Set(p)
 	l := e.BitLen()
 	for i := 0; i < l; i++ {
 		if e.Bit(i) == 1 {
@@ -447,7 +440,7 @@ func (g *G2) MulScalar(c, p *PointG2, e *big.Int) *PointG2 {
 		}
 		g.Double(n, n)
 	}
-	return g.Copy(c, q)
+	return c.Set(q)
 }
 
 // ClearCofactor maps given a G2 point to correct subgroup
@@ -461,7 +454,7 @@ func (g *G2) ClearCofactor(p *PointG2) {
 // Result is assigned to point at first argument.
 func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG2, error) {
 	if len(points) != len(powers) {
-		return nil, fmt.Errorf("point and scalar vectors should be in same length")
+		return nil, errors.New("point and scalar vectors should be in same length")
 	}
 	var c uint32 = 3
 	if len(powers) >= 32 {
@@ -478,7 +471,7 @@ func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG
 	j := 0
 	var cur uint32
 	for cur <= numBits {
-		g.Copy(acc, g.Zero())
+		acc.Zero()
 		bucket = make([]*PointG2, (1<<c)-1)
 		for i := 0; i < len(bucket); i++ {
 			bucket[i] = g.New()
@@ -491,26 +484,24 @@ func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG
 			}
 			powers[i] = new(big.Int).Rsh(powers[i], uint(c))
 		}
-
-		g.Copy(sum, g.Zero())
+		sum.Zero()
 		for i := len(bucket) - 1; i >= 0; i-- {
 			g.Add(sum, sum, bucket[i])
 			g.Add(acc, acc, sum)
 		}
 		windows[j] = g.New()
-		g.Copy(windows[j], acc)
+		windows[j].Set(acc)
 		j++
 		cur += c
 	}
-	g.Copy(acc, g.Zero())
+	acc.Zero()
 	for i := len(windows) - 1; i >= 0; i-- {
 		for j := uint32(0); j < c; j++ {
 			g.Double(acc, acc)
 		}
 		g.Add(acc, acc, windows[i])
 	}
-	g.Copy(r, acc)
-	return r, nil
+	return r.Set(acc), nil
 }
 
 // MapToCurve given a byte slice returns a valid G2 point.
@@ -525,8 +516,8 @@ func (g *G2) MapToCurve(in []byte) (*PointG2, error) {
 	}
 	x, y := swuMapG2(fp2, u)
 	isogenyMapG2(fp2, x, y)
-	one := fp2.one()
-	q := &PointG2{*x, *y, *one}
+	z := new(fe2).one()
+	q := &PointG2{*x, *y, *z}
 	g.ClearCofactor(q)
 	return g.Affine(q), nil
 }
@@ -544,8 +535,8 @@ func (g *G2) EncodeToCurve(msg, domain []byte) (*PointG2, error) {
 	u := &fe2{*hashRes[0], *hashRes[1]}
 	x, y := swuMapG2(fp2, u)
 	isogenyMapG2(fp2, x, y)
-	one := fp2.one()
-	q := &PointG2{*x, *y, *one}
+	z := new(fe2).one()
+	q := &PointG2{*x, *y, *z}
 	g.ClearCofactor(q)
 	return g.Affine(q), nil
 }
@@ -563,8 +554,9 @@ func (g *G2) HashToCurve(msg, domain []byte) (*PointG2, error) {
 	u0, u1 := &fe2{*hashRes[0], *hashRes[1]}, &fe2{*hashRes[2], *hashRes[3]}
 	x0, y0 := swuMapG2(fp2, u0)
 	x1, y1 := swuMapG2(fp2, u1)
-	one := fp2.one()
-	p0, p1 := &PointG2{*x0, *y0, *one}, &PointG2{*x1, *y1, *one}
+	z0 := new(fe2).one()
+	z1 := new(fe2).one()
+	p0, p1 := &PointG2{*x0, *y0, *z0}, &PointG2{*x1, *y1, *z1}
 	g.Add(p0, p0, p1)
 	g.Affine(p0)
 	isogenyMapG2(fp2, &p0[0], &p0[1])

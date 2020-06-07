@@ -1,28 +1,26 @@
 package bls12381
 
 import (
-	"crypto/rand"
-	"fmt"
-	"io"
+	"errors"
 	"math/big"
 )
 
 func fromBytes(in []byte) (*fe, error) {
 	fe := &fe{}
 	if len(in) != 48 {
-		return nil, fmt.Errorf("input string should be equal 48 bytes")
+		return nil, errors.New("input string should be equal 48 bytes")
 	}
-	fe.fromBytes(in)
-	if !valid(fe) {
-		return nil, fmt.Errorf("must be less than modulus")
+	fe.setBytes(in)
+	if !fe.isValid() {
+		return nil, errors.New("must be less than modulus")
 	}
-	mul(fe, fe, r2)
+	toMont(fe, fe)
 	return fe, nil
 }
 
 func from64Bytes(in []byte) (*fe, error) {
 	if len(in) != 64 {
-		return nil, fmt.Errorf("input string should be equal 64 bytes")
+		return nil, errors.New("input string should be equal 64 bytes")
 	}
 	a0 := make([]byte, 48)
 	copy(a0[16:48], in[:32])
@@ -53,10 +51,10 @@ func from64Bytes(in []byte) (*fe, error) {
 
 func fromBig(in *big.Int) (*fe, error) {
 	fe := new(fe).setBig(in)
-	if !valid(fe) {
-		return nil, fmt.Errorf("invalid input string")
+	if !fe.isValid() {
+		return nil, errors.New("invalid input string")
 	}
-	mul(fe, fe, r2)
+	toMont(fe, fe)
 	return fe, nil
 }
 
@@ -65,10 +63,10 @@ func fromString(in string) (*fe, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !valid(fe) {
-		return nil, fmt.Errorf("invalid input string")
+	if !fe.isValid() {
+		return nil, errors.New("invalid input string")
 	}
-	mul(fe, fe, r2)
+	toMont(fe, fe)
 	return fe, nil
 }
 
@@ -87,40 +85,7 @@ func toBig(e *fe) *big.Int {
 func toString(e *fe) (s string) {
 	e2 := new(fe)
 	fromMont(e2, e)
-	return e2.String()
-}
-
-func valid(fe *fe) bool {
-	return fe.cmp(&modulus) == -1
-}
-
-func zero() *fe {
-	return &fe{}
-}
-
-func one() *fe {
-	return new(fe).set(r1)
-}
-
-func newRand(r io.Reader) (*fe, error) {
-	fe := new(fe)
-	bi, err := rand.Int(r, modulus.big())
-	if err != nil {
-		return nil, err
-	}
-	return fe.setBig(bi), nil
-}
-
-func equal(a, b *fe) bool {
-	return a.equal(b)
-}
-
-func isZero(a *fe) bool {
-	return a.isZero()
-}
-
-func isOne(a *fe) bool {
-	return a.equal(one())
+	return e2.string()
 }
 
 func toMont(c, a *fe) {
@@ -204,15 +169,15 @@ func inverse(inv, e *fe) {
 	return
 }
 
-func sqrt(c, a *fe) (hasRoot bool) {
+func sqrt(c, a *fe) bool {
 	u, v := new(fe).set(a), new(fe)
 	exp(c, a, pPlus1Over4)
 	square(v, c)
-	return equal(u, v)
+	return u.equal(v)
 }
 
 func isQuadraticNonResidue(elem *fe) bool {
 	result := new(fe)
 	exp(result, elem, pMinus1Over2)
-	return !equal(result, one())
+	return !result.isOne()
 }

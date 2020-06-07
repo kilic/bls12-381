@@ -1,8 +1,7 @@
 package bls12381
 
 import (
-	"fmt"
-	"io"
+	"errors"
 	"math/big"
 )
 
@@ -29,7 +28,7 @@ func newFp2() *fp2 {
 
 func (e *fp2) fromBytes(in []byte) (*fe2, error) {
 	if len(in) != 96 {
-		return nil, fmt.Errorf("input string should be larger than 96 bytes")
+		return nil, errors.New("input string should be larger than 96 bytes")
 	}
 	c1, err := fromBytes(in[:48])
 	if err != nil {
@@ -50,49 +49,20 @@ func (e *fp2) toBytes(a *fe2) []byte {
 }
 
 func (e *fp2) new() *fe2 {
-	return e.zero()
+	return new(fe2).zero()
 }
 
 func (e *fp2) zero() *fe2 {
-	return &fe2{}
+	return new(fe2).zero()
 }
 
 func (e *fp2) one() *fe2 {
-	return &fe2{*one(), *zero()}
-}
-
-func (e *fp2) rand(r io.Reader) (*fe2, error) {
-	a0, err := newRand(r)
-	if err != nil {
-		return nil, err
-	}
-	a1, err := newRand(r)
-	if err != nil {
-		return nil, err
-	}
-	return &fe2{*a0, *a1}, nil
+	return new(fe2).one()
 }
 
 func (e *fp2) fromMont(c, a *fe2) {
 	fromMont(&c[0], &a[0])
 	fromMont(&c[1], &a[1])
-}
-
-func (e *fp2) isZero(a *fe2) bool {
-	return isZero(&a[0]) && isZero(&a[1])
-}
-
-func (e *fp2) isOne(a *fe2) bool {
-	return isOne(&a[0]) && isZero(&a[1])
-}
-
-func (e *fp2) equal(a, b *fe2) bool {
-	return equal(&a[0], &b[0]) && equal(&a[1], &b[1])
-}
-
-func (e *fp2) copy(c, a *fe2) {
-	c[0].set(&a[0])
-	c[1].set(&a[1])
 }
 
 func (e *fp2) add(c, a, b *fe2) {
@@ -120,7 +90,6 @@ func (e *fp2) doubleAssign(a *fe2) {
 	doubleAssign(&a[1])
 }
 
-// ldouble doubles field element `a` and sets the result `c` without modular reduction
 func (e *fp2) ldouble(c, a *fe2) {
 	ldouble(&c[0], &a[0])
 	ldouble(&c[1], &a[1])
@@ -154,7 +123,7 @@ func (e *fp2) mul(c, a, b *fe2) {
 	add(t[3], &b[0], &b[1])
 	sub(&c[0], t[1], t[2])
 	addAssign(t[1], t[2])
-	mulAssign(t[0], t[3])
+	mul(t[0], t[0], t[3])
 	sub(&c[1], t[0], t[1])
 }
 
@@ -166,7 +135,7 @@ func (e *fp2) mulAssign(a, b *fe2) {
 	add(t[3], &b[0], &b[1])
 	sub(&a[0], t[1], t[2])
 	addAssign(t[1], t[2])
-	mulAssign(t[0], t[3])
+	mul(t[0], t[0], t[3])
 	sub(&a[1], t[0], t[1])
 }
 
@@ -212,7 +181,7 @@ func (e *fp2) inverse(c, a *fe2) {
 	addAssign(t[0], t[1])
 	inverse(t[0], t[0])
 	mul(&c[0], &a[0], t[0])
-	mulAssign(t[0], &a[1])
+	mul(t[0], t[0], &a[1])
 	neg(&c[1], t[0])
 }
 
@@ -229,13 +198,7 @@ func (e *fp2) exp(c, a *fe2, s *big.Int) {
 			e.mul(z, z, a)
 		}
 	}
-	e.copy(c, z)
-}
-
-func (e *fp2) div(c, a, b *fe2) {
-	t0 := e.new()
-	e.inverse(t0, b)
-	e.mul(c, a, t0)
+	c.set(z)
 }
 
 func (e *fp2) frobeniousMap(c, a *fe2, power uint) {
@@ -256,12 +219,12 @@ func (e *fp2) frobeniousMapAssign(a *fe2, power uint) {
 
 func (e *fp2) sqrt(c, a *fe2) bool {
 	u, x0, a1, alpha := &fe2{}, &fe2{}, &fe2{}, &fe2{}
-	e.copy(u, a)
+	u.set(a)
 	e.exp(a1, a, pMinus3Over4)
 	e.square(alpha, a1)
 	e.mul(alpha, alpha, a)
 	e.mul(x0, a1, a)
-	if e.equal(alpha, negativeOne2) {
+	if alpha.equal(negativeOne2) {
 		neg(&c[0], &x0[1])
 		c[1].set(&x0[0])
 		return true
@@ -270,5 +233,13 @@ func (e *fp2) sqrt(c, a *fe2) bool {
 	e.exp(alpha, alpha, pMinus1Over2)
 	e.mul(c, alpha, x0)
 	e.square(alpha, c)
-	return e.equal(alpha, u)
+	return alpha.equal(u)
+}
+
+func (e *fp2) isQuadraticNonResidue(a *fe2) bool {
+	c0, c1 := new(fe), new(fe)
+	square(c0, &a[0])
+	square(c1, &a[1])
+	add(c1, c1, c0)
+	return isQuadraticNonResidue(c1)
 }
