@@ -365,6 +365,17 @@ func TestG2MultiExpBatch(t *testing.T) {
 	}
 }
 
+func TestClearCofactor(t *testing.T) {
+	g2 := NewG2()
+	for i := 0; i < fuz; i++ {
+		a := g2.rand()
+		g2.ClearCofactor(a)
+		if !g2.InCorrectSubgroup(a) {
+			t.Fatal("clear cofactor failed")
+		}
+	}
+}
+
 func TestG2MapToCurve(t *testing.T) {
 	for i, v := range []struct {
 		u        []byte
@@ -434,17 +445,6 @@ func TestG2MapToCurve(t *testing.T) {
 		}
 		if !bytes.Equal(g.ToBytes(p0), v.expected) {
 			t.Fatal("map to curve fails", i)
-		}
-	}
-}
-
-func TestClearCofactor(t *testing.T) {
-	g2 := NewG2()
-	for i := 0; i < fuz; i++ {
-		a := g2.rand()
-		g2.ClearCofactor(a)
-		if !g2.InCorrectSubgroup(a) {
-			t.Fatal("clear cofactor failed")
 		}
 	}
 }
