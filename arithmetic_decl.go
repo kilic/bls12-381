@@ -6,20 +6,13 @@ import (
 	"golang.org/x/sys/cpu"
 )
 
-var isX86CharacteristicSet bool = false
-
 func init() {
-	if !isX86CharacteristicSet {
-		if !(cpu.X86.HasADX && cpu.X86.HasBMI2) {
-			mul = mulNoADX
-			mulAssign = mulAssignNoADX
-		}
-		isX86CharacteristicSet = true
+	if !cpu.X86.HasADX || !cpu.X86.HasBMI2 {
+		mul = mulNoADX
 	}
 }
 
 var mul func(c, a, b *fe) = mulADX
-var mulAssign func(a, b *fe) = mulAssignADX
 
 func square(c, a *fe) {
 	mul(c, a, a)
@@ -70,10 +63,4 @@ func _neg(c, a *fe)
 func mulNoADX(c, a, b *fe)
 
 //go:noescape
-func mulAssignNoADX(a, b *fe)
-
-//go:noescape
 func mulADX(c, a, b *fe)
-
-//go:noescape
-func mulAssignADX(a, b *fe)
