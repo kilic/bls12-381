@@ -2,7 +2,7 @@ package bls12381
 
 // isogenyMapG1 applies 11-isogeny map for BLS12-381 G1 defined at draft-irtf-cfrg-hash-to-curve-06.
 func isogenyMapG1(x, y *fe) {
-	// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06#appendix-C.2
+	// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-08#appendix-C.2
 	params := isogenyConstansG1
 	degree := 15
 	xNum, xDen, yNum, yDen := new(fe), new(fe), new(fe), new(fe)
@@ -34,7 +34,7 @@ func isogenyMapG2(e *fp2, x, y *fe2) {
 	if e == nil {
 		e = newFp2()
 	}
-	// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06#appendix-C.2
+	// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-08#appendix-C.2
 	params := isogenyConstantsG2
 	degree := 3
 	xNum := new(fe2).set(params[0][degree])

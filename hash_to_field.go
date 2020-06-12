@@ -2,15 +2,12 @@ package bls12381
 
 import (
 	"crypto/sha256"
-	"errors"
 )
 
 func hashToFpXMDSHA256(msg []byte, domain []byte, count int) ([]*fe, error) {
-	randBytes, err := expandMsgSHA256XMD(msg, domain, count*64)
-	if err != nil {
-		return nil, err
-	}
+	randBytes := expandMsgSHA256XMD(msg, domain, count*64)
 	els := make([]*fe, count)
+	var err error
 	for i := 0; i < count; i++ {
 		els[i], err = from64Bytes(randBytes[i*64 : (i+1)*64])
 		if err != nil {
@@ -20,11 +17,17 @@ func hashToFpXMDSHA256(msg []byte, domain []byte, count int) ([]*fe, error) {
 	return els, nil
 }
 
-func expandMsgSHA256XMD(msg []byte, domain []byte, outLen int) ([]byte, error) {
+func expandMsgSHA256XMD(msg []byte, domain []byte, outLen int) []byte {
 	h := sha256.New()
 	domainLen := uint8(len(domain))
-	if domainLen > 255 {
-		return nil, errors.New("invalid domain length")
+	if len(domain) > 255 {
+		// See https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/?include_text=1
+		// Section 5.3.3
+		h.Write([]byte("H2C-OVERSIZE-DST-"))
+		h.Write(domain)
+		domain = h.Sum(nil)
+		h.Reset()
+		domainLen = uint8(len(domain))
 	}
 	// DST_prime = DST || I2OSP(len(DST), 1)
 	// b_0 = H(Z_pad || msg || l_i_b_str || I2OSP(0, 1) || DST_prime)
@@ -66,5 +69,5 @@ func expandMsgSHA256XMD(msg []byte, domain []byte, outLen int) ([]byte, error) {
 	}
 	// b_ell
 	copy(out[(ell-1)*h.Size():], bi[:])
-	return out[:outLen], nil
+	return out[:outLen]
 }
