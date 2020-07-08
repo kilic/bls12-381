@@ -1,11 +1,14 @@
 package bls12381
 
 import (
-	"crypto/sha256"
+	"hash"
 )
 
-func hashToFpXMDSHA256(msg []byte, domain []byte, count int) ([]*fe, error) {
-	randBytes := expandMsgSHA256XMD(msg, domain, count*64)
+func hashToFpXMD(f func() hash.Hash, msg []byte, domain []byte, count int) ([]*fe, error) {
+	h := f()
+	lenPerElm := h.Size() * 2
+	lenInBytes := count * lenPerElm
+	randBytes := expandMsgXMD(f, msg, domain, lenInBytes)
 	els := make([]*fe, count)
 	var err error
 	for i := 0; i < count; i++ {
@@ -17,8 +20,8 @@ func hashToFpXMDSHA256(msg []byte, domain []byte, count int) ([]*fe, error) {
 	return els, nil
 }
 
-func expandMsgSHA256XMD(msg []byte, domain []byte, outLen int) []byte {
-	h := sha256.New()
+func expandMsgXMD(f func() hash.Hash, msg []byte, domain []byte, outLen int) []byte {
+	h := f()
 	domainLen := uint8(len(domain))
 	if len(domain) > 255 {
 		// See https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/?include_text=1
@@ -70,4 +73,6 @@ func expandMsgSHA256XMD(msg []byte, domain []byte, outLen int) []byte {
 	// b_ell
 	copy(out[(ell-1)*h.Size():], bi[:])
 	return out[:outLen]
+
 }
+
