@@ -1,4 +1,4 @@
-module github.com/kilic/bls12-381
+module github.com/mikelodder7/bls12-381
 
 go 1.12
 
