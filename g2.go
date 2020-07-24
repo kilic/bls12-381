@@ -63,7 +63,7 @@ func (g *G2) Q() *big.Int {
 	return new(big.Int).Set(q)
 }
 
-// FromUncompressed expects byte slice larger than 192 bytes and given bytes returns a new point in G2.
+// FromUncompressed expects byte slice at least 192 bytes and given bytes returns a new point in G2.
 // Serialization rules are in line with zcash library. See below for details.
 // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
 // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
@@ -123,7 +123,7 @@ func (g *G2) ToUncompressed(p *PointG2) []byte {
 	return out
 }
 
-// FromCompressed expects byte slice larger than 96 bytes and given bytes returns a new point in G2.
+// FromCompressed expects byte slice at least 96 bytes and given bytes returns a new point in G2.
 // Serialization rules are in line with zcash library. See below for details.
 // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
 // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
@@ -204,7 +204,7 @@ func (g *G2) fromBytesUnchecked(in []byte) (*PointG2, error) {
 
 // FromBytes constructs a new point given uncompressed byte input.
 // FromBytes does not take zcash flags into account.
-// Byte input expected to be larger than 96 bytes.
+// Byte input expected to be at least 192 bytes.
 // First 192 bytes should be concatenation of x and y values
 // Point (0, 0) is considered as infinity.
 func (g *G2) FromBytes(in []byte) (*PointG2, error) {
