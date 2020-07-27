@@ -114,7 +114,7 @@ var g2One = PointG2{
 var G2One = g2One
 
 /*
-	Frobenious Coeffs
+	Frobenius Coeffs
 */
 
 var frobeniusCoeffs2 = [2]fe{
