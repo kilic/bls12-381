@@ -234,30 +234,29 @@ func (e *fp12) cyclotomicExp(c, a *fe12, s *big.Int) {
 	c.set(z)
 }
 
-func (e *fp12) frobeniusMap(c, a *fe12, power uint) {
-	fp6 := e.fp6
-	fp6.frobeniusMap(&c[0], &a[0], power)
-	fp6.frobeniusMap(&c[1], &a[1], power)
-	switch power {
-	case 0:
-		return
-	case 6:
-		fp6.neg(&c[1], &c[1])
-	default:
-		fp6.mulByBaseField(&c[1], &c[1], &frobeniusCoeffs12[power])
-	}
+func (e *fp12) frobeniusMap1(a *fe12) {
+	fp6, fp2 := e.fp6, e.fp6.fp2
+	fp6.frobeniusMap1(&a[0])
+	fp6.frobeniusMap1(&a[1])
+	fp2.mulAssign(&a[1][0], &frobeniusCoeffs12[1])
+	fp2.mulAssign(&a[1][1], &frobeniusCoeffs12[1])
+	fp2.mulAssign(&a[1][2], &frobeniusCoeffs12[1])
 }
 
-func (e *fp12) frobeniusMapAssign(a *fe12, power uint) {
-	fp6 := e.fp6
-	fp6.frobeniusMapAssign(&a[0], power)
-	fp6.frobeniusMapAssign(&a[1], power)
-	switch power {
-	case 0:
-		return
-	case 6:
-		fp6.neg(&a[1], &a[1])
-	default:
-		fp6.mulByBaseField(&a[1], &a[1], &frobeniusCoeffs12[power])
-	}
+func (e *fp12) frobeniusMap2(a *fe12) {
+	fp6, fp2 := e.fp6, e.fp6.fp2
+	fp6.frobeniusMap2(&a[0])
+	fp6.frobeniusMap2(&a[1])
+	fp2.mulAssign(&a[1][0], &frobeniusCoeffs12[2])
+	fp2.mulAssign(&a[1][1], &frobeniusCoeffs12[2])
+	fp2.mulAssign(&a[1][2], &frobeniusCoeffs12[2])
+}
+
+func (e *fp12) frobeniusMap3(a *fe12) {
+	fp6, fp2 := e.fp6, e.fp6.fp2
+	fp6.frobeniusMap3(&a[0])
+	fp6.frobeniusMap3(&a[1])
+	fp2.mulAssign(&a[1][0], &frobeniusCoeffs12[3])
+	fp2.mulAssign(&a[1][1], &frobeniusCoeffs12[3])
+	fp2.mulAssign(&a[1][2], &frobeniusCoeffs12[3])
 }
