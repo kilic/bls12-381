@@ -197,8 +197,21 @@ func (e *Engine) millerLoop(f *fe12) {
 }
 
 func (e *Engine) exp(c, a *fe12) {
+	// exp raises element by x = - 15132376222941642752
 	fp12 := e.fp12
-	fp12.cyclotomicExp(c, a, x)
+	chain := func(n int) {
+		fp12.mulAssign(c, a)
+		for i := 0; i < n; i++ {
+			fp12.cyclotomicSquare(c, c)
+		}
+	}
+	fp12.cyclotomicSquare(c, a) // c = a ^ 2
+	chain(2)                    // c = (a ^ (2 + 1)) ^ (2 ^ 2) = a ^ 12
+	chain(3)                    // c = (a ^ (12 + 1)) ^ (2 ^ 3) = a ^ 104
+	chain(9)                    // c = (a ^ (104 + 1)) ^ (2 ^ 9) = a ^ 53760
+	chain(32)                   // c = (a ^ (53760 + 1)) ^ (2 ^ 32) = a ^ 230901736800256
+	chain(16)                   // c = (a ^ (230901736800256 + 1)) ^ (2 ^ 16) = a ^ 15132376222941642752
+	// apply conjugate since x is negative
 	fp12.conjugate(c, c)
 }
 
