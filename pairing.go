@@ -219,15 +219,24 @@ func (e *Engine) finalExp(f *fe12) {
 	fp12 := e.fp12
 	t := e.t12
 	// easy part
-	fp12.frobeniusMap(&t[0], f, 6)
+	t[0].set(f)
+	// t1 = if
 	fp12.inverse(&t[1], f)
+	// t0 = f ^ p6
+	fp12.conjugate(&t[0], &t[0])
+	// t2 = f ^ (p6 - 1)
 	fp12.mul(&t[2], &t[0], &t[1])
+	// t1 = f ^ (p6 - 1)
 	t[1].set(&t[2])
-	fp12.frobeniusMapAssign(&t[2], 2)
+	// t2 = f ^ (p6 -1) * p2
+	// fp12.frobeniusMapAssign(&t[2], 2)
+	fp12.frobeniusMap2(&t[2])
+	// t2 = f ^ (p6 -1) * (p2 + 1)
 	fp12.mulAssign(&t[2], &t[1])
+
+	// hard part
 	fp12.cyclotomicSquare(&t[1], &t[2])
 	fp12.conjugate(&t[1], &t[1])
-	// hard part
 	e.exp(&t[3], &t[2])
 	fp12.cyclotomicSquare(&t[4], &t[3])
 	fp12.mul(&t[5], &t[1], &t[3])
@@ -241,11 +250,14 @@ func (e *Engine) finalExp(f *fe12) {
 	fp12.mulAssign(&t[4], &t[2])
 	fp12.conjugate(&t[5], &t[2])
 	fp12.mulAssign(&t[1], &t[2])
-	fp12.frobeniusMapAssign(&t[1], 3)
+	// fp12.frobeniusMap(&t[1], 3)
+	fp12.frobeniusMap3(&t[1])
 	fp12.mulAssign(&t[6], &t[5])
-	fp12.frobeniusMapAssign(&t[6], 1)
+	// fp12.frobeniusMap(&t[6], 1)
+	fp12.frobeniusMap1(&t[6])
 	fp12.mulAssign(&t[3], &t[0])
-	fp12.frobeniusMapAssign(&t[3], 2)
+	// fp12.frobeniusMap(&t[3], 2)
+	fp12.frobeniusMap2(&t[3])
 	fp12.mulAssign(&t[3], &t[1])
 	fp12.mulAssign(&t[3], &t[6])
 	fp12.mul(f, &t[3], &t[4])

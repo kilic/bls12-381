@@ -1385,6 +1385,125 @@ func TestFp12Inversion(t *testing.T) {
 	}
 }
 
+func TestFrobeniusMapping2(t *testing.T) {
+	f := newFp2()
+	a, _ := new(fe2).rand(rand.Reader)
+	b0, b1, b2, b3 := new(fe2), new(fe2), new(fe2), new(fe2)
+	f.exp(b0, a, modulus.big())
+	f.conjugate(b1, a)
+	b2.set(a)
+	f.frobeniusMap1(b2)
+	b3.set(a)
+	f.frobeniusMap(b3, 1)
+	if !b0.equal(b3) {
+		t.Fatal("frobenius map failed")
+	}
+	if !b1.equal(b3) {
+		t.Fatal("frobenius map failed")
+	}
+	if !b2.equal(b3) {
+		t.Fatal("frobenius map failed")
+	}
+}
+
+func TestFrobeniusMapping6(t *testing.T) {
+	{
+		f := newFp2()
+		z := nonResidue2
+		for i := 0; i < 6; i++ {
+			p, r, e := modulus.big(), new(fe2), big.NewInt(0)
+			// p ^ i
+			p.Exp(p, big.NewInt(int64(i)), nil)
+			// (p ^ i - 1) / 3
+			e.Sub(p, big.NewInt(1)).Div(e, big.NewInt(3))
+			// r = z ^ (p ^ i - 1) / 3
+			f.exp(r, z, e)
+			if !r.equal(&frobeniusCoeffs61[i]) {
+				t.Fatalf("bad frobenius fp6 1q coefficient")
+			}
+		}
+		for i := 0; i < 6; i++ {
+			p, r, e := modulus.big(), new(fe2), big.NewInt(0)
+			// p ^ i
+			p.Exp(p, big.NewInt(int64(i)), nil).Mul(p, big.NewInt(2))
+			// (2 * p ^ i - 2) / 3
+			e.Sub(p, big.NewInt(2)).Div(e, big.NewInt(3))
+			// r = z ^ (2 * p ^ i - 2) / 3
+			f.exp(r, z, e)
+			if !r.equal(&frobeniusCoeffs62[i]) {
+				t.Fatalf("bad frobenius fp6 2q coefficient")
+			}
+		}
+	}
+	f := newFp6(nil)
+	r0, r1 := f.new(), f.new()
+	e, _ := new(fe6).rand(rand.Reader)
+	r0.set(e)
+	r1.set(e)
+	f.frobeniusMap(r1, 1)
+	f.frobeniusMap1(r0)
+	if !r0.equal(r1) {
+		t.Fatalf("frobenius mapping by 1 failed")
+	}
+	r0.set(e)
+	r1.set(e)
+	f.frobeniusMap(r1, 2)
+	f.frobeniusMap2(r0)
+	if !r0.equal(r1) {
+		t.Fatalf("frobenius mapping by 2 failed")
+	}
+	r0.set(e)
+	r1.set(e)
+	f.frobeniusMap(r1, 3)
+	f.frobeniusMap3(r0)
+	if !r0.equal(r1) {
+		t.Fatalf("frobenius mapping by 3 failed")
+	}
+}
+
+func TestFrobeniusMapping12(t *testing.T) {
+	{
+		f := newFp2()
+		z := nonResidue2
+		for i := 0; i < 12; i++ {
+			p, r, e := modulus.big(), new(fe2), big.NewInt(0)
+			// p ^ i
+			p.Exp(p, big.NewInt(int64(i)), nil)
+			// (p ^ i - 1) / 6
+			e.Sub(p, big.NewInt(1)).Div(e, big.NewInt(6))
+			// r = z ^ (p ^ i - 1) / 6
+			f.exp(r, z, e)
+			if !r.equal(&frobeniusCoeffs12[i]) {
+				t.Fatalf("bad frobenius fp12 coefficient")
+			}
+		}
+	}
+	f := newFp12(nil)
+	r0, r1 := f.new(), f.new()
+	e, _ := new(fe12).rand(rand.Reader)
+	p := modulus.big()
+	f.exp(r0, e, p)
+	r1.set(e)
+	f.frobeniusMap1(r1)
+	if !r0.equal(r1) {
+		t.Fatalf("frobenius mapping by 1 failed")
+	}
+	p.Mul(p, modulus.big())
+	f.exp(r0, e, p)
+	r1.set(e)
+	f.frobeniusMap2(r1)
+	if !r0.equal(r1) {
+		t.Fatalf("frobenius mapping by 2 failed")
+	}
+	p.Mul(p, modulus.big())
+	f.exp(r0, e, p)
+	r1.set(e)
+	f.frobeniusMap3(r1)
+	if !r0.equal(r1) {
+		t.Fatalf("frobenius mapping by 2 failed")
+	}
+}
+
 func BenchmarkMultiplication(t *testing.B) {
 	a, _ := new(fe).rand(rand.Reader)
 	b, _ := new(fe).rand(rand.Reader)

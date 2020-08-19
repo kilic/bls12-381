@@ -303,40 +303,36 @@ func (e *fp6) inverse(c, a *fe6) {
 	fp2.mul(&c[2], t[1], t[3])
 }
 
-func (e *fp6) frobeniusMap(c, a *fe6, power uint) {
+func (e *fp6) frobeniusMap(a *fe6, power int) {
 	fp2 := e.fp2
-	fp2.frobeniusMap(&c[0], &a[0], power)
-	fp2.frobeniusMap(&c[1], &a[1], power)
-	fp2.frobeniusMap(&c[2], &a[2], power)
-	switch power % 6 {
-	case 0:
-		return
-	case 3:
-		neg(&c[0][0], &a[1][1])
-		c[1][1].set(&a[1][0])
-		fp2.neg(&a[2], &a[2])
-	default:
-		fp2.mul(&c[1], &c[1], &frobeniusCoeffs61[power%6])
-		fp2.mul(&c[2], &c[2], &frobeniusCoeffs62[power%6])
-	}
+	fp2.frobeniusMap(&a[0], power)
+	fp2.frobeniusMap(&a[1], power)
+	fp2.frobeniusMap(&a[2], power)
+	fp2.mulAssign(&a[1], &frobeniusCoeffs61[power%6])
+	fp2.mulAssign(&a[2], &frobeniusCoeffs62[power%6])
 }
 
-func (e *fp6) frobeniusMapAssign(a *fe6, power uint) {
+func (e *fp6) frobeniusMap1(a *fe6) {
 	fp2 := e.fp2
-	fp2.frobeniusMapAssign(&a[0], power)
-	fp2.frobeniusMapAssign(&a[1], power)
-	fp2.frobeniusMapAssign(&a[2], power)
-	t := e.t
-	switch power % 6 {
-	case 0:
-		return
-	case 3:
-		neg(&t[0][0], &a[1][1])
-		a[1][1].set(&a[1][0])
-		a[1][0].set(&t[0][0])
-		fp2.neg(&a[2], &a[2])
-	default:
-		fp2.mulAssign(&a[1], &frobeniusCoeffs61[power%6])
-		fp2.mulAssign(&a[2], &frobeniusCoeffs62[power%6])
-	}
+	fp2.frobeniusMap1(&a[0])
+	fp2.frobeniusMap1(&a[1])
+	fp2.frobeniusMap1(&a[2])
+	e.fp2.mulAssign(&a[1], &frobeniusCoeffs61[1])
+	e.fp2.mulAssign(&a[2], &frobeniusCoeffs62[1])
+}
+
+func (e *fp6) frobeniusMap2(a *fe6) {
+	e.fp2.mulAssign(&a[1], &frobeniusCoeffs61[2])
+	e.fp2.mulAssign(&a[2], &frobeniusCoeffs62[2])
+}
+
+func (e *fp6) frobeniusMap3(a *fe6) {
+	fp2, t := e.fp2, e.t
+	fp2.frobeniusMap1(&a[0])
+	fp2.frobeniusMap1(&a[1])
+	fp2.frobeniusMap1(&a[2])
+	neg(&t[0][0], &a[1][1])
+	a[1][1].set(&a[1][0])
+	a[1][0].set(&t[0][0])
+	fp2.neg(&a[2], &a[2])
 }
