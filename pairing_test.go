@@ -137,7 +137,7 @@ func TestPairingBilinearity(t *testing.T) {
 			t.Fatal("bad pairing, 1")
 		}
 	}
-	// e(a * G1, b * G2) = e((a + b) * G1, G2)
+	// e(a * G1, b * G2) = e((a * b) * G1, G2)
 	{
 		// scalars
 		a, b := big.NewInt(17), big.NewInt(117)
@@ -156,7 +156,7 @@ func TestPairingBilinearity(t *testing.T) {
 			t.Fatal("bad pairing, 2")
 		}
 	}
-	// e(a * G1, b * G2) = e((a + b) * G1, G2)
+	// e(a * G1, b * G2) = e(G1, (a * b) * G2)
 	{
 		// scalars
 		a, b := big.NewInt(17), big.NewInt(117)
