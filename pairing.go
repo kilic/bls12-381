@@ -61,8 +61,9 @@ func (e *Engine) AddPair(g1 *PointG1, g2 *PointG2) *Engine {
 
 // AddPairInv adds a G1, G2 point pair to pairing engine. G1 point is negated.
 func (e *Engine) AddPairInv(g1 *PointG1, g2 *PointG2) *Engine {
-	e.G1.Neg(g1, g1)
-	e.AddPair(g1, g2)
+	ng1 := e.G1.New().Set(g1)
+	e.G1.Neg(ng1, g1)
+	e.AddPair(ng1, g2)
 	return e
 }
 
@@ -147,7 +148,7 @@ func (e *Engine) additionStep(coeff *[3]fe2, r, q *PointG2) {
 }
 
 func (e *Engine) preCompute(ellCoeffs *[68][3]fe2, twistPoint *PointG2) {
-	// Algorithm 5 in  https://eprint.iacr.org/2019/077.pdf
+	// Algorithm 5 in https://eprint.iacr.org/2019/077.pdf
 	if e.G2.IsZero(twistPoint) {
 		return
 	}
