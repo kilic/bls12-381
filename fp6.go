@@ -31,7 +31,7 @@ func newFp6(f *fp2) *fp6 {
 }
 
 func (e *fp6) fromBytes(b []byte) (*fe6, error) {
-	if len(b) < 288 {
+	if len(b) != 288 {
 		return nil, errors.New("input string should be larger than 288 bytes")
 	}
 	fp2 := e.fp2
