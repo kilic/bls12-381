@@ -3,6 +3,8 @@ package bls12381
 import (
 	"bytes"
 	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"io/ioutil"
 	"math/big"
 	"testing"
@@ -493,7 +495,7 @@ func TestG2EncodeToCurve(t *testing.T) {
 		},
 	} {
 		g := NewG2()
-		p0, err := g.EncodeToCurve(v.msg, domain)
+		p0, err := g.EncodeToCurve(sha256.New, v.msg, domain)
 		if err != nil {
 			t.Fatal("encode to point fails", i, err)
 		}
@@ -547,12 +549,51 @@ func TestG2HashToCurve(t *testing.T) {
 		},
 	} {
 		g := NewG2()
-		p0, err := g.HashToCurve(v.msg, domain)
+		p0, err := g.HashToCurve(sha256.New, v.msg, domain)
 		if err != nil {
 			t.Fatal("encode to point fails", i, err)
 		}
 		if !bytes.Equal(g.ToBytes(p0), v.expected) {
 			t.Fatal("encode to point fails x", i)
+		}
+	}
+	domain = []byte("QUUX-V01-CS02-with-expander")
+	for i, v := range []struct {
+		msg      []byte
+		expected []byte
+	}{
+		{
+			msg: []byte(""),
+			expected: fromHex(-1,
+				"11476980d59511379345dddd759c97c2a799bf21ee991e977439d73ff24dfedb468e5b8a1fd99e1e79eb80b5b17e32f900d83d21bd763b2b783e2e420de8813998556464624a9f328d9f5993efcacfd35b5ebc2bbdcd50a9f82393ae769a165c1250d29a557c960255447cd524b24f48f158048383f8e956562a54564c468d3c40e77b434f7382a6c67078c59800ac7b0048f91e5ec8bbaa5cdb8993243a8bb255fcf2d6aaabf785e9129bff0ebfff8ac9e2cdb5919ccdf8e4a05b940c281b42",
+			),
+		},
+		{
+			msg: []byte("abc"),
+			expected: fromHex(-1,
+				"158715ddabfc01a58b21bf7590b36aeaf0af7b7f336d4b9a18ec2952801be51ff81e092f8d465ebe8433576acaf1970e0c5b94d02b027927c94ca7520ebc5e0b8ada1b778df99c2390f0a485b2939aa8c4aefd4100a81b4071a218689b890d230fc5edda32abcf705239d2ba7a67c08ec90de872765cab945b02449e44a3d8e933fb2982cdb286cd3e38e688ee736ce10f1b39c3fec1de32245b6bdba9848f9d3a93adbf1c69280f4e20c961885251227e798445947eff1038f8dfe93a713bf0",
+			),
+		},
+		{
+			msg: []byte("abcdef0123456789"),
+			expected: fromHex(-1,
+				"0b78c6db53a98aa4c600524cc8c24cabaf3f695645fd3f3c58e5a7c105737cf8dbccf4ef14517210bb200bda2f82374b029dfd5cfa8735a372aa5f5edd1449be549c76f611c859b7fbbbbb85c821be209685caae39c4f80c8fd10b6140309795146c6ffc2ee10da5379c237ef43e4c24f71e32ffc3d3949a0f07c6b177406ee90fef3059cd3a860bc74cc945bf3335360a7e5f4221f2e0f29589feab7d7ac6f7a17a50324881071a14a49556f2a8de47d164b317d480fb47ec0f082d44b7b641",
+			),
+		},
+		{
+			msg: []byte("a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+			expected: fromHex(-1,
+				"164da56a56881558025526ddba71c1a25a5650ae44ff47ce78d784c03c1c523b85acd73fecca9beb7142df1852ecaccf0222289d1ebdac5c2cf336f6f5bb9880ee58efbeac543dcb5317222224052d3d1ada9aa26c74ccda6c90a7a0484080ed16b9cf44913ea3a924f762fdfa8061ca88cff73aa6f40e01eeb7eed75b7d45cc3163644ee8d00c9a00a750f56f6d492e0d39e2c0234380e8bf1503d754c3998e54460a4b9dc135f7f9b08b6a6d86dcc2bc1de0ec601b09970646ddf1c9f9c71c",
+			),
+		},
+	} {
+		g := NewG2()
+		p0, err := g.HashToCurve(sha256.New, v.msg, domain)
+		if err != nil {
+			t.Fatal("hash to point fails", i, err)
+		}
+		if !bytes.Equal(g.ToBytes(p0), v.expected) {
+			t.Fatalf("hash to point fails %d: expected: %v, got: %v", i, hex.EncodeToString(v.expected), hex.EncodeToString(g.ToBytes(p0)))
 		}
 	}
 }

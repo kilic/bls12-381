@@ -2,6 +2,7 @@ package bls12381
 
 import (
 	"errors"
+	"hash"
 	"math"
 	"math/big"
 )
@@ -496,7 +497,7 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, powers []*big.Int) (*PointG
 
 // MapToCurve given a byte slice returns a valid G1 point.
 // This mapping function implements the Simplified Shallue-van de Woestijne-Ulas method.
-// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06
+// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-08
 // Input byte slice should be a valid field element, otherwise an error is returned.
 func (g *G1) MapToCurve(in []byte) (*PointG1, error) {
 	u, err := fromBytes(in)
@@ -514,9 +515,9 @@ func (g *G1) MapToCurve(in []byte) (*PointG1, error) {
 // EncodeToCurve given a message and domain seperator tag returns the hash result
 // which is a valid curve point.
 // Implementation follows BLS12381G1_XMD:SHA-256_SSWU_NU_ suite at
-// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06
-func (g *G1) EncodeToCurve(msg, domain []byte) (*PointG1, error) {
-	hashRes, err := hashToFpXMDSHA256(msg, domain, 1)
+// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-08
+func (g *G1) EncodeToCurve(f func() hash.Hash,  msg, domain []byte) (*PointG1, error) {
+	hashRes, err := hashToFpXMD(f, msg, domain, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -532,9 +533,9 @@ func (g *G1) EncodeToCurve(msg, domain []byte) (*PointG1, error) {
 // HashToCurve given a message and domain seperator tag returns the hash result
 // which is a valid curve point.
 // Implementation follows BLS12381G1_XMD:SHA-256_SSWU_RO_ suite at
-// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06
-func (g *G1) HashToCurve(msg, domain []byte) (*PointG1, error) {
-	hashRes, err := hashToFpXMDSHA256(msg, domain, 2)
+// https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-08
+func (g *G1) HashToCurve(f func() hash.Hash, msg, domain []byte) (*PointG1, error) {
+	hashRes, err := hashToFpXMD(f, msg, domain, 2)
 	if err != nil {
 		return nil, err
 	}
