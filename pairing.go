@@ -83,7 +83,6 @@ func (e *Engine) affine(p pair) {
 }
 
 func (e *Engine) doublingStep(coeff *[3]fe2, r *PointG2) {
-	// Adaptation of Formula 3 in https://eprint.iacr.org/2010/526.pdf
 	fp2 := e.fp2
 	t := e.t2
 	fp2.mul(t[0], &r[0], &r[1])
@@ -117,7 +116,6 @@ func (e *Engine) doublingStep(coeff *[3]fe2, r *PointG2) {
 }
 
 func (e *Engine) additionStep(coeff *[3]fe2, r, q *PointG2) {
-	// Algorithm 12 in https://eprint.iacr.org/2010/526.pdf
 	fp2 := e.fp2
 	t := e.t2
 	fp2.mul(t[0], &q[1], &r[2])
@@ -148,13 +146,12 @@ func (e *Engine) additionStep(coeff *[3]fe2, r, q *PointG2) {
 }
 
 func (e *Engine) preCompute(ellCoeffs *[68][3]fe2, twistPoint *PointG2) {
-	// Algorithm 5 in https://eprint.iacr.org/2019/077.pdf
 	if e.G2.IsZero(twistPoint) {
 		return
 	}
 	r := new(PointG2).Set(twistPoint)
 	j := 0
-	for i := int(x.BitLen() - 2); i >= 0; i-- {
+	for i := 62; /* x.BitLen() - 2 */ i >= 0; i-- {
 		e.doublingStep(&ellCoeffs[j], r)
 		if x.Bit(i) != 0 {
 			j++
