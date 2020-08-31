@@ -440,7 +440,6 @@ func TestFpSquareRoot(t *testing.T) {
 }
 
 func TestFpNonResidue(t *testing.T) {
-
 	if !isQuadraticNonResidue(nonResidue1) {
 		t.Fatal("element is quadratic non residue, 1")
 	}
@@ -453,7 +452,7 @@ func TestFpNonResidue(t *testing.T) {
 	for i := 0; i < fuz; i++ {
 		a, _ := new(fe).rand(rand.Reader)
 		square(a, a)
-		if isQuadraticNonResidue(new(fe).one()) {
+		if isQuadraticNonResidue(a) {
 			t.Fatal("element is not quadratic non residue")
 		}
 	}
@@ -837,7 +836,7 @@ func TestFp2NonResidue(t *testing.T) {
 	for i := 0; i < fuz; i++ {
 		a, _ := new(fe2).rand(rand.Reader)
 		field.squareAssign(a)
-		if field.isQuadraticNonResidue(new(fe2).one()) {
+		if field.isQuadraticNonResidue(a) {
 			t.Fatal("element is not quadratic non residue")
 		}
 	}
