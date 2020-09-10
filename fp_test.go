@@ -64,29 +64,29 @@ func TestFpAdditionCrossAgainstBigInt(t *testing.T) {
 		a, _ := new(fe).rand(rand.Reader)
 		b, _ := new(fe).rand(rand.Reader)
 		c := new(fe)
-		big_a := toBig(a)
-		big_b := toBig(b)
+		big_a := a.big()
+		big_b := b.big()
 		big_c := new(big.Int)
 		add(c, a, b)
-		out_1 := toBytes(c)
+		out_1 := c.bytes()
 		out_2 := padBytes(big_c.Add(big_a, big_b).Mod(big_c, modulus.big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatal("cross test against big.Int is not satisfied A")
 		}
 		double(c, a)
-		out_1 = toBytes(c)
+		out_1 = c.bytes()
 		out_2 = padBytes(big_c.Add(big_a, big_a).Mod(big_c, modulus.big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatal("cross test against big.Int is not satisfied B")
 		}
 		sub(c, a, b)
-		out_1 = toBytes(c)
+		out_1 = c.bytes()
 		out_2 = padBytes(big_c.Sub(big_a, big_b).Mod(big_c, modulus.big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatal("cross test against big.Int is not satisfied C")
 		}
 		neg(c, a)
-		out_1 = toBytes(c)
+		out_1 = c.bytes()
 		out_2 = padBytes(big_c.Neg(big_a).Mod(big_c, modulus.big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatal("cross test against big.Int is not satisfied D")
@@ -98,26 +98,26 @@ func TestFpAdditionCrossAgainstBigIntAssigned(t *testing.T) {
 	for i := 0; i < fuz; i++ {
 		a, _ := new(fe).rand(rand.Reader)
 		b, _ := new(fe).rand(rand.Reader)
-		big_a, big_b := toBig(a), toBig(b)
+		big_a, big_b := a.big(), b.big()
 		addAssign(a, b)
-		out_1 := toBytes(a)
+		out_1 := a.bytes()
 		out_2 := padBytes(big_a.Add(big_a, big_b).Mod(big_a, modulus.big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatal("cross test against big.Int is not satisfied A")
 		}
 		a, _ = new(fe).rand(rand.Reader)
-		big_a = toBig(a)
+		big_a = a.big()
 		doubleAssign(a)
-		out_1 = toBytes(a)
+		out_1 = a.bytes()
 		out_2 = padBytes(big_a.Add(big_a, big_a).Mod(big_a, modulus.big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatal("cross test against big.Int is not satisfied B")
 		}
 		a, _ = new(fe).rand(rand.Reader)
 		b, _ = new(fe).rand(rand.Reader)
-		big_a, big_b = toBig(a), toBig(b)
+		big_a, big_b = a.big(), b.big()
 		subAssign(a, b)
-		out_1 = toBytes(a)
+		out_1 = a.bytes()
 		out_2 = padBytes(big_a.Sub(big_a, big_b).Mod(big_a, modulus.big()).Bytes(), 48)
 		if !bytes.Equal(out_1, out_2) {
 			t.Fatal("cross test against big.Int is not satisfied A")
