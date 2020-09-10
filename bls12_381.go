@@ -125,6 +125,24 @@ var g2One = PointG2{
 var G2One = g2One
 
 /*
+	Scalar Field
+	Size of four words
+	sr = 2 ^ 256
+*/
+
+// -q^(-1) mod 2^64
+var qinp uint64 = 0xfffffffeffffffff
+
+// modulus = p
+var qmodulus = fe{0xffffffff00000001, 0x53bda402fffe5bfe, 0x3339d80809a1d805, 0x73eda753299d7d48}
+
+// sr1 = sr mod p
+var sr1 = &Fr{0x00000001fffffffe, 0x5884b7fa00034802, 0x998c4fefecbc4ff5, 0x1824b159acc5056f}
+
+// sr2 = sr^2 mod p
+var sr2 = &Fr{0xc999e990f3f29c6d, 0x2b6cedcb87925c23, 0x05d314967254398f, 0x0748d9d99f59ff11}
+
+/*
 	Frobenius Coeffs
 */
 

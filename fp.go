@@ -166,7 +166,6 @@ func inverse(inv, e *fe) {
 		double(u, u)
 	}
 	inv.set(u)
-	return
 }
 
 func sqrt(c, a *fe) bool {

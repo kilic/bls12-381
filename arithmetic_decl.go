@@ -9,6 +9,7 @@ import (
 func init() {
 	if !cpu.X86.HasADX || !cpu.X86.HasBMI2 {
 		mul = mulNoADX
+		mulFR = mulNoADXFR
 	}
 }
 
@@ -64,3 +65,35 @@ func mulNoADX(c, a, b *fe)
 
 //go:noescape
 func mulADX(c, a, b *fe)
+
+//go:noescape
+func addFR(c, a, b *Fr)
+
+//go:noescape
+func doubleFR(c, a *Fr)
+
+//go:noescape
+func subFR(c, a, b *Fr)
+
+//go:noescape
+func _negFR(c, a *Fr)
+
+//go:noescape
+func mulNoADXFR(c, a, b *Fr)
+
+//go:noescape
+func mulADXFR(c, a, b *Fr)
+
+var mulFR func(c, a, b *Fr) = mulADXFR
+
+func squareFR(c, a *Fr) {
+	mulFR(c, a, a)
+}
+
+func negFR(c, a *Fr) {
+	if a.isZero() {
+		c.Set(a)
+	} else {
+		_negFR(c, a)
+	}
+}
