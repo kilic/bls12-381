@@ -263,20 +263,19 @@ func TestG1MultiExpExpected(t *testing.T) {
 	}
 }
 
-func TestG1MultiExpBatch(t *testing.T) {
+func TestG1MultiExp(t *testing.T) {
 	g := NewG1()
-	one := g.one()
-	n := 1000
+	n := 100
 	bases := make([]*PointG1, n)
 	scalars := make([]*big.Int, n)
-	// scalars: [s0,s1 ... s(n-1)]
-	// bases: [P0,P1,..P(n-1)] = [s(n-1)*G, s(n-2)*G ... s0*G]
-	for i, j := 0, n-1; i < n; i, j = i+1, j-1 {
-		scalars[j], _ = rand.Int(rand.Reader, big.NewInt(100000))
-		bases[i] = g.New()
-		g.MulScalar(bases[i], one, scalars[j])
+	var err error
+	for i := 0; i < n; i++ {
+		scalars[i], err = rand.Int(rand.Reader, q)
+		if err != nil {
+			t.Fatal(err)
+		}
+		bases[i] = g.rand()
 	}
-	// expected: s(n-1)*P0 + s(n-2)*P1 + s0*P(n-1)
 	expected, tmp := g.New(), g.New()
 	for i := 0; i < n; i++ {
 		g.MulScalar(tmp, bases[i], scalars[i])
@@ -448,6 +447,27 @@ func BenchmarkG1Mul(t *testing.B) {
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
 		g1.MulScalar(&c, a, e)
+	}
+}
+
+func BenchmarkMultiExp(t *testing.B) {
+	g := NewG1()
+	n := 100
+	bases := make([]*PointG1, n)
+	scalars := make([]*big.Int, n)
+	var err error
+	for i := 0; i < n; i++ {
+		scalars[i], err = rand.Int(rand.Reader, q)
+		if err != nil {
+			t.Fatal(err)
+		}
+		bases[i] = g.rand()
+	}
+
+	res := g.New()
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		_, _ = g.MultiExp(res, bases, scalars)
 	}
 }
 
