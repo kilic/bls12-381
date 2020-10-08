@@ -26,18 +26,6 @@ func randScalar(max *big.Int) *big.Int {
 	return a
 }
 
-func randScalars(max *big.Int, size int) []*big.Int {
-	var scalars []*big.Int
-	for i := 0; i < size; i++ {
-		a, err := rand.Int(rand.Reader, max)
-		if err != nil {
-			panic(errors.New(""))
-		}
-		scalars = append(scalars, a)
-	}
-	return scalars
-}
-
 func fromHex(size int, hexStrs ...string) []byte {
 	var out []byte
 	if size > 0 {

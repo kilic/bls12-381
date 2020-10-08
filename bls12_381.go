@@ -76,7 +76,9 @@ var b2 = &fe2{
 }
 
 // Group order
-var q = bigFromHex("0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001")
+var qBig = bigFromHex("0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001")
+
+var q = &Fr{0xffffffff00000001, 0x53bda402fffe5bfe, 0x3339d80809a1d805, 0x73eda753299d7d48}
 
 // G1 cofactor
 var cofactorG1 = bigFromHex("0x396c8c005555e1568c00aaab0000aaab")
