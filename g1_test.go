@@ -3,6 +3,7 @@ package bls12381
 import (
 	"bytes"
 	"crypto/rand"
+	"crypto/sha256"
 	"io/ioutil"
 	"math/big"
 	"testing"
@@ -377,7 +378,7 @@ func TestG1EncodeToCurve(t *testing.T) {
 		},
 	} {
 		g := NewG1()
-		p0, err := g.EncodeToCurve(v.msg, domain)
+		p0, err := g.EncodeToCurve(sha256.New, v.msg, domain)
 		if err != nil {
 			t.Fatal("encode to point fails", i, err)
 		}
@@ -423,7 +424,7 @@ func TestG1HashToCurve(t *testing.T) {
 		},
 	} {
 		g := NewG1()
-		p0, err := g.HashToCurve(v.msg, domain)
+		p0, err := g.HashToCurve(sha256.New, v.msg, domain)
 		if err != nil {
 			t.Fatal("hash to point fails", i, err)
 		}
