@@ -50,7 +50,7 @@ func newTempG1() tempG1 {
 
 // Q returns group order in big.Int.
 func (g *G1) Q() *big.Int {
-	return new(big.Int).Set(q)
+	return new(big.Int).Set(qBig)
 }
 
 // FromUncompressed expects byte slice at least 96 bytes and given bytes returns a new point in G1.
@@ -420,7 +420,7 @@ func (g *G1) Sub(c, a, b *PointG1) *PointG1 {
 }
 
 // MulScalar multiplies a point by given scalar value in big.Int and assigns the result to point at first argument.
-func (g *G1) MulScalar(c, p *PointG1, e *big.Int) *PointG1 {
+func (g *G1) MulScalarBig(c, p *PointG1, e *big.Int) *PointG1 {
 	q, n := &PointG1{}, &PointG1{}
 	n.Set(p)
 	l := e.BitLen()
@@ -433,16 +433,30 @@ func (g *G1) MulScalar(c, p *PointG1, e *big.Int) *PointG1 {
 	return c.Set(q)
 }
 
-// ClearCofactor maps given a G1 point to correct subgroup
-func (g *G1) ClearCofactor(p *PointG1) {
-	g.MulScalar(p, p, cofactorEFFG1)
+// MulScalar multiplies a point by given scalar value and assigns the result to point at first argument.
+func (g *G1) MulScalar(c, p *PointG1, e *Fr) *PointG1 {
+	q, n := &PointG1{}, &PointG1{}
+	n.Set(p)
+	for i := 0; i < frBitSize; i++ {
+		if e.Bit(i) {
+			g.Add(q, q, n)
+		}
+		g.Double(n, n)
+	}
+	return c.Set(q)
 }
 
-// MultiExp calculates multi exponentiation. Given pairs of G1 point and scalar values
-// (P_0, e_0), (P_1, e_1), ... (P_n, e_n) calculates r = e_0 * P_0 + e_1 * P_1 + ... + e_n * P_n
+// ClearCofactor maps given a G1 point to correct subgroup
+func (g *G1) ClearCofactor(p *PointG1) {
+	g.MulScalarBig(p, p, cofactorEFFG1)
+}
+
+// MultiExpBig calculates multi exponentiation. Scalar values are received as big.Int type.
+// Given pairs of G1 point and scalar values `(P_0, e_0), (P_1, e_1), ... (P_n, e_n)`,
+// calculates `r = e_0 * P_0 + e_1 * P_1 + ... + e_n * P_n`.
 // Length of points and scalars are expected to be equal, otherwise an error is returned.
 // Result is assigned to point at first argument.
-func (g *G1) MultiExp(r *PointG1, points []*PointG1, scalars []*big.Int) (*PointG1, error) {
+func (g *G1) MultiExpBig(r *PointG1, points []*PointG1, scalars []*big.Int) (*PointG1, error) {
 	if len(points) != len(scalars) {
 		return nil, errors.New("point and scalar vectors should be in same length")
 	}
@@ -464,6 +478,54 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, scalars []*big.Int) (*Point
 
 		for i := 0; i < len(scalars); i++ {
 			index := bucketSize & int(new(big.Int).Rsh(scalars[i], uint(c*j)).Int64())
+			if index != 0 {
+				g.Add(&bucket[index-1], &bucket[index-1], points[i])
+			}
+		}
+
+		acc, sum := g.New(), g.New()
+		for i := bucketSize - 1; i >= 0; i-- {
+			g.Add(sum, sum, &bucket[i])
+			g.Add(acc, acc, sum)
+		}
+		windows[j].Set(acc)
+	}
+
+	acc := g.New()
+	for i := len(windows) - 1; i >= 0; i-- {
+		for j := 0; j < c; j++ {
+			g.Double(acc, acc)
+		}
+		g.Add(acc, acc, &windows[i])
+	}
+	return r.Set(acc), nil
+}
+
+// MultiExp calculates multi exponentiation. Given pairs of G1 point and scalar values `(P_0, e_0), (P_1, e_1), ... (P_n, e_n)`,
+// calculates `r = e_0 * P_0 + e_1 * P_1 + ... + e_n * P_n`. Length of points and scalars are expected to be equal,
+// otherwise an error is returned. Result is assigned to point at first argument.
+func (g *G1) MultiExp(r *PointG1, points []*PointG1, scalars []*Fr) (*PointG1, error) {
+	if len(points) != len(scalars) {
+		return nil, errors.New("point and scalar vectors should be in same length")
+	}
+
+	c := 3
+	if len(scalars) >= 32 {
+		c = int(math.Ceil(math.Log(float64(len(scalars)))))
+	}
+
+	bucketSize := (1 << c) - 1
+	windows := make([]PointG1, 255/c+1)
+	bucket := make([]PointG1, bucketSize)
+
+	for j := 0; j < len(windows); j++ {
+
+		for i := 0; i < bucketSize; i++ {
+			bucket[i].Zero()
+		}
+
+		for i := 0; i < len(scalars); i++ {
+			index := bucketSize & int(scalars[i].sliceUint64(c*j))
 			if index != 0 {
 				g.Add(&bucket[index-1], &bucket[index-1], points[i])
 			}

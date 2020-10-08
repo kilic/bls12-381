@@ -3,6 +3,7 @@ package bls12381
 import (
 	"bytes"
 	"crypto/rand"
+	"fmt"
 	"io/ioutil"
 	"math/big"
 	"testing"
@@ -17,11 +18,11 @@ func (g *G1) one() *PointG1 {
 }
 
 func (g *G1) rand() *PointG1 {
-	k, err := rand.Int(rand.Reader, q)
+	k, err := rand.Int(rand.Reader, qBig)
 	if err != nil {
 		panic(err)
 	}
-	return g.MulScalar(&PointG1{}, g.one(), k)
+	return g.MulScalarBig(&PointG1{}, g.one(), k)
 }
 
 func TestG1Serialization(t *testing.T) {
@@ -166,14 +167,54 @@ func TestG1AdditiveProperties(t *testing.T) {
 	}
 }
 
+func TestG1MultiplicativePropertiesBig(t *testing.T) {
+	g := NewG1()
+	t0, t1 := g.New(), g.New()
+	zero := g.Zero()
+	for i := 0; i < fuz; i++ {
+		a := g.rand()
+		s1, s2, s3 := randScalar(qBig), randScalar(qBig), randScalar(qBig)
+		sone := big.NewInt(1)
+		g.MulScalarBig(t0, zero, s1)
+		if !g.Equal(t0, zero) {
+			t.Fatal(" 0 ^ s == 0")
+		}
+		g.MulScalarBig(t0, a, sone)
+		if !g.Equal(t0, a) {
+			t.Fatal(" a ^ 1 == a")
+		}
+		g.MulScalarBig(t0, zero, s1)
+		if !g.Equal(t0, zero) {
+			t.Fatal(" 0 ^ s == a")
+		}
+		g.MulScalarBig(t0, a, s1)
+		g.MulScalarBig(t0, t0, s2)
+		s3.Mul(s1, s2)
+		g.MulScalarBig(t1, a, s3)
+		if !g.Equal(t0, t1) {
+			t.Errorf(" (a ^ s1) ^ s2 == a ^ (s1 * s2)")
+		}
+		g.MulScalarBig(t0, a, s1)
+		g.MulScalarBig(t1, a, s2)
+		g.Add(t0, t0, t1)
+		s3.Add(s1, s2)
+		g.MulScalarBig(t1, a, s3)
+		if !g.Equal(t0, t1) {
+			t.Errorf(" (a ^ s1) + (a ^ s2) == a ^ (s1 + s2)")
+		}
+	}
+}
+
 func TestG1MultiplicativeProperties(t *testing.T) {
 	g := NewG1()
 	t0, t1 := g.New(), g.New()
 	zero := g.Zero()
 	for i := 0; i < fuz; i++ {
 		a := g.rand()
-		s1, s2, s3 := randScalar(q), randScalar(q), randScalar(q)
-		sone := big.NewInt(1)
+		s1, _ := new(Fr).Rand(rand.Reader)
+		s2, _ := new(Fr).Rand(rand.Reader)
+		s3, _ := new(Fr).Rand(rand.Reader)
+		sone := &Fr{1}
 		g.MulScalar(t0, zero, s1)
 		if !g.Equal(t0, zero) {
 			t.Fatal(" 0 ^ s == 0")
@@ -191,7 +232,7 @@ func TestG1MultiplicativeProperties(t *testing.T) {
 		s3.Mul(s1, s2)
 		g.MulScalar(t1, a, s3)
 		if !g.Equal(t0, t1) {
-			t.Errorf(" (a ^ s1) ^ s2 == a ^ (s1 * s2)")
+			t.Fatal(" (a ^ s1) ^ s2 == a ^ (s1 * s2)")
 		}
 		g.MulScalar(t0, a, s1)
 		g.MulScalar(t1, a, s2)
@@ -199,7 +240,7 @@ func TestG1MultiplicativeProperties(t *testing.T) {
 		s3.Add(s1, s2)
 		g.MulScalar(t1, a, s3)
 		if !g.Equal(t0, t1) {
-			t.Errorf(" (a ^ s1) + (a ^ s2) == a ^ (s1 + s2)")
+			t.Fatal(" (a ^ s1) + (a ^ s2) == a ^ (s1 + s2)")
 		}
 	}
 }
@@ -247,7 +288,7 @@ func TestZKCryptoVectorsG1CompressedValid(t *testing.T) {
 	}
 }
 
-func TestG1MultiExpExpected(t *testing.T) {
+func TestG1MultiExpBigExpected(t *testing.T) {
 	g := NewG1()
 	one := g.one()
 	var scalars [2]*big.Int
@@ -256,35 +297,78 @@ func TestG1MultiExpExpected(t *testing.T) {
 	scalars[1] = big.NewInt(3)
 	bases[0], bases[1] = new(PointG1).Set(one), new(PointG1).Set(one)
 	expected, result := g.New(), g.New()
-	g.MulScalar(expected, one, big.NewInt(5))
+	g.MulScalarBig(expected, one, big.NewInt(5))
+	_, _ = g.MultiExpBig(result, bases[:], scalars[:])
+	if !g.Equal(expected, result) {
+		t.Fatal("bad multi-exponentiation")
+	}
+}
+
+func TestG1MultiExpExpected(t *testing.T) {
+	g := NewG1()
+	one := g.one()
+	var scalars [2]*Fr
+	var bases [2]*PointG1
+	scalars[0] = &Fr{2}
+	scalars[1] = &Fr{3}
+	bases[0], bases[1] = new(PointG1).Set(one), new(PointG1).Set(one)
+	expected, result := g.New(), g.New()
+	g.MulScalar(expected, one, &Fr{5})
 	_, _ = g.MultiExp(result, bases[:], scalars[:])
 	if !g.Equal(expected, result) {
 		t.Fatal("bad multi-exponentiation")
 	}
 }
 
+func TestG1MultiExpBig(t *testing.T) {
+	g := NewG1()
+	for n := 1; n < 1024+1; n = n * 2 {
+		bases := make([]*PointG1, n)
+		scalars := make([]*big.Int, n)
+		var err error
+		for i := 0; i < n; i++ {
+			scalars[i], err = rand.Int(rand.Reader, qBig)
+			if err != nil {
+				t.Fatal(err)
+			}
+			bases[i] = g.rand()
+		}
+		expected, tmp := g.New(), g.New()
+		for i := 0; i < n; i++ {
+			g.MulScalarBig(tmp, bases[i], scalars[i])
+			g.Add(expected, expected, tmp)
+		}
+		result := g.New()
+		_, _ = g.MultiExpBig(result, bases, scalars)
+		if !g.Equal(expected, result) {
+			t.Fatal("bad multi-exponentiation")
+		}
+	}
+}
+
 func TestG1MultiExp(t *testing.T) {
 	g := NewG1()
-	n := 100
-	bases := make([]*PointG1, n)
-	scalars := make([]*big.Int, n)
-	var err error
-	for i := 0; i < n; i++ {
-		scalars[i], err = rand.Int(rand.Reader, q)
-		if err != nil {
-			t.Fatal(err)
+	for n := 1; n < 1024+1; n = n * 2 {
+		bases := make([]*PointG1, n)
+		scalars := make([]*Fr, n)
+		var err error
+		for i := 0; i < n; i++ {
+			scalars[i], err = new(Fr).Rand(rand.Reader)
+			if err != nil {
+				t.Fatal(err)
+			}
+			bases[i] = g.rand()
 		}
-		bases[i] = g.rand()
-	}
-	expected, tmp := g.New(), g.New()
-	for i := 0; i < n; i++ {
-		g.MulScalar(tmp, bases[i], scalars[i])
-		g.Add(expected, expected, tmp)
-	}
-	result := g.New()
-	_, _ = g.MultiExp(result, bases, scalars)
-	if !g.Equal(expected, result) {
-		t.Fatal("bad multi-exponentiation")
+		expected, tmp := g.New(), g.New()
+		for i := 0; i < n; i++ {
+			g.MulScalar(tmp, bases[i], scalars[i])
+			g.Add(expected, expected, tmp)
+		}
+		result := g.New()
+		_, _ = g.MultiExp(result, bases, scalars)
+		if !g.Equal(expected, result) {
+			t.Fatal("bad multi-exponentiation")
+		}
 	}
 }
 
@@ -441,7 +525,7 @@ func BenchmarkG1Add(t *testing.B) {
 	}
 }
 
-func BenchmarkG1Mul(t *testing.B) {
+func BenchmarkG1MulBig(t *testing.B) {
 	g1 := NewG1()
 	a, e, c := g1.rand(), q, PointG1{}
 	t.ResetTimer()
@@ -450,24 +534,43 @@ func BenchmarkG1Mul(t *testing.B) {
 	}
 }
 
-func BenchmarkMultiExp(t *testing.B) {
-	g := NewG1()
-	n := 100
-	bases := make([]*PointG1, n)
-	scalars := make([]*big.Int, n)
-	var err error
-	for i := 0; i < n; i++ {
-		scalars[i], err = rand.Int(rand.Reader, q)
-		if err != nil {
-			t.Fatal(err)
-		}
-		bases[i] = g.rand()
+func BenchmarkG1Mul(t *testing.B) {
+	g1 := NewG1()
+	a, c := g1.rand(), PointG1{}
+	e, err := new(Fr).Rand(rand.Reader)
+	if err != nil {
+		t.Error(err)
 	}
-
-	res := g.New()
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
-		_, _ = g.MultiExp(res, bases, scalars)
+		g1.MulScalar(&c, a, e)
+	}
+}
+
+func BenchmarkG1MultiExpBig(t *testing.B) {
+	g := NewG1()
+	v := func(n int) ([]*PointG1, []*big.Int) {
+		bases := make([]*PointG1, n)
+		scalars := make([]*big.Int, n)
+		var err error
+		for i := 0; i < n; i++ {
+			scalars[i], err = rand.Int(rand.Reader, qBig)
+			if err != nil {
+				t.Fatal(err)
+			}
+			bases[i] = g.rand()
+		}
+		return bases, scalars
+	}
+	for _, i := range []int{2, 10, 100, 1000} {
+		t.Run(fmt.Sprint(i), func(t *testing.B) {
+			bases, scalars := v(i)
+			result := g.New()
+			t.ResetTimer()
+			for i := 0; i < t.N; i++ {
+				_, _ = g.MultiExpBig(result, bases, scalars)
+			}
+		})
 	}
 }
 

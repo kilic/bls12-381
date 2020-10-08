@@ -22,20 +22,20 @@ func (g *G2) one() *PointG2 {
 }
 
 func (g *G2) rand() *PointG2 {
-	k, err := rand.Int(rand.Reader, q)
+	k, err := rand.Int(rand.Reader, qBig)
 	if err != nil {
 		panic(err)
 	}
-	return g.MulScalar(&PointG2{}, g.one(), k)
+	return g.MulScalarBig(&PointG2{}, g.one(), k)
 }
 
 func (g *G2) randCorrect() *PointG2 {
-	k, err := rand.Int(rand.Reader, q)
+	k, err := rand.Int(rand.Reader, qBig)
 	if err != nil {
 		panic(err)
 	}
 	a := g.new()
-	g.MulScalar(a, g.one(), k)
+	g.MulScalarBig(a, g.one(), k)
 	return g.ClearCofactor(a)
 }
 
@@ -196,32 +196,32 @@ func TestG2MultiplicativeProperties(t *testing.T) {
 	zero := g.Zero()
 	for i := 0; i < fuz; i++ {
 		a := g.rand()
-		s1, s2, s3 := randScalar(q), randScalar(q), randScalar(q)
+		s1, s2, s3 := randScalar(qBig), randScalar(qBig), randScalar(qBig)
 		sone := big.NewInt(1)
-		g.MulScalar(t0, zero, s1)
+		g.MulScalarBig(t0, zero, s1)
 		if !g.Equal(t0, zero) {
 			t.Fatal(" 0 ^ s == 0")
 		}
-		g.MulScalar(t0, a, sone)
+		g.MulScalarBig(t0, a, sone)
 		if !g.Equal(t0, a) {
 			t.Fatal(" a ^ 1 == a")
 		}
-		g.MulScalar(t0, zero, s1)
+		g.MulScalarBig(t0, zero, s1)
 		if !g.Equal(t0, zero) {
 			t.Fatal(" 0 ^ s == a")
 		}
-		g.MulScalar(t0, a, s1)
-		g.MulScalar(t0, t0, s2)
+		g.MulScalarBig(t0, a, s1)
+		g.MulScalarBig(t0, t0, s2)
 		s3.Mul(s1, s2)
-		g.MulScalar(t1, a, s3)
+		g.MulScalarBig(t1, a, s3)
 		if !g.Equal(t0, t1) {
 			t.Errorf(" (a ^ s1) ^ s2 == a ^ (s1 * s2)")
 		}
-		g.MulScalar(t0, a, s1)
-		g.MulScalar(t1, a, s2)
+		g.MulScalarBig(t0, a, s1)
+		g.MulScalarBig(t1, a, s2)
 		g.Add(t0, t0, t1)
 		s3.Add(s1, s2)
-		g.MulScalar(t1, a, s3)
+		g.MulScalarBig(t1, a, s3)
 		if !g.Equal(t0, t1) {
 			t.Errorf(" (a ^ s1) + (a ^ s2) == a ^ (s1 + s2)")
 		}
@@ -234,7 +234,7 @@ func TestWNAFMulAgainstNaive(t *testing.T) {
 		a := g2.randCorrect()
 		c0, c1 := g2.new(), g2.new()
 		e := randScalar(g2.Q())
-		g2.MulScalar(c0, a, e)
+		g2.MulScalarBig(c0, a, e)
 		g2.wnafMul(c1, a, e)
 		if !g2.Equal(c0, c1) {
 			t.Fatal("wnaf against naive failed")
@@ -248,7 +248,7 @@ func TestG2MultiplicativePropertiesWNAF(t *testing.T) {
 	zero := g.Zero()
 	for i := 0; i < fuz; i++ {
 		a := g.randCorrect()
-		s1, s2, s3 := randScalar(q), randScalar(q), randScalar(q)
+		s1, s2, s3 := randScalar(qBig), randScalar(qBig), randScalar(qBig)
 		sone := big.NewInt(1)
 		g.wnafMul(t0, zero, s1)
 		if !g.Equal(t0, zero) {
@@ -332,35 +332,62 @@ func TestG2MultiExpExpected(t *testing.T) {
 	scalars[1] = big.NewInt(3)
 	bases[0], bases[1] = new(PointG2).Set(one), new(PointG2).Set(one)
 	expected, result := g.New(), g.New()
-	g.MulScalar(expected, one, big.NewInt(5))
-	_, _ = g.MultiExp(result, bases[:], scalars[:])
+	g.MulScalarBig(expected, one, big.NewInt(5))
+	_, _ = g.MultiExpBig(result, bases[:], scalars[:])
 	if !g.Equal(expected, result) {
 		t.Fatal("bad multi-exponentiation")
 	}
 }
 
+func TestG2MultiExpBig(t *testing.T) {
+	g := NewG2()
+	for n := 1; n < 1024+1; n = n * 2 {
+		bases := make([]*PointG2, n)
+		scalars := make([]*big.Int, n)
+		var err error
+		for i := 0; i < n; i++ {
+			scalars[i], err = rand.Int(rand.Reader, qBig)
+			if err != nil {
+				t.Fatal(err)
+			}
+			bases[i] = g.rand()
+		}
+		expected, tmp := g.New(), g.New()
+		for i := 0; i < n; i++ {
+			g.MulScalarBig(tmp, bases[i], scalars[i])
+			g.Add(expected, expected, tmp)
+		}
+		result := g.New()
+		_, _ = g.MultiExpBig(result, bases, scalars)
+		if !g.Equal(expected, result) {
+			t.Fatal("bad multi-exponentiation")
+		}
+	}
+}
+
 func TestG2MultiExp(t *testing.T) {
 	g := NewG2()
-	n := 100
-	bases := make([]*PointG2, n)
-	scalars := make([]*big.Int, n)
-	var err error
-	for i := 0; i < n; i++ {
-		scalars[i], err = rand.Int(rand.Reader, q)
-		if err != nil {
-			t.Fatal(err)
+	for n := 1; n < 1024+1; n = n * 2 {
+		bases := make([]*PointG2, n)
+		scalars := make([]*Fr, n)
+		var err error
+		for i := 0; i < n; i++ {
+			scalars[i], err = new(Fr).Rand(rand.Reader)
+			if err != nil {
+				t.Fatal(err)
+			}
+			bases[i] = g.rand()
 		}
-		bases[i] = g.rand()
-	}
-	expected, tmp := g.New(), g.New()
-	for i := 0; i < n; i++ {
-		g.MulScalar(tmp, bases[i], scalars[i])
-		g.Add(expected, expected, tmp)
-	}
-	result := g.New()
-	_, _ = g.MultiExp(result, bases, scalars)
-	if !g.Equal(expected, result) {
-		t.Fatal("bad multi-exponentiation")
+		expected, tmp := g.New(), g.New()
+		for i := 0; i < n; i++ {
+			g.MulScalar(tmp, bases[i], scalars[i])
+			g.Add(expected, expected, tmp)
+		}
+		result := g.New()
+		_, _ = g.MultiExp(result, bases, scalars)
+		if !g.Equal(expected, result) {
+			t.Fatal("bad multi-exponentiation")
+		}
 	}
 }
 
@@ -567,10 +594,10 @@ func BenchmarkG2Add(t *testing.B) {
 
 func BenchmarkG2Mul(t *testing.B) {
 	g2 := NewG2()
-	a, e, c := g2.rand(), q, PointG2{}
+	a, e, c := g2.rand(), qBig, PointG2{}
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
-		g2.MulScalar(&c, a, e)
+		g2.MulScalarBig(&c, a, e)
 	}
 }
 

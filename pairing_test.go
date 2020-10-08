@@ -129,8 +129,8 @@ func TestPairingBilinearity(t *testing.T) {
 		G1, G2 := g1.One(), g2.One()
 		e0 := bls.AddPair(G1, G2).Result()
 		P1, P2 := g1.New(), g2.New()
-		g1.MulScalar(P1, G1, a)
-		g2.MulScalar(P2, G2, b)
+		g1.MulScalarBig(P1, G1, a)
+		g2.MulScalarBig(P2, G2, b)
 		e1 := bls.AddPair(P1, P2).Result()
 		gt.Exp(e0, e0, c)
 		if !e0.Equal(e1) {
@@ -144,12 +144,12 @@ func TestPairingBilinearity(t *testing.T) {
 		c := new(big.Int).Mul(a, b)
 		// LHS
 		G1, G2 := g1.One(), g2.One()
-		g1.MulScalar(G1, G1, c)
+		g1.MulScalarBig(G1, G1, c)
 		bls.AddPair(G1, G2)
 		// RHS
 		P1, P2 := g1.One(), g2.One()
-		g1.MulScalar(P1, P1, a)
-		g2.MulScalar(P2, P2, b)
+		g1.MulScalarBig(P1, P1, a)
+		g2.MulScalarBig(P2, P2, b)
 		bls.AddPairInv(P1, P2)
 		// should be one
 		if !bls.Check() {
@@ -163,12 +163,12 @@ func TestPairingBilinearity(t *testing.T) {
 		c := new(big.Int).Mul(a, b)
 		// LHS
 		G1, G2 := g1.One(), g2.One()
-		g2.MulScalar(G2, G2, c)
+		g2.MulScalarBig(G2, G2, c)
 		bls.AddPair(G1, G2)
 		// RHS
 		H1, H2 := g1.One(), g2.One()
-		g1.MulScalar(H1, H1, a)
-		g2.MulScalar(H2, H2, b)
+		g1.MulScalarBig(H1, H1, a)
+		g2.MulScalarBig(H2, H2, b)
 		bls.AddPairInv(H1, H2)
 		// should be one
 		if !bls.Check() {
@@ -187,10 +187,10 @@ func TestPairingMulti(t *testing.T) {
 	// RHS
 	for i := 0; i < numOfPair; i++ {
 		// (ai1 * G1, ai2 * G2)
-		a1, a2 := randScalar(q), randScalar(q)
+		a1, a2 := randScalar(qBig), randScalar(qBig)
 		P1, P2 := g1.One(), g2.One()
-		g1.MulScalar(P1, P1, a1)
-		g2.MulScalar(P2, P2, a2)
+		g1.MulScalarBig(P1, P1, a1)
+		g2.MulScalarBig(P2, P2, a2)
 		bls.AddPair(P1, P2)
 		// accumulate targetExp
 		// t += (ai1 * ai2)
@@ -200,7 +200,7 @@ func TestPairingMulti(t *testing.T) {
 	// LHS
 	// e(t * G1, G2)
 	T1, T2 := g1.One(), g2.One()
-	g1.MulScalar(T1, T1, targetExp)
+	g1.MulScalarBig(T1, T1, targetExp)
 	bls.AddPairInv(T1, T2)
 	if !bls.Check() {
 		t.Fatal("fail multi pairing")
