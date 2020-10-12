@@ -21,7 +21,7 @@ func TestScalarField(t *testing.T) {
 	}
 	r = &Fr{1}
 	r.toMont()
-	if !r.equal(sr1) {
+	if !r.Equal(sr1) {
 		t.Fatal("mont transformaition failed")
 	}
 }
@@ -30,7 +30,7 @@ func TestFrSerialization(t *testing.T) {
 	in := make([]byte, frByteSize)
 
 	e := new(Fr).FromBytes(in)
-	if !e.isZero() {
+	if !e.IsZero() {
 		t.Fatal("serialization failed, from bytes zero")
 	}
 	if !bytes.Equal(in, e.ToBytes()) {
@@ -38,7 +38,7 @@ func TestFrSerialization(t *testing.T) {
 	}
 
 	e = new(Fr).RedFromBytes(in)
-	if !e.isZero() {
+	if !e.IsZero() {
 		t.Fatal("serialization failed, from bytes zero, reduced")
 	}
 	if !bytes.Equal(in, e.RedToBytes()) {
@@ -51,17 +51,17 @@ func TestFrSerialization(t *testing.T) {
 	}
 	b := new(Fr)
 	b.setBytes(a.bytes())
-	if !a.equal(b) {
+	if !a.Equal(b) {
 		t.Fatal("serialization failed, set bytes")
 	}
 
 	b = new(Fr).FromBytes(a.ToBytes())
-	if !a.equal(b) {
+	if !a.Equal(b) {
 		t.Fatal("serialization failed, from/to bytes")
 	}
 
 	b = new(Fr).RedFromBytes(a.RedToBytes())
-	if !a.equal(b) {
+	if !a.Equal(b) {
 		t.Fatal("serialization failed, from/to bytes, reduced")
 	}
 }
@@ -93,6 +93,24 @@ func TestFrBitTest(t *testing.T) {
 		if a0 != a1 {
 			t.Fatal("bit test failed", i)
 		}
+	}
+}
+
+func TestFrBitShift(t *testing.T) {
+	a, _ := new(Fr).Rand(rand.Reader)
+	b := new(Fr).Set(a)
+	b.mul2()
+	b.div2()
+	if !b.Equal(a) {
+		t.Fatal("mul2 div2 failed")
+	}
+	a, _ = new(Fr).Rand(rand.Reader)
+	a[0] = a[0] & 0xfffffffffffffffe
+	b.Set(a)
+	b.div2()
+	b.mul2()
+	if !b.Equal(a) {
+		t.Fatal("mul2 div2 failed")
 	}
 }
 
@@ -138,40 +156,40 @@ func TestFrAdditionProperties(t *testing.T) {
 		b, _ := new(Fr).Rand(rand.Reader)
 		c1, c2 := new(Fr), new(Fr)
 		c1.Add(a, zero)
-		if !c1.equal(a) {
+		if !c1.Equal(a) {
 			t.Fatal("a + 0 == a")
 		}
 		c1.Sub(a, zero)
-		if !c1.equal(a) {
+		if !c1.Equal(a) {
 			t.Fatal("a - 0 == a")
 		}
 		c1.Double(zero)
-		if !c1.equal(zero) {
+		if !c1.Equal(zero) {
 			t.Fatal("2 * 0 == 0")
 		}
 		c1.Neg(zero)
-		if !c1.equal(zero) {
+		if !c1.Equal(zero) {
 			t.Fatal("-0 == 0")
 		}
 		c1.Sub(zero, a)
 		c2.Neg(a)
-		if !c1.equal(c2) {
+		if !c1.Equal(c2) {
 			t.Fatal("0-a == -a")
 		}
 		c1.Double(a)
 		c2.Add(a, a)
-		if !c1.equal(c2) {
+		if !c1.Equal(c2) {
 			t.Fatal("2 * a == a + a")
 		}
 		c1.Add(a, b)
 		c2.Add(b, a)
-		if !c1.equal(c2) {
+		if !c1.Equal(c2) {
 			t.Fatal("a + b = b + a")
 		}
 		c1.Sub(a, b)
 		c2.Sub(b, a)
 		c2.Neg(c2)
-		if !c1.equal(c2) {
+		if !c1.Equal(c2) {
 			t.Fatal("a - b = - ( b - a )")
 		}
 		c0, _ := new(Fr).Rand(rand.Reader)
@@ -179,14 +197,14 @@ func TestFrAdditionProperties(t *testing.T) {
 		c1.Add(c1, c0)
 		c2.Add(a, c0)
 		c2.Add(c2, b)
-		if !c1.equal(c2) {
+		if !c1.Equal(c2) {
 			t.Fatal("(a + b) + c == (a + c ) + b")
 		}
 		c1.Sub(a, b)
 		c1.Sub(c1, c0)
 		c2.Sub(a, c0)
 		c2.Sub(c2, b)
-		if !c1.equal(c2) {
+		if !c1.Equal(c2) {
 			t.Fatal("(a - b) - c == (a - c ) -b")
 		}
 	}
@@ -233,16 +251,16 @@ func TestFrMultiplicationProperties(t *testing.T) {
 		zero, one := new(Fr).Zero(), new(Fr).One()
 		c1, c2 := new(Fr), new(Fr)
 		c1.Mul(a, zero)
-		if !c1.equal(zero) {
+		if !c1.Equal(zero) {
 			t.Fatal("a * 0 == 0")
 		}
 		c1.Mul(a, one)
-		if !c1.equal(a) {
+		if !c1.Equal(a) {
 			t.Fatal("a * 1 == a")
 		}
 		c1.Mul(a, b)
 		c2.Mul(b, a)
-		if !c1.equal(c2) {
+		if !c1.Equal(c2) {
 			t.Fatal("a * b == b * a")
 		}
 		c0, _ := new(Fr).Rand(rand.Reader)
@@ -250,21 +268,21 @@ func TestFrMultiplicationProperties(t *testing.T) {
 		c1.Mul(c1, c0)
 		c2.Mul(c0, b)
 		c2.Mul(c2, a)
-		if !c1.equal(c2) {
+		if !c1.Equal(c2) {
 			t.Fatal("(a * b) * c == (a * c) * b")
 		}
 		a.Square(zero)
-		if !a.equal(zero) {
+		if !a.Equal(zero) {
 			t.Fatal("0^2 == 0")
 		}
 		a.Square(one)
-		if !a.equal(one) {
+		if !a.Equal(one) {
 			t.Fatal("1^2 == 1")
 		}
 		_, _ = a.Rand(rand.Reader)
 		c1.Square(a)
 		c2.Mul(a, a)
-		if !c1.equal(c1) {
+		if !c1.Equal(c1) {
 			t.Fatal("a^2 == a*a")
 		}
 	}
@@ -277,16 +295,16 @@ func TestFrMultiplicationPropertiesReduced(t *testing.T) {
 		zero, one := new(Fr).Zero(), new(Fr).RedOne()
 		c1, c2 := new(Fr), new(Fr)
 		c1.RedMul(a, zero)
-		if !c1.equal(zero) {
+		if !c1.Equal(zero) {
 			t.Fatal("a * 0 == 0")
 		}
 		c1.RedMul(a, one)
-		if !c1.equal(a) {
+		if !c1.Equal(a) {
 			t.Fatal("a * 1 == a")
 		}
 		c1.RedMul(a, b)
 		c2.RedMul(b, a)
-		if !c1.equal(c2) {
+		if !c1.Equal(c2) {
 			t.Fatal("a * b == b * a")
 		}
 		c0, _ := new(Fr).Rand(rand.Reader)
@@ -294,21 +312,21 @@ func TestFrMultiplicationPropertiesReduced(t *testing.T) {
 		c1.RedMul(c1, c0)
 		c2.RedMul(c0, b)
 		c2.RedMul(c2, a)
-		if !c1.equal(c2) {
+		if !c1.Equal(c2) {
 			t.Fatal("(a * b) * c == (a * c) * b")
 		}
 		a.RedSquare(zero)
-		if !a.equal(zero) {
+		if !a.Equal(zero) {
 			t.Fatal("0^2 == 0")
 		}
 		a.RedSquare(one)
-		if !a.equal(one) {
+		if !a.Equal(one) {
 			t.Fatal("1^2 == 1")
 		}
 		_, _ = a.Rand(rand.Reader)
 		c1.RedSquare(a)
 		c2.RedMul(a, a)
-		if !c1.equal(c1) {
+		if !c1.Equal(c1) {
 			t.Fatal("a^2 == a*a")
 		}
 	}
@@ -319,11 +337,11 @@ func TestFrExponentiation(t *testing.T) {
 		a, _ := new(Fr).Rand(rand.Reader)
 		u := new(Fr)
 		u.Exp(a, big.NewInt(0))
-		if !u.isRedOne() {
+		if !u.IsRedOne() {
 			t.Fatal("a^0 == 1")
 		}
 		u.Exp(a, big.NewInt(1))
-		if !u.equal(a) {
+		if !u.Equal(a) {
 			t.Fatal("a^1 == a")
 		}
 		v := new(Fr)
@@ -331,16 +349,16 @@ func TestFrExponentiation(t *testing.T) {
 		u.RedMul(u, u)
 		u.RedMul(u, u)
 		v.Exp(a, big.NewInt(8))
-		if !u.equal(v) {
+		if !u.Equal(v) {
 			t.Fatal("((a^2)^2)^2 == a^8")
 		}
 		u.Exp(a, qBig)
-		if !u.equal(a) {
+		if !u.Equal(a) {
 			t.Fatal("a^p == a")
 		}
 		qMinus1 := new(big.Int).Sub(qBig, big.NewInt(1))
 		u.Exp(a, qMinus1)
-		if !u.isRedOne() {
+		if !u.IsRedOne() {
 			t.Fatal("a^(p-1) == 1")
 		}
 	}

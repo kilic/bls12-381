@@ -11,7 +11,6 @@ const frByteSize = 32
 const frBitSize = 255
 const frNumberOfLimbs = 4
 
-// Fr is scalar field element representation
 type Fr [4]uint64
 
 func NewFr() *Fr {
@@ -71,32 +70,26 @@ func (e *Fr) setBytes(in []byte) {
 
 func (e *Fr) setBig(in *big.Int) error {
 	zero := new(big.Int)
+	e.Zero()
 	c := in.Cmp(zero)
 	if c == -1 {
 		return errors.New("cannot set negative element")
 	} else if c == 0 {
-		e.Zero()
 		return nil
 	}
-
+	_in := new(big.Int)
 	c = in.Cmp(qBig)
 	if c == 0 {
-		e.Zero()
 		return nil
 	} else if c == -1 {
-		words := in.Bits()
-		e[0] = uint64(words[0])
-		e[1] = uint64(words[1])
-		e[2] = uint64(words[2])
-		e[3] = uint64(words[3])
-		return nil
+		_in.Set(in)
+	} else {
+		_in = new(big.Int).Mod(in, qBig)
 	}
-	_in := new(big.Int).Mod(in, qBig)
 	words := _in.Bits()
-	e[0] = uint64(words[0])
-	e[1] = uint64(words[1])
-	e[2] = uint64(words[2])
-	e[3] = uint64(words[3])
+	for i := 0; i < len(words); i++ {
+		e[i] = uint64(words[i])
+	}
 	return nil
 }
 
@@ -135,20 +128,31 @@ func (e *Fr) bytes() []byte {
 	return out
 }
 
-func (e *Fr) isZero() bool {
+func (e *Fr) IsZero() bool {
 	return (e[3] | e[2] | e[1] | e[0]) == 0
 }
 
-func (e *Fr) isOne() bool {
-	return e.equal(&Fr{1})
+func (e *Fr) IsOne() bool {
+	return e.Equal(&Fr{1})
 }
 
-func (e *Fr) isRedOne() bool {
-	return e.equal(sr1)
+func (e *Fr) IsRedOne() bool {
+	return e.Equal(sr1)
 }
 
-func (e *Fr) equal(e2 *Fr) bool {
+func (e *Fr) Equal(e2 *Fr) bool {
 	return e2[0] == e[0] && e2[1] == e[1] && e2[2] == e[2] && e2[3] == e[3]
+}
+
+func (e *Fr) Cmp(e1 *Fr) int {
+	for i := 4; i >= 0; i-- {
+		if e[i] > e1[i] {
+			return 1
+		} else if e[i] < e1[i] {
+			return -1
+		}
+	}
+	return 0
 }
 
 func (e *Fr) sliceUint64(from int) uint64 {
@@ -160,6 +164,20 @@ func (e *Fr) sliceUint64(from int) uint64 {
 		return e[2]>>(from-128) | e[3]<<(192-from)
 	}
 	return e[3] >> (from - 192)
+}
+
+func (e *Fr) div2() {
+	e[0] = e[0]>>1 | e[1]<<63
+	e[1] = e[1]>>1 | e[2]<<63
+	e[2] = e[2]>>1 | e[3]<<63
+	e[3] = e[3] >> 1
+}
+
+func (e *Fr) mul2() {
+	e[3] = e[3]<<1 | e[2]>>63
+	e[2] = e[2]<<1 | e[1]>>63
+	e[1] = e[1]<<1 | e[0]>>63
+	e[0] = e[0] << 1
 }
 
 func (e *Fr) Bit(at int) bool {
@@ -227,40 +245,3 @@ func (e *Fr) Exp(a *Fr, ee *big.Int) {
 	}
 	e.Set(z)
 }
-
-// func toWNAF(e *big.Int, w uint) nafNumber {
-// 	z := new(big.Int).Set(e)
-// 	naf := []nafSign{}
-// 	W := new(big.Int).Lsh(bigOne, w)
-// 	Wl := new(big.Int).Rsh(W, 1)
-// 	for z.Cmp(bigZero) != 0 {
-// 		if z.Bit(0) == 1 {
-// 			nafBit := new(big.Int)
-// 			nafBit.Mod(z, W)
-// 			if nafBit.Cmp(Wl) >= 0 {
-// 				nafBit.Sub(nafBit, W)
-// 			}
-// 			naf = append(naf, nafSign(nafBit.Int64()))
-// 			z.Sub(z, nafBit)
-// 		} else {
-// 			naf = append(naf, nafZERO)
-// 		}
-// 		z.Rsh(z, 1)
-// 	}
-// 	return naf
-// }
-
-// func fromWNAF(naf nafNumber, w int) *big.Int {
-// 	acc := new(big.Int)
-// 	d := big.NewInt(1)
-// 	d.Lsh(d, uint(len(naf)-1))
-// 	for i := len(naf) - 1; i >= 0; i-- {
-// 		if naf[i] == nafNEG {
-// 			acc.Sub(acc, d)
-// 		} else if naf[i] == nafPOS {
-// 			acc.Add(acc, d)
-// 		}
-// 		d.Rsh(d, 1)
-// 	}
-// 	return acc
-// }

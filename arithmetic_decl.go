@@ -91,7 +91,7 @@ func squareFR(c, a *Fr) {
 }
 
 func negFR(c, a *Fr) {
-	if a.isZero() {
+	if a.IsZero() {
 		c.Set(a)
 	} else {
 		_negFR(c, a)

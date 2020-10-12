@@ -1,35 +1,114 @@
 package bls12381
 
 import (
+	"errors"
 	"math/big"
 )
 
-func wnaf(e0 *big.Int, window uint) []int64 {
-	e := new(big.Int).Set(e0)
-	zero := big.NewInt(0)
-	if e.Cmp(zero) == 0 {
-		return []int64{}
-	}
-	max := int64(1 << window)
-	midpoint := int64(1 << (window - 1))
-	modulusMask := uint64(1<<window) - 1
-	var out []int64
-	for e.Cmp(zero) != 0 {
-		var z int64
-		if e.Bit(0)&1 == 1 {
-			maskedBits := int64(e.Uint64() & modulusMask)
-			if maskedBits > midpoint {
-				z = maskedBits - max
-				e.Add(e, new(big.Int).SetInt64(0-z))
-			} else {
-				z = maskedBits
-				e.Sub(e, new(big.Int).SetInt64(z))
+type nafNumber []int
+
+var bigZero = big.NewInt(0)
+var bigOne = big.NewInt(1)
+
+func bigToWNAF(e *big.Int, w int) nafNumber {
+
+	naf := nafNumber{}
+	k := new(big.Int).Lsh(bigOne, uint(w))
+	halfK := new(big.Int).Rsh(k, 1)
+
+	ee := new(big.Int).Set(e)
+	for ee.Cmp(bigZero) != 0 {
+
+		if ee.Bit(0) == 1 {
+
+			nafSign := new(big.Int)
+			nafSign.Mod(ee, k)
+
+			if nafSign.Cmp(halfK) >= 0 {
+				nafSign.Sub(nafSign, k)
 			}
+
+			naf = append(naf, int(nafSign.Int64()))
+
+			ee.Sub(ee, nafSign)
+
 		} else {
-			z = 0
+			naf = append(naf, 0)
 		}
-		out = append(out, z)
-		e.Rsh(e, 1)
+
+		ee.Rsh(ee, 1)
 	}
-	return out
+	return naf
+}
+
+func bigFromWNAF(naf nafNumber, w int) *big.Int {
+	acc := new(big.Int)
+	k := new(big.Int).Set(bigOne)
+	for i := 0; i < len(naf); i++ {
+		if naf[i] != 0 {
+			z := new(big.Int).Mul(k, big.NewInt(int64(naf[i])))
+			acc.Add(acc, z)
+		}
+		k.Lsh(k, 1)
+	}
+	return acc
+}
+
+func (e *Fr) toWNAF(w int) (nafNumber, error) {
+	if w < 2 {
+		return nil, errors.New("bad window size")
+	}
+
+	naf := nafNumber{}
+
+	k, halfK, kMask := 1<<w, 1<<(w-1), (1<<w)-1
+
+	ee := new(Fr).Set(e)
+
+	for !ee.IsZero() {
+
+		if ee.Bit(0) {
+
+			nafSign := int(ee[0]) & kMask
+			if nafSign >= halfK {
+				nafSign = nafSign - k
+			}
+
+			naf = append(naf, int(nafSign))
+			if nafSign < 0 {
+				ee.Add(ee, &Fr{uint64(-nafSign)})
+			} else {
+				ee.Sub(ee, &Fr{uint64(nafSign)})
+			}
+
+		} else {
+			naf = append(naf, 0)
+		}
+		ee.div2()
+	}
+
+	return naf, nil
+}
+
+func (e *Fr) fromWNAF(naf nafNumber, w int) *Fr {
+	acc := new(Fr).Zero()
+	k := new(Fr).One()
+	for i := 0; i < len(naf); i++ {
+
+		if naf[i] < 0 {
+
+			z := new(Fr)
+			z.Mul(k, &Fr{uint64(-naf[i])})
+			acc.Sub(acc, z)
+
+		} else if naf[i] > 0 {
+
+			z := new(Fr)
+			z.Mul(k, &Fr{uint64(naf[i])})
+			acc.Add(acc, z)
+		}
+
+		k.mul2()
+	}
+	return acc
 }
