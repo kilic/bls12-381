@@ -185,6 +185,53 @@ func (e *fp2) inverse(c, a *fe2) {
 	neg(&c[1], t[0])
 }
 
+func (e *fp2) inverseBatch(in []fe2) {
+
+	n, N, setFirst := 0, len(in), false
+
+	for i := 0; i < len(in); i++ {
+		if !in[i].isZero() {
+			n++
+		}
+	}
+
+	tA := make([]fe2, n)
+	tB := make([]fe2, n)
+
+	for i, j := 0, 0; i < N; i++ {
+		if !in[i].isZero() {
+			if !setFirst {
+				setFirst = true
+				tA[j].set(&in[i])
+			} else {
+				e.mul(&tA[j], &in[i], &tA[j-1])
+			}
+			j = j + 1
+		}
+	}
+
+	e.inverse(&tB[n-1], &tA[n-1])
+
+	for i, j := N-1, n-1; j != 0; i-- {
+		if !in[i].isZero() {
+			e.mul(&tB[j-1], &tB[j], &in[i])
+			j = j - 1
+		}
+	}
+
+	for i, j := 0, 0; i < N; i++ {
+		if !in[i].isZero() {
+			if setFirst {
+				setFirst = false
+				in[i].set(&tB[j])
+			} else {
+				e.mul(&in[i], &tA[j-1], &tB[j])
+			}
+			j = j + 1
+		}
+	}
+}
+
 func (e *fp2) mulByFq(c, a *fe2, b *fe) {
 	mul(&c[0], &a[0], b)
 	mul(&c[1], &a[1], b)
