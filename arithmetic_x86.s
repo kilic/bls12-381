@@ -2270,8 +2270,8 @@ TEXT ·subFR(SB), NOSPLIT, $0-24
 /* end                                     */
 
 
-// func _negFR(c *[4]uint64, a *[4]uint64, p *[4]uint64)
-TEXT ·_negFR(SB), NOSPLIT, $0-24
+// func _negFR(c *[4]uint64, a *[4]uint64)
+TEXT ·_negFR(SB), NOSPLIT, $0-16
 	// |
 	MOVQ a+8(FP), DI
 
