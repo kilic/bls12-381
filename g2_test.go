@@ -3,6 +3,7 @@ package bls12381
 import (
 	"bytes"
 	"crypto/rand"
+	"fmt"
 	"io/ioutil"
 	"math/big"
 	"testing"
@@ -120,6 +121,26 @@ func TestG2IsOnCurve(t *testing.T) {
 	}
 }
 
+func TestG2BatchAffine(t *testing.T) {
+	n := 20
+	g := NewG2()
+	points0 := make([]*PointG2, n)
+	points1 := make([]*PointG2, n)
+	for i := 0; i < n; i++ {
+		points0[i] = g.rand()
+		points1[i] = g.New().Set(points0[i])
+		if g.IsAffine(points0[i]) {
+			t.Fatal("expect non affine point")
+		}
+	}
+	g.AffineBatch(points0)
+	for i := 0; i < n; i++ {
+		if !g.Equal(points0[i], points1[i]) {
+			t.Fatal("batch affine failed")
+		}
+	}
+}
+
 func TestG2AdditiveProperties(t *testing.T) {
 	g := NewG2()
 	t0, t1 := g.New(), g.New()
@@ -190,6 +211,31 @@ func TestG2AdditiveProperties(t *testing.T) {
 	}
 }
 
+func TestG2MixedAdd(t *testing.T) {
+	g := NewG2()
+	for i := 0; i < fuz; i++ {
+		a, b := g.rand(), g.rand()
+		if g.IsAffine(a) || g.IsAffine(b) {
+			t.Fatal("expect non affine points")
+		}
+		bAffine := g.New().Set(b)
+		g.Affine(bAffine)
+		r0, r1 := g.New(), g.New()
+		g.Add(r0, a, b)
+		g.AddMixed(r1, a, bAffine)
+		if !g.Equal(r0, r1) {
+			t.Fatal("mixed addition failed")
+		}
+		aAffine := g.New().Set(a)
+		g.Affine(aAffine)
+		g.AddMixed(r0, a, aAffine)
+		g.Double(r1, a)
+		if !g.Equal(r0, r1) {
+			t.Fatal("mixed addition must double where points are equal")
+		}
+	}
+}
+
 func TestG2MultiplicativeProperties(t *testing.T) {
 	g := NewG2()
 	t0, t1 := g.New(), g.New()
@@ -233,8 +279,8 @@ func TestWNAFMulAgainstNaive(t *testing.T) {
 	for i := 0; i < fuz; i++ {
 		a := g2.randCorrect()
 		c0, c1 := g2.new(), g2.new()
-		e := randScalar(g2.Q())
-		g2.MulScalarBig(c0, a, e)
+		e, _ := new(Fr).Rand(rand.Reader)
+		g2.MulScalar(c0, a, e)
 		g2.wnafMul(c1, a, e)
 		if !g2.Equal(c0, c1) {
 			t.Fatal("wnaf against naive failed")
@@ -248,13 +294,14 @@ func TestG2MultiplicativePropertiesWNAF(t *testing.T) {
 	zero := g.Zero()
 	for i := 0; i < fuz; i++ {
 		a := g.randCorrect()
-		s1, s2, s3 := randScalar(qBig), randScalar(qBig), randScalar(qBig)
-		sone := big.NewInt(1)
+		s1, _ := new(Fr).Rand(rand.Reader)
+		s2, _ := new(Fr).Rand(rand.Reader)
+		s3, _ := new(Fr).Rand(rand.Reader)
 		g.wnafMul(t0, zero, s1)
 		if !g.Equal(t0, zero) {
 			t.Fatalf(" 0 ^ s == 0")
 		}
-		g.wnafMul(t0, a, sone)
+		g.wnafMul(t0, a, &Fr{1})
 		if !g.Equal(t0, a) {
 			t.Fatalf(" a ^ 1 == a")
 		}
@@ -592,12 +639,111 @@ func BenchmarkG2Add(t *testing.B) {
 	}
 }
 
-func BenchmarkG2Mul(t *testing.B) {
+func BenchmarkG2MulBig(t *testing.B) {
 	g2 := NewG2()
 	a, e, c := g2.rand(), qBig, PointG2{}
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
 		g2.MulScalarBig(&c, a, e)
+	}
+}
+
+func BenchmarkG2Mul(t *testing.B) {
+	g2 := NewG2()
+	a, e, c := g2.rand(), q, PointG2{}
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		g2.MulScalar(&c, a, e)
+	}
+}
+
+func BenchmarkG2MulWNAF(t *testing.B) {
+	g2 := NewG2()
+	a, e, c := g2.rand(), q, PointG2{}
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		g2.wnafMul(&c, a, e)
+	}
+}
+
+func BenchmarkG2MultiExpBig(t *testing.B) {
+	g := NewG2()
+	v := func(n int) ([]*PointG2, []*big.Int) {
+		bases := make([]*PointG2, n)
+		scalars := make([]*big.Int, n)
+		var err error
+		for i := 0; i < n; i++ {
+			scalars[i], err = rand.Int(rand.Reader, qBig)
+			if err != nil {
+				t.Fatal(err)
+			}
+			bases[i] = g.rand()
+		}
+		return bases, scalars
+	}
+	for _, i := range []int{2, 10, 100, 1000} {
+		t.Run(fmt.Sprint(i), func(t *testing.B) {
+			bases, scalars := v(i)
+			result := g.New()
+			t.ResetTimer()
+			for i := 0; i < t.N; i++ {
+				_, _ = g.MultiExpBig(result, bases, scalars)
+			}
+		})
+	}
+}
+
+func BenchmarkG2MultiExp(t *testing.B) {
+	g := NewG2()
+	v := func(n int) ([]*PointG2, []*Fr) {
+		bases := make([]*PointG2, n)
+		scalars := make([]*Fr, n)
+		var err error
+		for i := 0; i < n; i++ {
+			scalars[i], err = new(Fr).Rand(rand.Reader)
+			if err != nil {
+				t.Fatal(err)
+			}
+			bases[i] = g.rand()
+		}
+		return bases, scalars
+	}
+	for _, i := range []int{2, 10, 100, 1000} {
+		t.Run(fmt.Sprint(i), func(t *testing.B) {
+			bases, scalars := v(i)
+			result := g.New()
+			t.ResetTimer()
+			for i := 0; i < t.N; i++ {
+				_, _ = g.MultiExp(result, bases, scalars)
+			}
+		})
+	}
+}
+
+func BenchmarkG2MultiExpAffine(t *testing.B) {
+	g := NewG2()
+	v := func(n int) ([]*PointG2, []*Fr) {
+		bases := make([]*PointG2, n)
+		scalars := make([]*Fr, n)
+		var err error
+		for i := 0; i < n; i++ {
+			scalars[i], err = new(Fr).Rand(rand.Reader)
+			if err != nil {
+				t.Fatal(err)
+			}
+			bases[i] = g.Affine(g.rand())
+		}
+		return bases, scalars
+	}
+	for _, i := range []int{2, 10, 100, 1000} {
+		t.Run(fmt.Sprint(i), func(t *testing.B) {
+			bases, scalars := v(i)
+			result := g.New()
+			t.ResetTimer()
+			for i := 0; i < t.N; i++ {
+				_, _ = g.MultiExp(result, bases, scalars)
+			}
+		})
 	}
 }
 
