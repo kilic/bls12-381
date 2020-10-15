@@ -52,8 +52,9 @@ func newEngineTemp() pairingEngineTemp {
 // AddPair adds a g1, g2 point pair to pairing engine
 func (e *Engine) AddPair(g1 *PointG1, g2 *PointG2) *Engine {
 	p := newPair(g1, g2)
-	if !e.isZero(p) {
-		e.affine(p)
+	if !(e.G1.IsZero(p.g1) || e.G2.IsZero(p.g2)) {
+		e.G1.Affine(p.g1)
+		e.G2.Affine(p.g2)
 		e.pairs = append(e.pairs, p)
 	}
 	return e
@@ -73,16 +74,7 @@ func (e *Engine) Reset() *Engine {
 	return e
 }
 
-func (e *Engine) isZero(p pair) bool {
-	return e.G1.IsZero(p.g1) || e.G2.IsZero(p.g2)
-}
-
-func (e *Engine) affine(p pair) {
-	e.G1.Affine(p.g1)
-	e.G2.Affine(p.g2)
-}
-
-func (e *Engine) doublingStep(coeff *[3]fe2, r *PointG2) {
+func (e *Engine) doublingStep(coeff *fe6, r *PointG2) {
 	fp2 := e.fp2
 	t := e.t2
 	fp2.mul(t[0], &r[0], &r[1])
@@ -115,7 +107,7 @@ func (e *Engine) doublingStep(coeff *[3]fe2, r *PointG2) {
 	fp2.neg(&coeff[2], t[6])
 }
 
-func (e *Engine) additionStep(coeff *[3]fe2, r, q *PointG2) {
+func (e *Engine) additionStep(coeff *fe6, r, q *PointG2) {
 	fp2 := e.fp2
 	t := e.t2
 	fp2.mul(t[0], &q[1], &r[2])
@@ -145,53 +137,49 @@ func (e *Engine) additionStep(coeff *[3]fe2, r, q *PointG2) {
 	coeff[2].set(t[1])
 }
 
-func (e *Engine) preCompute(ellCoeffs *[68][3]fe2, twistPoint *PointG2) {
-	if e.G2.IsZero(twistPoint) {
-		return
-	}
-	r := new(PointG2).Set(twistPoint)
-	j := 0
-	for i := 62; /* x.BitLen() - 2 */ i >= 0; i-- {
-		e.doublingStep(&ellCoeffs[j], r)
-		if x.Bit(i) != 0 {
+func (e *Engine) precompute() [][68]fe6 {
+	n := len(e.pairs)
+	coeffs := make([][68]fe6, len(e.pairs))
+	for i := 0; i < n; i++ {
+		r := new(PointG2).Set(e.pairs[i].g2)
+		j := 0
+		for k := 62; k >= 0; k-- {
+			e.doublingStep(&coeffs[i][j], r)
+			if x.Bit(k) != 0 {
+				j++
+				e.additionStep(&coeffs[i][j], r, e.pairs[i].g2)
+			}
 			j++
-			ellCoeffs[j] = fe6{}
-			e.additionStep(&ellCoeffs[j], r, twistPoint)
 		}
-		j++
+	}
+	return coeffs
+}
+
+func (e *Engine) lineEval(f *fe12, coeffs [][68]fe6, j int) {
+	t := e.t2
+	for i := 0; i < len(e.pairs); i++ {
+		e.fp2.mulByFq(t[0], &coeffs[i][j][2], &e.pairs[i].g1[1])
+		e.fp2.mulByFq(t[1], &coeffs[i][j][1], &e.pairs[i].g1[0])
+		e.fp12.mulBy014Assign(f, &coeffs[i][j][0], t[1], t[0])
 	}
 }
 
 func (e *Engine) millerLoop(f *fe12) {
-	pairs := e.pairs
-	ellCoeffs := make([][68][3]fe2, len(pairs))
-	for i := 0; i < len(pairs); i++ {
-		e.preCompute(&ellCoeffs[i], pairs[i].g2)
-	}
-	fp12, fp2 := e.fp12, e.fp2
-	t := e.t2
+	coeffs := e.precompute()
 	f.one()
 	j := 0
-	for i := 62; /* x.BitLen() - 2 */ i >= 0; i-- {
+	for i := 62; i >= 0; i-- {
 		if i != 62 {
-			fp12.square(f, f)
+			e.fp12.square(f, f)
 		}
-		for i := 0; i <= len(pairs)-1; i++ {
-			fp2.mulByFq(t[0], &ellCoeffs[i][j][2], &pairs[i].g1[1])
-			fp2.mulByFq(t[1], &ellCoeffs[i][j][1], &pairs[i].g1[0])
-			fp12.mulBy014Assign(f, &ellCoeffs[i][j][0], t[1], t[0])
-		}
+		e.lineEval(f, coeffs, j)
 		if x.Bit(i) != 0 {
 			j++
-			for i := 0; i <= len(pairs)-1; i++ {
-				fp2.mulByFq(t[0], &ellCoeffs[i][j][2], &pairs[i].g1[1])
-				fp2.mulByFq(t[1], &ellCoeffs[i][j][1], &pairs[i].g1[0])
-				fp12.mulBy014Assign(f, &ellCoeffs[i][j][0], t[1], t[0])
-			}
+			e.lineEval(f, coeffs, j)
 		}
 		j++
 	}
-	fp12.conjugate(f, f)
+	e.fp12.conjugate(f, f)
 }
 
 // exp raises element by x = -15132376222941642752
