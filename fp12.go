@@ -224,17 +224,17 @@ func (e *fp12) inverse(c, a *fe12) {
 	fp6.neg(&c[1], t[0])            // c1 = -a1v
 }
 
-func (e *fp12) mulBy014Assign(a *fe12, b0, b1, b4 *fe2) {
+func (e *fp12) mul014(a *fe12, b0, b1, b4 *fe2) {
 	fp2, fp6, t, u := e.fp2(), e.fp6, e.t6, e.t2[0]
-	fp6.mulBy01(t[0], &a[0], b0, b1) // t0 = a0b0
-	fp6.mulBy1(t[1], &a[1], b4)      // t1 = a1b1
-	fp2.add(u, b1, b4)               // u = b01 + b10
-	fp6.add(t[2], &a[1], &a[0])      // a0 + a1
-	fp6.mulBy01Assign(t[2], b0, u)   // v1 = u(a0 + a1s)
-	fp6.subAssign(t[2], t[0])        // v1 - t0
-	fp6.sub(&a[1], t[2], t[1])       // c1 = v1 - t0 - t1
-	fp6.mulByNonResidue(t[1], t[1])  // βt1
-	fp6.add(&a[0], t[1], t[0])       // c0 = t0 + βt1
+	fp6.mul01(t[0], &a[0], b0, b1)  // t0 = a0b0
+	fp6.mul1(t[1], &a[1], b4)       // t1 = a1b1
+	fp2.add(u, b1, b4)              // u = b01 + b10
+	fp6.add(t[2], &a[1], &a[0])     // a0 + a1
+	fp6.mul01(t[2], t[2], b0, u)    // v1 = u(a0 + a1s)
+	fp6.subAssign(t[2], t[0])       // v1 - t0
+	fp6.sub(&a[1], t[2], t[1])      // c1 = v1 - t0 - t1
+	fp6.mulByNonResidue(t[1], t[1]) // βt1
+	fp6.add(&a[0], t[1], t[0])      // c0 = t0 + βt1
 }
 
 func (e *fp12) exp(c, a *fe12, s *big.Int) {

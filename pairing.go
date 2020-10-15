@@ -78,7 +78,7 @@ func (e *Engine) doublingStep(coeff *fe6, r *PointG2) {
 	fp2 := e.fp2
 	t := e.t2
 	fp2.mul(t[0], &r[0], &r[1])
-	fp2.mulByFq(t[0], t[0], twoInv)
+	fp2.mul0(t[0], t[0], twoInv)
 	fp2.square(t[1], &r[1])
 	fp2.square(t[2], &r[2])
 	fp2.double(t[7], t[2])
@@ -87,7 +87,7 @@ func (e *Engine) doublingStep(coeff *fe6, r *PointG2) {
 	fp2.double(t[4], t[3])
 	fp2.add(t[4], t[4], t[3])
 	fp2.add(t[5], t[1], t[4])
-	fp2.mulByFq(t[5], t[5], twoInv)
+	fp2.mul0(t[5], t[5], twoInv)
 	fp2.add(t[6], &r[1], &r[2])
 	fp2.square(t[6], t[6])
 	fp2.add(t[7], t[2], t[1])
@@ -158,9 +158,9 @@ func (e *Engine) precompute() [][68]fe6 {
 func (e *Engine) lineEval(f *fe12, coeffs [][68]fe6, j int) {
 	t := e.t2
 	for i := 0; i < len(e.pairs); i++ {
-		e.fp2.mulByFq(t[0], &coeffs[i][j][2], &e.pairs[i].g1[1])
-		e.fp2.mulByFq(t[1], &coeffs[i][j][1], &e.pairs[i].g1[0])
-		e.fp12.mulBy014Assign(f, &coeffs[i][j][0], t[1], t[0])
+		e.fp2.mul0(t[0], &coeffs[i][j][2], &e.pairs[i].g1[1])
+		e.fp2.mul0(t[1], &coeffs[i][j][1], &e.pairs[i].g1[0])
+		e.fp12.mul014(f, &coeffs[i][j][0], t[1], t[0])
 	}
 }
 

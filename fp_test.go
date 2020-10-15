@@ -1064,7 +1064,7 @@ func TestFp6SparseMultiplication(t *testing.T) {
 		u, _ = new(fe6).rand(rand.Reader)
 		b[2].zero()
 		fp6.mul(u, a, b)
-		fp6.mulBy01(a, a, &b[0], &b[1])
+		fp6.mul01(a, a, &b[0], &b[1])
 		if !a.equal(u) {
 			t.Fatal("mul by 01")
 		}
@@ -1076,7 +1076,7 @@ func TestFp6SparseMultiplication(t *testing.T) {
 		b[2].zero()
 		b[0].zero()
 		fp6.mul(u, a, b)
-		fp6.mulBy1(a, a, &b[1])
+		fp6.mul1(a, a, &b[1])
 		if !a.equal(u) {
 			t.Fatal("mul by 1")
 		}
@@ -1380,7 +1380,7 @@ func TestFp12SparseMultiplication(t *testing.T) {
 		b[1][0].zero()
 		b[1][2].zero()
 		fp12.mul(u, a, b)
-		fp12.mulBy014Assign(a, &b[0][0], &b[0][1], &b[1][1])
+		fp12.mul014(a, &b[0][0], &b[0][1], &b[1][1])
 		if !a.equal(u) {
 			t.Fatal("mul by 01")
 		}

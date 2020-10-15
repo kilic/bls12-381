@@ -237,7 +237,7 @@ func (e *fp6) square(c, a *fe6) {
 	fp2.sub(&c[2], t[1], t[0]) // c2 = s1 + s2 - s0 - s4
 }
 
-func (e *fp6) mulBy01(c, a *fe6, b0, b1 *fe2) {
+func (e *fp6) mul01(c, a *fe6, b0, b1 *fe2) {
 	fp2, t := e.fp2, e.t
 	// v0 = a0b0
 	// v1 = a1b1
@@ -263,27 +263,7 @@ func (e *fp6) mulBy01(c, a *fe6, b0, b1 *fe2) {
 	fp2.add(&c[0], t[2], t[0])      //  (b1(a1 + a2) - v1)β + v0
 }
 
-func (e *fp6) mulBy01Assign(a *fe6, b0, b1 *fe2) {
-	fp2, t := e.fp2, e.t
-	fp2.mul(t[0], &a[0], b0)
-	fp2.mul(t[1], &a[1], b1)
-	fp2.add(t[5], &a[1], &a[2])
-	fp2.mul(t[2], b1, t[5])
-	fp2.subAssign(t[2], t[1])
-	fp2.mulByNonResidue(t[2], t[2])
-	fp2.add(t[5], &a[0], &a[2])
-	fp2.mul(t[3], b0, t[5])
-	fp2.subAssign(t[3], t[0])
-	fp2.add(&a[2], t[3], t[1])
-	fp2.add(t[4], b0, b1)
-	fp2.add(t[5], &a[0], &a[1])
-	fp2.mulAssign(t[4], t[5])
-	fp2.subAssign(t[4], t[0])
-	fp2.sub(&a[1], t[4], t[1])
-	fp2.add(&a[0], t[2], t[0])
-}
-
-func (e *fp6) mulBy1(c, a *fe6, b1 *fe2) {
+func (e *fp6) mul1(c, a *fe6, b1 *fe2) {
 	fp2, t := e.fp2, e.t
 	// c0 = βa2b1
 	// c1 = a0b1

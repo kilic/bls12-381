@@ -185,6 +185,11 @@ func (e *fp2) squareAssign(a *fe2) {
 	mul(&a[1], t[2], &a[1])
 }
 
+func (e *fp2) mul0(c, a *fe2, b *fe) {
+	mul(&c[0], &a[0], b)
+	mul(&c[1], &a[1], b)
+}
+
 func (e *fp2) mulByNonResidue(c, a *fe2) {
 	t := e.t
 	// c0 = (a0 - a1)
@@ -269,11 +274,6 @@ func (e *fp2) inverseBatch(in []fe2) {
 			j = j + 1
 		}
 	}
-}
-
-func (e *fp2) mulByFq(c, a *fe2, b *fe) {
-	mul(&c[0], &a[0], b)
-	mul(&c[1], &a[1], b)
 }
 
 func (e *fp2) exp(c, a *fe2, s *big.Int) {
