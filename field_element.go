@@ -9,7 +9,7 @@ import (
 )
 
 // fe is base field element representation
-type fe /***			***/ [6]uint64
+type fe /***			***/ [fpNumberOfLimbs]uint64
 
 // fe2 is element representation of 'fp2' which is quadratic extention of base field 'fp'
 // Representation follows c[0] + c[1] * u encoding order.
@@ -24,16 +24,15 @@ type fe6 /**			***/ [3]fe2
 type fe12 /**			***/ [2]fe6
 
 func (fe *fe) setBytes(in []byte) *fe {
-	size := 48
 	l := len(in)
-	if l >= size {
-		l = size
+	if l >= fpByteSize {
+		l = fpByteSize
 	}
-	padded := make([]byte, size)
-	copy(padded[size-l:], in[:])
+	padded := make([]byte, fpByteSize)
+	copy(padded[fpByteSize-l:], in[:])
 	var a int
-	for i := 0; i < 6; i++ {
-		a = size - i*8
+	for i := 0; i < fpNumberOfLimbs; i++ {
+		a = fpByteSize - i*8
 		fe[i] = uint64(padded[a-1]) | uint64(padded[a-2])<<8 |
 			uint64(padded[a-3])<<16 | uint64(padded[a-4])<<24 |
 			uint64(padded[a-5])<<32 | uint64(padded[a-6])<<40 |
@@ -68,10 +67,10 @@ func (fe *fe) set(fe2 *fe) *fe {
 }
 
 func (fe *fe) bytes() []byte {
-	out := make([]byte, 48)
+	out := make([]byte, fpByteSize)
 	var a int
-	for i := 0; i < 6; i++ {
-		a = 48 - i*8
+	for i := 0; i < fpNumberOfLimbs; i++ {
+		a = fpByteSize - i*8
 		out[a-1] = byte(fe[i])
 		out[a-2] = byte(fe[i] >> 8)
 		out[a-3] = byte(fe[i] >> 16)
@@ -89,7 +88,7 @@ func (fe *fe) big() *big.Int {
 }
 
 func (fe *fe) string() (s string) {
-	for i := 5; i >= 0; i-- {
+	for i := fpNumberOfLimbs - 1; i >= 0; i-- {
 		s = fmt.Sprintf("%s%16.16x", s, fe[i])
 	}
 	return "0x" + s
@@ -140,7 +139,7 @@ func (fe *fe) isOne() bool {
 }
 
 func (fe *fe) cmp(fe2 *fe) int {
-	for i := 5; i > -1; i-- {
+	for i := fpNumberOfLimbs - 1; i >= 0; i-- {
 		if fe[i] > fe2[i] {
 			return 1
 		} else if fe[i] < fe2[i] {

@@ -25,6 +25,11 @@ func (p *PointG1) Zero() *PointG1 {
 	return p
 }
 
+// IsAffine checks a G1 point whether it is in affine form.
+func (p *PointG1) IsAffine() bool {
+	return p[2].isOne()
+}
+
 type tempG1 struct {
 	t [9]*fe
 }
@@ -58,11 +63,11 @@ func (g *G1) Q() *big.Int {
 // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
 // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
-	if len(uncompressed) != 96 {
+	if len(uncompressed) != 2*fpByteSize {
 		return nil, errors.New("input string should be equal or larger than 96")
 	}
-	var in [96]byte
-	copy(in[:], uncompressed[:96])
+	var in [2 * fpByteSize]byte
+	copy(in[:], uncompressed[:2*fpByteSize])
 	if in[0]&(1<<7) != 0 {
 		return nil, errors.New("input string should be equal or larger than 96")
 	}
@@ -78,11 +83,11 @@ func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 		return g.Zero(), nil
 	}
 	in[0] &= 0x1f
-	x, err := fromBytes(in[:48])
+	x, err := fromBytes(in[:fpByteSize])
 	if err != nil {
 		return nil, err
 	}
-	y, err := fromBytes(in[48:])
+	y, err := fromBytes(in[fpByteSize:])
 	if err != nil {
 		return nil, err
 	}
@@ -102,14 +107,14 @@ func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
 // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G1) ToUncompressed(p *PointG1) []byte {
-	out := make([]byte, 96)
+	out := make([]byte, 2*fpByteSize)
 	if g.IsZero(p) {
 		out[0] |= 1 << 6
 		return out
 	}
 	g.Affine(p)
-	copy(out[:48], toBytes(&p[0]))
-	copy(out[48:], toBytes(&p[1]))
+	copy(out[:fpByteSize], toBytes(&p[0]))
+	copy(out[fpByteSize:], toBytes(&p[1]))
 	return out
 }
 
@@ -118,10 +123,10 @@ func (g *G1) ToUncompressed(p *PointG1) []byte {
 // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
 // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
-	if len(compressed) != 48 {
+	if len(compressed) != fpByteSize {
 		return nil, errors.New("input string should be equal or larger than 48")
 	}
-	var in [48]byte
+	var in [fpByteSize]byte
 	copy(in[:], compressed[:])
 	if in[0]&(1<<7) == 0 {
 		return nil, errors.New("compression flag should be set")
@@ -165,7 +170,7 @@ func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
 // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G1) ToCompressed(p *PointG1) []byte {
-	out := make([]byte, 48)
+	out := make([]byte, fpByteSize)
 	g.Affine(p)
 	if g.IsZero(p) {
 		out[0] |= 1 << 6
@@ -180,11 +185,11 @@ func (g *G1) ToCompressed(p *PointG1) []byte {
 }
 
 func (g *G1) fromBytesUnchecked(in []byte) (*PointG1, error) {
-	p0, err := fromBytes(in[:48])
+	p0, err := fromBytes(in[:fpByteSize])
 	if err != nil {
 		return nil, err
 	}
-	p1, err := fromBytes(in[48:])
+	p1, err := fromBytes(in[fpByteSize:])
 	if err != nil {
 		return nil, err
 	}
@@ -193,19 +198,17 @@ func (g *G1) fromBytesUnchecked(in []byte) (*PointG1, error) {
 }
 
 // FromBytes constructs a new point given uncompressed byte input.
-// FromBytes does not take zcash flags into account.
-// Byte input expected to be at least 96 bytes.
-// First 96 bytes should be concatenation of x and y values.
-// Point (0, 0) is considered as infinity.
+// Input string is expected to be equal to 96 bytes and concatenation of x and y cooridanates.
+// (0, 0) is considered as infinity.
 func (g *G1) FromBytes(in []byte) (*PointG1, error) {
-	if len(in) != 96 {
+	if len(in) != 2*fpByteSize {
 		return nil, errors.New("input string should be equal or larger than 96")
 	}
-	p0, err := fromBytes(in[:48])
+	p0, err := fromBytes(in[:fpByteSize])
 	if err != nil {
 		return nil, err
 	}
-	p1, err := fromBytes(in[48:])
+	p1, err := fromBytes(in[fpByteSize:])
 	if err != nil {
 		return nil, err
 	}
@@ -222,16 +225,15 @@ func (g *G1) FromBytes(in []byte) (*PointG1, error) {
 }
 
 // ToBytes serializes a point into bytes in uncompressed form.
-// ToBytes does not take zcash flags into account.
 // ToBytes returns (0, 0) if point is infinity.
 func (g *G1) ToBytes(p *PointG1) []byte {
-	out := make([]byte, 96)
+	out := make([]byte, 2*fpByteSize)
 	if g.IsZero(p) {
 		return out
 	}
 	g.Affine(p)
-	copy(out[:48], toBytes(&p[0]))
-	copy(out[48:], toBytes(&p[1]))
+	copy(out[:fpByteSize], toBytes(&p[0]))
+	copy(out[fpByteSize:], toBytes(&p[1]))
 	return out
 }
 
@@ -289,15 +291,19 @@ func (g *G1) IsOnCurve(p *PointG1) bool {
 		return true
 	}
 	t := g.t
-	square(t[0], &p[1])
-	square(t[1], &p[0])
-	mul(t[1], t[1], &p[0])
-	square(t[2], &p[2])
-	square(t[3], t[2])
-	mul(t[2], t[2], t[3])
-	mul(t[2], b, t[2])
-	add(t[1], t[1], t[2])
-	return t[0].equal(t[1])
+	square(t[0], &p[1])    // y^2
+	square(t[1], &p[0])    // x^2
+	mul(t[1], t[1], &p[0]) // x^3
+	if p.IsAffine() {
+		addAssign(t[1], b)      // x^2 + b
+		return t[0].equal(t[1]) // y^2 ?= x^3 + b
+	}
+	square(t[2], &p[2])     // z^2
+	square(t[3], t[2])      // z^4
+	mul(t[2], t[2], t[3])   // z^6
+	mul(t[2], b, t[2])      // b * z^6
+	add(t[1], t[1], t[2])   // x^3 + b * z^6
+	return t[0].equal(t[1]) // y^2 ?= x^3 + b * z^6
 }
 
 // IsAffine checks a G1 point whether it is in affine form.
@@ -312,12 +318,12 @@ func (g *G1) Affine(p *PointG1) *PointG1 {
 	}
 	if !g.IsAffine(p) {
 		t := g.t
-		inverse(t[0], &p[2])
-		square(t[1], t[0])
-		mul(&p[0], &p[0], t[1])
-		mul(t[0], t[0], t[1])
-		mul(&p[1], &p[1], t[0])
-		p[2].one()
+		inverse(t[0], &p[2])    // z^-1
+		square(t[1], t[0])      // z^-2
+		mul(&p[0], &p[0], t[1]) // x = x * z^-2
+		mul(t[0], t[0], t[1])   // z^-3
+		mul(&p[1], &p[1], t[0]) // y = y * z^-3
+		p[2].one()              // z = 1
 	}
 	return p
 }
@@ -351,14 +357,14 @@ func (g *G1) Add(r, p1, p2 *PointG1) *PointG1 {
 		return r.Set(p1)
 	}
 	t := g.t
-	square(t[7], &p1[2])
-	mul(t[1], &p2[0], t[7])
-	mul(t[2], &p1[2], t[7])
-	mul(t[0], &p2[1], t[2])
-	square(t[8], &p2[2])
-	mul(t[3], &p1[0], t[8])
-	mul(t[4], &p2[2], t[8])
-	mul(t[2], &p1[1], t[4])
+	square(t[7], &p1[2])    // z1z1
+	mul(t[1], &p2[0], t[7]) // u2 = x2 * z1z1
+	mul(t[2], &p1[2], t[7]) // z1z1 * z1
+	mul(t[0], &p2[1], t[2]) // s2 = y2 * z1z1 * z1
+	square(t[8], &p2[2])    // z2z2
+	mul(t[3], &p1[0], t[8]) // u1 = x1 * z2z2
+	mul(t[4], &p2[2], t[8]) // z2z2 * z2
+	mul(t[2], &p1[1], t[4]) // s1 = y1 * z2z2 * z2
 	if t[1].equal(t[3]) {
 		if t[0].equal(t[2]) {
 			return g.Double(r, p1)
@@ -366,27 +372,27 @@ func (g *G1) Add(r, p1, p2 *PointG1) *PointG1 {
 			return r.Zero()
 		}
 	}
-	sub(t[1], t[1], t[3])
-	double(t[4], t[1])
-	square(t[4], t[4])
-	mul(t[5], t[1], t[4])
-	sub(t[0], t[0], t[2])
-	double(t[0], t[0])
-	square(t[6], t[0])
-	sub(t[6], t[6], t[5])
-	mul(t[3], t[3], t[4])
-	double(t[4], t[3])
-	sub(&r[0], t[6], t[4])
-	sub(t[4], t[3], &r[0])
-	mul(t[6], t[2], t[5])
-	double(t[6], t[6])
-	mul(t[0], t[0], t[4])
-	sub(&r[1], t[0], t[6])
-	add(t[0], &p1[2], &p2[2])
-	square(t[0], t[0])
-	sub(t[0], t[0], t[7])
-	sub(t[0], t[0], t[8])
-	mul(&r[2], t[0], t[1])
+	sub(t[1], t[1], t[3])     // h = u2 - u1
+	double(t[4], t[1])        // 2h
+	square(t[4], t[4])        // i = 2h^2
+	mul(t[5], t[1], t[4])     // j = h*i
+	sub(t[0], t[0], t[2])     // s2 - s1
+	double(t[0], t[0])        // r = 2*(s2 - s1)
+	square(t[6], t[0])        // r^2
+	sub(t[6], t[6], t[5])     // r^2 - j
+	mul(t[3], t[3], t[4])     // v = u1 * i
+	double(t[4], t[3])        // 2*v
+	sub(&r[0], t[6], t[4])    // x3 = r^2 - j - 2*v
+	sub(t[4], t[3], &r[0])    // v - x3
+	mul(t[6], t[2], t[5])     // s1 * j
+	double(t[6], t[6])        // 2 * s1 * j
+	mul(t[0], t[0], t[4])     // r * (v - x3)
+	sub(&r[1], t[0], t[6])    // y3 = r * (v - x3) - (2 * s1 * j)
+	add(t[0], &p1[2], &p2[2]) // z1 + z2
+	square(t[0], t[0])        // (z1 + z2)^2
+	sub(t[0], t[0], t[7])     // (z1 + z2)^2 - z1z1
+	sub(t[0], t[0], t[8])     // (z1 + z2)^2 - z1z1 - z2z2
+	mul(&r[2], t[0], t[1])    // z3 = ((z1 + z2)^2 - z1z1 - z2z2) * h
 	return r
 }
 
@@ -441,28 +447,28 @@ func (g *G1) Double(r, p *PointG1) *PointG1 {
 		return r.Set(p)
 	}
 	t := g.t
-	square(t[0], &p[0])
-	square(t[1], &p[1])
-	square(t[2], t[1])
-	add(t[1], &p[0], t[1])
-	square(t[1], t[1])
-	sub(t[1], t[1], t[0])
-	sub(t[1], t[1], t[2])
-	double(t[1], t[1])
-	double(t[3], t[0])
-	add(t[0], t[3], t[0])
-	square(t[4], t[0])
-	double(t[3], t[1])
-	sub(&r[0], t[4], t[3])
-	sub(t[1], t[1], &r[0])
-	double(t[2], t[2])
-	double(t[2], t[2])
-	double(t[2], t[2])
-	mul(t[0], t[0], t[1])
-	sub(t[1], t[0], t[2])
-	mul(t[0], &p[1], &p[2])
-	r[1].set(t[1])
-	double(&r[2], t[0])
+	square(t[0], &p[0])     // a = x^2
+	square(t[1], &p[1])     // b = y^2
+	square(t[2], t[1])      // c = b^2
+	add(t[1], &p[0], t[1])  // b + x1
+	square(t[1], t[1])      // (b + x1)^2
+	sub(t[1], t[1], t[0])   // (b + x1)^2 - a
+	sub(t[1], t[1], t[2])   // (b + x1)^2 - a - c
+	double(t[1], t[1])      // d = 2((b+x1)^2 - a - c)
+	double(t[3], t[0])      // 2a
+	add(t[0], t[3], t[0])   // e = 3a
+	square(t[4], t[0])      // f = e^2
+	double(t[3], t[1])      // 2d
+	sub(&r[0], t[4], t[3])  // x3 = f - 2d
+	sub(t[1], t[1], &r[0])  // d-x3
+	double(t[2], t[2])      //
+	double(t[2], t[2])      //
+	double(t[2], t[2])      // 8c
+	mul(t[0], t[0], t[1])   // e * (d - x3)
+	sub(t[1], t[0], t[2])   // x3 = e * (d - x3) - 8c
+	mul(t[0], &p[1], &p[2]) // y1 * z1
+	r[1].set(t[1])          //
+	double(&r[2], t[0])     // z3 = 2(y1 * z1)
 	return r
 }
 

@@ -11,7 +11,7 @@ func TestPairingExpected(t *testing.T) {
 	GT := bls.GT()
 	expected, err := GT.FromBytes(
 		fromHex(
-			48,
+			fpByteSize,
 			"0x0f41e58663bf08cf068672cbd01a7ec73baca4d72ca93544deff686bfd6df543d48eaa24afe47e1efde449383b676631",
 			"0x04c581234d086a9902249b64728ffd21a189e87935a954051c7cdba7b3872629a4fafc05066245cb9108f0242d0fe3ef",
 			"0x03350f55a7aefcd3c31b4fcb6ce5771cc6a0e9786ab5973320c806ad360829107ba810c5a09ffdd9be2291a0c25a99a2",
@@ -31,7 +31,7 @@ func TestPairingExpected(t *testing.T) {
 	}
 	r := bls.AddPair(G1.One(), G2.One()).Result()
 	if !r.Equal(expected) {
-		t.Fatal("bad pairing")
+		t.Fatal("expected pairing failed")
 	}
 	if !GT.IsValid(r) {
 		t.Fatal("element is not in correct subgroup")
@@ -89,7 +89,7 @@ func TestPairingNonDegeneracy(t *testing.T) {
 	{
 		expected, err := GT.FromBytes(
 			fromHex(
-				48,
+				fpByteSize,
 				"0x0f41e58663bf08cf068672cbd01a7ec73baca4d72ca93544deff686bfd6df543d48eaa24afe47e1efde449383b676631",
 				"0x04c581234d086a9902249b64728ffd21a189e87935a954051c7cdba7b3872629a4fafc05066245cb9108f0242d0fe3ef",
 				"0x03350f55a7aefcd3c31b4fcb6ce5771cc6a0e9786ab5973320c806ad360829107ba810c5a09ffdd9be2291a0c25a99a2",
@@ -113,7 +113,7 @@ func TestPairingNonDegeneracy(t *testing.T) {
 		bls.AddPair(g1One, g2One)
 		e := bls.Result()
 		if !e.Equal(expected) {
-			t.Fatal("bad pairing")
+			t.Fatal("pairing failed")
 		}
 	}
 }
@@ -134,7 +134,7 @@ func TestPairingBilinearity(t *testing.T) {
 		e1 := bls.AddPair(P1, P2).Result()
 		gt.Exp(e0, e0, c)
 		if !e0.Equal(e1) {
-			t.Fatal("bad pairing, 1")
+			t.Fatal("pairing failed")
 		}
 	}
 	// e(a * G1, b * G2) = e((a + b) * G1, G2)
@@ -153,7 +153,7 @@ func TestPairingBilinearity(t *testing.T) {
 		bls.AddPairInv(P1, P2)
 		// should be one
 		if !bls.Check() {
-			t.Fatal("bad pairing, 2")
+			t.Fatal("pairing failed")
 		}
 	}
 	// e(a * G1, b * G2) = e((a + b) * G1, G2)
@@ -172,7 +172,7 @@ func TestPairingBilinearity(t *testing.T) {
 		bls.AddPairInv(H1, H2)
 		// should be one
 		if !bls.Check() {
-			t.Fatal("bad pairing, 3")
+			t.Fatal("pairing failed")
 		}
 	}
 }

@@ -10,7 +10,7 @@ import (
 )
 
 func (g *G1) one() *PointG1 {
-	one, _ := g.fromBytesUnchecked(fromHex(48,
+	one, _ := g.fromBytesUnchecked(fromHex(fpByteSize,
 		"0x17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb",
 		"0x08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1",
 	))
@@ -35,7 +35,7 @@ func TestG1Serialization(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !g1.IsZero(p0) {
-		t.Fatal("bad infinity serialization 1")
+		t.Fatal("infinity serialization failed")
 	}
 	b0 = g1.ToCompressed(zero)
 	p0, err = g1.FromCompressed(b0)
@@ -43,7 +43,7 @@ func TestG1Serialization(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !g1.IsZero(p0) {
-		t.Fatal("bad infinity serialization 2")
+		t.Fatal("infinity serialization failed")
 	}
 	b0 = g1.ToBytes(zero)
 	p0, err = g1.FromBytes(b0)
@@ -51,7 +51,7 @@ func TestG1Serialization(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !g1.IsZero(p0) {
-		t.Fatal("bad infinity serialization 3")
+		t.Fatal("infinity serialization failed")
 	}
 	for i := 0; i < fuz; i++ {
 		a := g1.rand()
@@ -61,7 +61,7 @@ func TestG1Serialization(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !g1.Equal(a, b) {
-			t.Fatal("bad serialization 1")
+			t.Fatal("serialization failed")
 		}
 		compressed := g1.ToCompressed(b)
 		a, err = g1.FromCompressed(compressed)
@@ -69,7 +69,7 @@ func TestG1Serialization(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !g1.Equal(a, b) {
-			t.Fatal("bad serialization 2")
+			t.Fatal("serialization failed")
 		}
 	}
 	for i := 0; i < fuz; i++ {
@@ -80,7 +80,7 @@ func TestG1Serialization(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !g1.Equal(a, b) {
-			t.Fatal("bad serialization 3")
+			t.Fatal("serialization failed")
 		}
 	}
 }
@@ -298,14 +298,14 @@ func TestZKCryptoVectorsG1UncompressedValid(t *testing.T) {
 	g := NewG1()
 	p1 := g.Zero()
 	for i := 0; i < 1000; i++ {
-		vector := data[i*96 : (i+1)*96]
+		vector := data[i*2*fpByteSize : (i+1)*2*fpByteSize]
 		p2, err := g.FromUncompressed(vector)
 		if err != nil {
 			t.Fatal("decoing fails", err, i)
 		}
 		uncompressed := g.ToUncompressed(p2)
 		if !bytes.Equal(vector, uncompressed) || !g.Equal(p1, p2) {
-			t.Fatal("bad serialization")
+			t.Fatal("serialization failed")
 		}
 
 		g.Add(p1, p1, &g1One)
@@ -320,14 +320,14 @@ func TestZKCryptoVectorsG1CompressedValid(t *testing.T) {
 	g := NewG1()
 	p1 := g.Zero()
 	for i := 0; i < 1000; i++ {
-		vector := data[i*48 : (i+1)*48]
+		vector := data[i*fpByteSize : (i+1)*fpByteSize]
 		p2, err := g.FromCompressed(vector)
 		if err != nil {
 			t.Fatal("decoing fails", err, i)
 		}
 		compressed := g.ToCompressed(p2)
 		if !bytes.Equal(vector, compressed) || !g.Equal(p1, p2) {
-			t.Fatal("bad serialization")
+			t.Fatal("serialization failed")
 		}
 		g.Add(p1, p1, &g1One)
 	}
@@ -345,7 +345,7 @@ func TestG1MultiExpBigExpected(t *testing.T) {
 	g.MulScalarBig(expected, one, big.NewInt(5))
 	_, _ = g.MultiExpBig(result, bases[:], scalars[:])
 	if !g.Equal(expected, result) {
-		t.Fatal("bad multi-exponentiation")
+		t.Fatal("multi-exponentiation failed")
 	}
 }
 
@@ -361,7 +361,7 @@ func TestG1MultiExpExpected(t *testing.T) {
 	g.MulScalar(expected, one, &Fr{5})
 	_, _ = g.MultiExp(result, bases[:], scalars[:])
 	if !g.Equal(expected, result) {
-		t.Fatal("bad multi-exponentiation")
+		t.Fatal("multi-exponentiation failed")
 	}
 }
 
@@ -386,7 +386,7 @@ func TestG1MultiExpBig(t *testing.T) {
 		result := g.New()
 		_, _ = g.MultiExpBig(result, bases, scalars)
 		if !g.Equal(expected, result) {
-			t.Fatal("bad multi-exponentiation")
+			t.Fatal("multi-exponentiation failed")
 		}
 	}
 }
@@ -412,7 +412,7 @@ func TestG1MultiExp(t *testing.T) {
 		result := g.New()
 		_, _ = g.MultiExp(result, bases, scalars)
 		if !g.Equal(expected, result) {
-			t.Fatal("bad multi-exponentiation")
+			t.Fatal("multi-exponentiation failed")
 		}
 	}
 }
@@ -423,7 +423,7 @@ func TestG1MapToCurve(t *testing.T) {
 		expected []byte
 	}{
 		{
-			u: make([]byte, 48),
+			u: make([]byte, fpByteSize),
 			expected: fromHex(-1,
 				"11a9a0372b8f332d5c30de9ad14e50372a73fa4c45d5f2fa5097f2d6fb93bcac592f2e1711ac43db0519870c7d0ea415",
 				"092c0f994164a0719f51c24ba3788de240ff926b55f58c445116e8bc6a47cd63392fd4e8e22bdf9feaa96ee773222133",
@@ -674,7 +674,7 @@ func BenchmarkG1MultiExpAffine(t *testing.B) {
 }
 
 func BenchmarkG1MapToCurve(t *testing.B) {
-	a := fromHex(48, "0x1234")
+	a := fromHex(fpByteSize, "0x1234")
 	g1 := NewG1()
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {

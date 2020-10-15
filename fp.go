@@ -7,7 +7,7 @@ import (
 
 func fromBytes(in []byte) (*fe, error) {
 	fe := &fe{}
-	if len(in) != 48 {
+	if len(in) != fpByteSize {
 		return nil, errors.New("input string should be equal 48 bytes")
 	}
 	fe.setBytes(in)
@@ -19,13 +19,13 @@ func fromBytes(in []byte) (*fe, error) {
 }
 
 func from64Bytes(in []byte) (*fe, error) {
-	if len(in) != 64 {
+	if len(in) != 32*2 {
 		return nil, errors.New("input string should be equal 64 bytes")
 	}
-	a0 := make([]byte, 48)
-	copy(a0[16:48], in[:32])
-	a1 := make([]byte, 48)
-	copy(a1[16:48], in[32:])
+	a0 := make([]byte, fpByteSize)
+	copy(a0[fpByteSize-32:fpByteSize], in[:32])
+	a1 := make([]byte, fpByteSize)
+	copy(a1[fpByteSize-32:fpByteSize], in[32:])
 	e0, err := fromBytes(a0)
 	if err != nil {
 		return nil, err
@@ -120,7 +120,7 @@ func inverse(inv, e *fe) {
 	var z uint64
 	var found = false
 	// Phase 1
-	for i := 0; i < 768; i++ {
+	for i := 0; i < sixWordBitSize*2; i++ {
 		if v.isZero() {
 			found = true
 			break
@@ -150,7 +150,7 @@ func inverse(inv, e *fe) {
 		return
 	}
 
-	if k < 381 || k > 381+384 {
+	if k < fpBitSize || k > fpBitSize+sixWordBitSize {
 		inv.zero()
 		return
 	}
@@ -162,7 +162,7 @@ func inverse(inv, e *fe) {
 	lsubAssign(u, r)
 
 	// Phase 2
-	for i := k; i < 384*2; i++ {
+	for i := k; i < 2*sixWordBitSize; i++ {
 		double(u, u)
 	}
 	inv.set(u)

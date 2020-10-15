@@ -10,7 +10,7 @@ import (
 )
 
 func (g *G2) one() *PointG2 {
-	one, err := g.fromBytesUnchecked(fromHex(48,
+	one, err := g.fromBytesUnchecked(fromHex(fpByteSize,
 		"0x13e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e",
 		"0x024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb8",
 		"0x0606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be",
@@ -58,7 +58,7 @@ func TestG2Serialization(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !g2.IsZero(p0) {
-		t.Fatal("bad infinity serialization 1")
+		t.Fatal("infinity serialization failed")
 	}
 	b0 = g2.ToCompressed(zero)
 	p0, err = g2.FromCompressed(b0)
@@ -66,7 +66,7 @@ func TestG2Serialization(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !g2.IsZero(p0) {
-		t.Fatal("bad infinity serialization 2")
+		t.Fatal("infinity serialization failed")
 	}
 	b0 = g2.ToBytes(zero)
 	p0, err = g2.FromBytes(b0)
@@ -74,7 +74,7 @@ func TestG2Serialization(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !g2.IsZero(p0) {
-		t.Fatal("bad infinity serialization 3")
+		t.Fatal("infinity serialization failed")
 	}
 	for i := 0; i < fuz; i++ {
 		a := g2.rand()
@@ -84,7 +84,7 @@ func TestG2Serialization(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !g2.Equal(a, b) {
-			t.Fatal("bad serialization 1")
+			t.Fatal("serialization failed")
 		}
 		compressed := g2.ToCompressed(b)
 		a, err = g2.FromCompressed(compressed)
@@ -92,7 +92,7 @@ func TestG2Serialization(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !g2.Equal(a, b) {
-			t.Fatal("bad serialization 2")
+			t.Fatal("serialization failed")
 		}
 	}
 	for i := 0; i < fuz; i++ {
@@ -103,7 +103,7 @@ func TestG2Serialization(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !g2.Equal(a, b) {
-			t.Fatal("bad serialization 3")
+			t.Fatal("serialization failed")
 		}
 	}
 }
@@ -342,7 +342,7 @@ func TestZKCryptoVectorsG2UncompressedValid(t *testing.T) {
 		}
 		uncompressed := g.ToUncompressed(p2)
 		if !bytes.Equal(vector, uncompressed) || !g.Equal(p1, p2) {
-			t.Fatal("bad serialization")
+			t.Fatal("serialization failed")
 		}
 		g.Add(p1, p1, &g2One)
 	}
@@ -356,14 +356,14 @@ func TestZKCryptoVectorsG2CompressedValid(t *testing.T) {
 	g := NewG2()
 	p1 := g.Zero()
 	for i := 0; i < 1000; i++ {
-		vector := data[i*96 : (i+1)*96]
+		vector := data[i*2*fpByteSize : (i+1)*2*fpByteSize]
 		p2, err := g.FromCompressed(vector)
 		if err != nil {
 			t.Fatal("decoing fails", err, i)
 		}
 		compressed := g.ToCompressed(p2)
 		if !bytes.Equal(vector, compressed) || !g.Equal(p1, p2) {
-			t.Fatal("bad serialization")
+			t.Fatal("serialization failed")
 		}
 
 		g.Add(p1, p1, &g2One)
@@ -382,7 +382,7 @@ func TestG2MultiExpExpected(t *testing.T) {
 	g.MulScalarBig(expected, one, big.NewInt(5))
 	_, _ = g.MultiExpBig(result, bases[:], scalars[:])
 	if !g.Equal(expected, result) {
-		t.Fatal("bad multi-exponentiation")
+		t.Fatal("multi-exponentiation failed")
 	}
 }
 
@@ -407,7 +407,7 @@ func TestG2MultiExpBig(t *testing.T) {
 		result := g.New()
 		_, _ = g.MultiExpBig(result, bases, scalars)
 		if !g.Equal(expected, result) {
-			t.Fatal("bad multi-exponentiation")
+			t.Fatal("multi-exponentiation failed")
 		}
 	}
 }
@@ -433,7 +433,7 @@ func TestG2MultiExp(t *testing.T) {
 		result := g.New()
 		_, _ = g.MultiExp(result, bases, scalars)
 		if !g.Equal(expected, result) {
-			t.Fatal("bad multi-exponentiation")
+			t.Fatal("multi-exponentiation failed")
 		}
 	}
 }
@@ -455,7 +455,7 @@ func TestG2MapToCurve(t *testing.T) {
 		expected []byte
 	}{
 		{
-			u: make([]byte, 96),
+			u: make([]byte, 2*fpByteSize),
 			expected: fromHex(-1, "0a67d12118b5a35bb02d2e86b3ebfa7e23410db93de39fb06d7025fa95e96ffa428a7a27c3ae4dd4b40bd251ac658892",
 				"018320896ec9eef9d5e619848dc29ce266f413d02dd31d9b9d44ec0c79cd61f18b075ddba6d7bd20b7ff27a4b324bfce",
 				"04c69777a43f0bda07679d5805e63f18cf4e0e7c6112ac7f70266d199b4f76ae27c6269a3ceebdae30806e9a76aadf5c",
@@ -757,7 +757,7 @@ func BenchmarkG2ClearCofactor(t *testing.B) {
 }
 
 func BenchmarkG2SWUMap(t *testing.B) {
-	a := fromHex(96, "0x1234")
+	a := fromHex(2*fpByteSize, "0x1234")
 	g2 := NewG2()
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
