@@ -173,8 +173,8 @@ func (e *fp12) mul(c, a, b *fe12) {
 	fp6.mul(t[2], &a[1], &b[1])     // v1 = a1b1
 	fp6.add(t[0], &a[0], &a[1])     // a0 + a1
 	fp6.add(t[3], &b[0], &b[1])     // b0 + b1
-	fp6.mul(t[0], t[0], t[3])       // (a0 + a1)(b0 + b1)
-	fp6.sub(t[0], t[0], t[1])       // (a0 + a1)(b0 + b1) - v0
+	fp6.mulAssign(t[0], t[3])       // (a0 + a1)(b0 + b1)
+	fp6.subAssign(t[0], t[1])       // (a0 + a1)(b0 + b1) - v0
 	fp6.sub(&c[1], t[0], t[2])      // c1 = (a0 + a1)(b0 + b1) - v0 - v1
 	fp6.mulByNonResidue(t[2], t[2]) // βv1
 	fp6.add(&c[0], t[1], t[2])      // c0 = v0 + βv1
@@ -186,8 +186,8 @@ func (e *fp12) mulAssign(a, b *fe12) {
 	fp6.mul(t[2], &a[1], &b[1])     // v1 = a1b1
 	fp6.add(t[0], &a[0], &a[1])     // a0 + a1
 	fp6.add(t[3], &b[0], &b[1])     // b0 + b1
-	fp6.mul(t[0], t[0], t[3])       // (a0 + a1)(b0 + b1)
-	fp6.sub(t[0], t[0], t[1])       // (a0 + a1)(b0 + b1) - v0
+	fp6.mulAssign(t[0], t[3])       // (a0 + a1)(b0 + b1)
+	fp6.subAssign(t[0], t[1])       // (a0 + a1)(b0 + b1) - v0
 	fp6.sub(&a[1], t[0], t[2])      // c1 = (a0 + a1)(b0 + b1) - v0 - v1
 	fp6.mulByNonResidue(t[2], t[2]) // βv1
 	fp6.add(&a[0], t[1], t[2])      // c0 = v0 + βv1
@@ -217,11 +217,11 @@ func (e *fp12) inverse(c, a *fe12) {
 	fp6.square(t[0], &a[0])         // a0^2
 	fp6.square(t[1], &a[1])         // a1^2
 	fp6.mulByNonResidue(t[1], t[1]) // βa1^2
-	fp6.sub(t[1], t[0], t[1])       // v = (a0^2 - a1^2)
-	fp6.inverse(t[0], t[1])         // v = v^-1
-	fp6.mul(&c[0], &a[0], t[0])     // c0 = a0v
-	fp6.mulAssign(t[0], &a[1])      //
-	fp6.neg(&c[1], t[0])            // c1 = -a1v
+	fp6.subAssign(t[0], t[1])       // v = (a0^2 - a1^2)
+	fp6.inverse(t[1], t[0])         // v = v^-1
+	fp6.mul(&c[0], &a[0], t[1])     // c0 = a0v
+	fp6.mulAssign(t[1], &a[1])      //
+	fp6.neg(&c[1], t[1])            // c1 = -a1v
 }
 
 func (e *fp12) mul014(a *fe12, b0, b1, b4 *fe2) {

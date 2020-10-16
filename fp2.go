@@ -142,22 +142,22 @@ func (e *fp2) mul(c, a, b *fe2) {
 	// Guide to Pairing Based Cryptography
 	// Algorithm 5.16
 
-	mul(t[1], &a[0], &b[0]) // a0b0
-	mul(t[2], &a[1], &b[1]) // a1b1
-	add(t[0], &a[0], &a[1]) // a0 + a1
-	add(t[3], &b[0], &b[1]) // b0 + b1
-	sub(&c[0], t[1], t[2])  // c0 = a0b0 - a1b1
-	addAssign(t[1], t[2])   // a0b0 + a1b1
-	mul(t[0], t[0], t[3])   // (a0 + a1)(b0 + b1)
-	sub(&c[1], t[0], t[1])  // c1 = (a0 + a1)(b0 + b1) - (a0b0 + a1b1)
+	mul(t[1], &a[0], &b[0])  // a0b0
+	mul(t[2], &a[1], &b[1])  // a1b1
+	ladd(t[0], &a[0], &a[1]) // a0 + a1
+	ladd(t[3], &b[0], &b[1]) // b0 + b1
+	sub(&c[0], t[1], t[2])   // c0 = a0b0 - a1b1
+	addAssign(t[1], t[2])    // a0b0 + a1b1
+	mul(t[0], t[0], t[3])    // (a0 + a1)(b0 + b1)
+	sub(&c[1], t[0], t[1])   // c1 = (a0 + a1)(b0 + b1) - (a0b0 + a1b1)
 }
 
 func (e *fp2) mulAssign(a, b *fe2) {
 	t := e.t
 	mul(t[1], &a[0], &b[0])
 	mul(t[2], &a[1], &b[1])
-	add(t[0], &a[0], &a[1])
-	add(t[3], &b[0], &b[1])
+	ladd(t[0], &a[0], &a[1])
+	ladd(t[3], &b[0], &b[1])
 	sub(&a[0], t[1], t[2])
 	addAssign(t[1], t[2])
 	mul(t[0], t[0], t[3])

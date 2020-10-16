@@ -280,10 +280,10 @@ func (g *G2) Equal(p1, p2 *PointG2) bool {
 	g.f.square(t[1], &p2[2])
 	g.f.mul(t[2], t[0], &p2[0])
 	g.f.mul(t[3], t[1], &p1[0])
-	g.f.mul(t[0], t[0], &p1[2])
-	g.f.mul(t[1], t[1], &p2[2])
-	g.f.mul(t[1], t[1], &p1[1])
-	g.f.mul(t[0], t[0], &p2[1])
+	g.f.mulAssign(t[0], &p1[2])
+	g.f.mulAssign(t[1], &p2[2])
+	g.f.mulAssign(t[1], &p1[1])
+	g.f.mulAssign(t[0], &p2[1])
 	return t[0].equal(t[1]) && t[2].equal(t[3])
 }
 
@@ -309,9 +309,9 @@ func (g *G2) IsOnCurve(p *PointG2) bool {
 	}
 	g.f.square(t[2], &p[2])   // z^2
 	g.f.square(t[3], t[2])    // z^4
-	g.f.mul(t[2], t[2], t[3]) // z^6
-	g.f.mul(t[2], b2, t[2])   // b*z^6
-	g.f.add(t[1], t[1], t[2]) // x^3 + b * z^6
+	g.f.mulAssign(t[2], t[3]) // z^6
+	g.f.mulAssign(t[2], b2)   // b*z^6
+	g.f.addAssign(t[1], t[2]) // x^3 + b * z^6
 	return t[0].equal(t[1])   // y^2 ?= x^3 + b * z^6
 }
 
@@ -327,12 +327,12 @@ func (g *G2) Affine(p *PointG2) *PointG2 {
 	}
 	if !g.IsAffine(p) {
 		t := g.t
-		g.f.inverse(t[0], &p[2])    // z^-1
-		g.f.square(t[1], t[0])      // z^-2
-		g.f.mul(&p[0], &p[0], t[1]) // x = x * z^-2
-		g.f.mul(t[0], t[0], t[1])   // z^-3
-		g.f.mul(&p[1], &p[1], t[0]) // y = y * z^-3
-		p[2].one()                  // z = 1
+		g.f.inverse(t[0], &p[2])   // z^-1
+		g.f.square(t[1], t[0])     // z^-2
+		g.f.mulAssign(&p[0], t[1]) // x = x * z^-2
+		g.f.mulAssign(t[0], t[1])  // z^-3
+		g.f.mulAssign(&p[1], t[0]) // y = y * z^-3
+		p[2].one()                 // z = 1
 	}
 	return p
 }
@@ -348,9 +348,9 @@ func (g *G2) AffineBatch(p []*PointG2) {
 	for i := 0; i < len(p); i++ {
 		if !g.IsAffine(p[i]) && !g.IsZero(p[i]) {
 			g.f.square(t[1], &inverses[i])
-			g.f.mul(&p[i][0], &p[i][0], t[1])
+			g.f.mulAssign(&p[i][0], t[1])
 			g.f.mul(t[0], &inverses[i], t[1])
-			g.f.mul(&p[i][1], &p[i][1], t[0])
+			g.f.mulAssign(&p[i][1], t[0])
 			p[i][2].one()
 		}
 	}
@@ -381,26 +381,26 @@ func (g *G2) Add(r, p1, p2 *PointG2) *PointG2 {
 			return r.Zero()
 		}
 	}
-	g.f.sub(t[1], t[1], t[3])     // h = u2 - u1
+	g.f.subAssign(t[1], t[3])     // h = u2 - u1
 	g.f.double(t[4], t[1])        // 2h
-	g.f.square(t[4], t[4])        // i = 2h^2
+	g.f.squareAssign(t[4])        // i = 2h^2
 	g.f.mul(t[5], t[1], t[4])     // j = h*i
-	g.f.sub(t[0], t[0], t[2])     // s2 - s1
-	g.f.double(t[0], t[0])        // r = 2*(s2 - s1)
+	g.f.subAssign(t[0], t[2])     // s2 - s1
+	g.f.doubleAssign(t[0])        // r = 2*(s2 - s1)
 	g.f.square(t[6], t[0])        // r^2
-	g.f.sub(t[6], t[6], t[5])     // r^2 - j
-	g.f.mul(t[3], t[3], t[4])     // v = u1 * i
+	g.f.subAssign(t[6], t[5])     // r^2 - j
+	g.f.mulAssign(t[3], t[4])     // v = u1 * i
 	g.f.double(t[4], t[3])        // 2*v
 	g.f.sub(&r[0], t[6], t[4])    // x3 = r^2 - j - 2*v
 	g.f.sub(t[4], t[3], &r[0])    // v - x3
 	g.f.mul(t[6], t[2], t[5])     // s1 * j
-	g.f.double(t[6], t[6])        // 2 * s1 * j
-	g.f.mul(t[0], t[0], t[4])     // r * (v - x3)
+	g.f.doubleAssign(t[6])        // 2 * s1 * j
+	g.f.mulAssign(t[0], t[4])     // r * (v - x3)
 	g.f.sub(&r[1], t[0], t[6])    // y3 = r * (v - x3) - (2 * s1 * j)
 	g.f.add(t[0], &p1[2], &p2[2]) // z1 + z2
-	g.f.square(t[0], t[0])        // (z1 + z2)^2
-	g.f.sub(t[0], t[0], t[7])     // (z1 + z2)^2 - z1z1
-	g.f.sub(t[0], t[0], t[8])     // (z1 + z2)^2 - z1z1 - z2z2
+	g.f.squareAssign(t[0])        // (z1 + z2)^2
+	g.f.subAssign(t[0], t[7])     // (z1 + z2)^2 - z1z1
+	g.f.subAssign(t[0], t[8])     // (z1 + z2)^2 - z1z1 - z2z2
 	g.f.mul(&r[2], t[0], t[1])    // z3 = ((z1 + z2)^2 - z1z1 - z2z2) * h
 	return r
 }
@@ -440,10 +440,10 @@ func (g *G2) AddMixed(r, p1, p2 *PointG2) *PointG2 {
 	g.f.sub(t[4], t[3], &r[0])  // v - x3
 	g.f.mul(t[6], &p1[1], t[5]) // y1 * j
 	g.f.doubleAssign(t[6])      // 2 * y1 * j
-	g.f.mul(t[0], t[0], t[4])   // r * (v - x3)
+	g.f.mulAssign(t[0], t[4])   // r * (v - x3)
 	g.f.sub(&r[1], t[0], t[6])  // y3 = r * (v - x3) - (2 * y1 * j)
 	g.f.add(t[0], &p1[2], t[1]) // z1 + h
-	g.f.square(t[0], t[0])      // (z1 + h)^2
+	g.f.squareAssign(t[0])      // (z1 + h)^2
 	g.f.subAssign(t[0], t[7])   // (z1 + h)^2 - z1z1
 	g.f.sub(&r[2], t[0], t[2])  // z3 = (z1 + z2)^2 - z1z1 - hh
 	return r
@@ -459,21 +459,21 @@ func (g *G2) Double(r, p *PointG2) *PointG2 {
 	g.f.square(t[0], &p[0])     // a = x^2
 	g.f.square(t[1], &p[1])     // b = y^2
 	g.f.square(t[2], t[1])      // c = b^2
-	g.f.add(t[1], &p[0], t[1])  // b + x1
-	g.f.square(t[1], t[1])      // (b + x1)^2
-	g.f.sub(t[1], t[1], t[0])   // (b + x1)^2 - a
-	g.f.sub(t[1], t[1], t[2])   // (b + x1)^2 - a - c
-	g.f.double(t[1], t[1])      // d = 2((b+x1)^2 - a - c)
+	g.f.addAssign(t[1], &p[0])  // b + x1
+	g.f.squareAssign(t[1])      // (b + x1)^2
+	g.f.subAssign(t[1], t[0])   // (b + x1)^2 - a
+	g.f.subAssign(t[1], t[2])   // (b + x1)^2 - a - c
+	g.f.doubleAssign(t[1])      // d = 2((b+x1)^2 - a - c)
 	g.f.double(t[3], t[0])      // 2a
-	g.f.add(t[0], t[3], t[0])   // e = 3a
+	g.f.addAssign(t[0], t[3])   // e = 3a
 	g.f.square(t[4], t[0])      // f = e^2
 	g.f.double(t[3], t[1])      // 2d
 	g.f.sub(&r[0], t[4], t[3])  // x3 = f - 2d
 	g.f.sub(t[1], t[1], &r[0])  // d-x3
-	g.f.double(t[2], t[2])      //
-	g.f.double(t[2], t[2])      //
-	g.f.double(t[2], t[2])      // 8c
-	g.f.mul(t[0], t[0], t[1])   // e * (d - x3)
+	g.f.doubleAssign(t[2])      //
+	g.f.doubleAssign(t[2])      //
+	g.f.doubleAssign(t[2])      // 8c
+	g.f.mulAssign(t[0], t[1])   // e * (d - x3)
 	g.f.sub(t[1], t[0], t[2])   // x3 = e * (d - x3) - 8c
 	g.f.mul(t[0], &p[1], &p[2]) // y1 * z1
 	r[1].set(t[1])              //

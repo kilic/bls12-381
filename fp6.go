@@ -165,23 +165,21 @@ func (e *fp6) mul(c, a, b *fe6) {
 	fp2.add(t[4], t[1], t[2])       // v1 + v2
 	fp2.subAssign(t[3], t[4])       // (a1 + a2)(b1 + b2) - v1 - v2
 	fp2.mulByNonResidue(t[3], t[3]) // ((a1 + a2)(b1 + b2) - v1 - v2)β
-	fp2.add(t[5], t[0], t[3])       // c0 = ((a1 + a2)(b1 + b2) - v1 - v2)β + v0
-
-	fp2.add(t[3], &a[0], &a[1])     // a0 + a1
+	fp2.addAssign(t[3], t[0])       // c0 = ((a1 + a2)(b1 + b2) - v1 - v2)β + v0
+	fp2.add(t[5], &a[0], &a[1])     // a0 + a1
 	fp2.add(t[4], &b[0], &b[1])     // b0 + b1
-	fp2.mulAssign(t[3], t[4])       // (a0 + a1)(b0 + b1)
+	fp2.mulAssign(t[5], t[4])       // (a0 + a1)(b0 + b1)
 	fp2.add(t[4], t[0], t[1])       // v0 + v1
-	fp2.subAssign(t[3], t[4])       // (a0 + a1)(b0 + b1) - v0 - v1
+	fp2.subAssign(t[5], t[4])       // (a0 + a1)(b0 + b1) - v0 - v1
 	fp2.mulByNonResidue(t[4], t[2]) // βv2
-	fp2.add(&c[1], t[3], t[4])      // c1 = (a0 + a1)(b0 + b1) - v0 - v1 + βv2
-
-	fp2.add(t[3], &a[0], &a[2]) // a0 + a2
-	fp2.add(t[4], &b[0], &b[2]) // b0 + b2
-	fp2.mulAssign(t[3], t[4])   // (a0 + a2)(b0 + b2)
-	fp2.add(t[4], t[0], t[2])   // v0 + v2
-	fp2.subAssign(t[3], t[4])   // (a0 + a2)(b0 + b2) - v0 - v2
-	fp2.add(&c[2], t[1], t[3])  // c2 = (a0 + a2)(b0 + b2) - v0 - v2 + v1
-	c[0].set(t[5])
+	fp2.add(&c[1], t[5], t[4])      // c1 = (a0 + a1)(b0 + b1) - v0 - v1 + βv2
+	fp2.add(t[5], &a[0], &a[2])     // a0 + a2
+	fp2.add(t[4], &b[0], &b[2])     // b0 + b2
+	fp2.mulAssign(t[5], t[4])       // (a0 + a2)(b0 + b2)
+	fp2.add(t[4], t[0], t[2])       // v0 + v2
+	fp2.subAssign(t[5], t[4])       // (a0 + a2)(b0 + b2) - v0 - v2
+	fp2.add(&c[2], t[1], t[5])      // c2 = (a0 + a2)(b0 + b2) - v0 - v2 + v1
+	c[0].set(t[3])
 }
 
 func (e *fp6) mulAssign(a, b *fe6) {
@@ -195,21 +193,21 @@ func (e *fp6) mulAssign(a, b *fe6) {
 	fp2.add(t[4], t[1], t[2])
 	fp2.subAssign(t[3], t[4])
 	fp2.mulByNonResidue(t[3], t[3])
-	fp2.add(t[5], t[0], t[3])
-	fp2.add(t[3], &a[0], &a[1])
+	fp2.addAssign(t[3], t[0])
+	fp2.add(t[5], &a[0], &a[1])
 	fp2.add(t[4], &b[0], &b[1])
-	fp2.mulAssign(t[3], t[4])
+	fp2.mulAssign(t[5], t[4])
 	fp2.add(t[4], t[0], t[1])
-	fp2.subAssign(t[3], t[4])
+	fp2.subAssign(t[5], t[4])
 	fp2.mulByNonResidue(t[4], t[2])
-	fp2.add(&a[1], t[3], t[4])
-	fp2.add(t[3], &a[0], &a[2])
+	fp2.add(&a[1], t[5], t[4])
+	fp2.add(t[5], &a[0], &a[2])
 	fp2.add(t[4], &b[0], &b[2])
-	fp2.mulAssign(t[3], t[4])
+	fp2.mulAssign(t[5], t[4])
 	fp2.add(t[4], t[0], t[2])
-	fp2.subAssign(t[3], t[4])
-	fp2.add(&a[2], t[1], t[3])
-	a[0].set(t[5])
+	fp2.subAssign(t[5], t[4])
+	fp2.add(&a[2], t[1], t[5])
+	a[0].set(t[3])
 }
 
 func (e *fp6) square(c, a *fe6) {

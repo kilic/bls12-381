@@ -372,26 +372,26 @@ func (g *G1) Add(r, p1, p2 *PointG1) *PointG1 {
 			return r.Zero()
 		}
 	}
-	sub(t[1], t[1], t[3])     // h = u2 - u1
+	subAssign(t[1], t[3])     // h = u2 - u1
 	double(t[4], t[1])        // 2h
 	square(t[4], t[4])        // i = 2h^2
 	mul(t[5], t[1], t[4])     // j = h*i
-	sub(t[0], t[0], t[2])     // s2 - s1
-	double(t[0], t[0])        // r = 2*(s2 - s1)
+	subAssign(t[0], t[2])     // s2 - s1
+	doubleAssign(t[0])        // r = 2*(s2 - s1)
 	square(t[6], t[0])        // r^2
-	sub(t[6], t[6], t[5])     // r^2 - j
+	subAssign(t[6], t[5])     // r^2 - j
 	mul(t[3], t[3], t[4])     // v = u1 * i
 	double(t[4], t[3])        // 2*v
 	sub(&r[0], t[6], t[4])    // x3 = r^2 - j - 2*v
 	sub(t[4], t[3], &r[0])    // v - x3
 	mul(t[6], t[2], t[5])     // s1 * j
-	double(t[6], t[6])        // 2 * s1 * j
+	doubleAssign(t[6])        // 2 * s1 * j
 	mul(t[0], t[0], t[4])     // r * (v - x3)
 	sub(&r[1], t[0], t[6])    // y3 = r * (v - x3) - (2 * s1 * j)
 	add(t[0], &p1[2], &p2[2]) // z1 + z2
 	square(t[0], t[0])        // (z1 + z2)^2
-	sub(t[0], t[0], t[7])     // (z1 + z2)^2 - z1z1
-	sub(t[0], t[0], t[8])     // (z1 + z2)^2 - z1z1 - z2z2
+	subAssign(t[0], t[7])     // (z1 + z2)^2 - z1z1
+	subAssign(t[0], t[8])     // (z1 + z2)^2 - z1z1 - z2z2
 	mul(&r[2], t[0], t[1])    // z3 = ((z1 + z2)^2 - z1z1 - z2z2) * h
 	return r
 }
@@ -419,24 +419,24 @@ func (g *G1) AddMixed(r, p1, p2 *PointG1) *PointG1 {
 	sub(t[1], t[1], &p1[0]) // h = u2 - x1
 	square(t[2], t[1])      // hh
 	double(t[4], t[2])
-	doubleAssign(t[4])       // 4hh
-	mul(t[5], t[1], t[4])    // j = h*i
-	subAssign(t[0], &p1[1])  // s2 - y1
-	doubleAssign(t[0])       // r = 2*(s2 - y1)
-	square(t[6], t[0])       // r^2
-	subAssign(t[6], t[5])    // r^2 - j
-	mul(t[3], &p1[0], t[4])  // v = x1 * i
-	double(t[4], t[3])       // 2*v
-	sub(&r[0], t[6], t[4])   // x3 = r^2 - j - 2*v
-	sub(t[4], t[3], &r[0])   // v - x3
-	mul(t[6], &p1[1], t[5])  // y1 * j
-	doubleAssign(t[6])       // 2 * y1 * j
-	mul(t[0], t[0], t[4])    // r * (v - x3)
-	sub(&r[1], t[0], t[6])   // y3 = r * (v - x3) - (2 * y1 * j)
-	ladd(t[0], &p1[2], t[1]) // z1 + h
-	square(t[0], t[0])       // (z1 + h)^2
-	subAssign(t[0], t[7])    // (z1 + h)^2 - z1z1
-	sub(&r[2], t[0], t[2])   // z3 = (z1 + z2)^2 - z1z1 - hh
+	doubleAssign(t[4])      // 4hh
+	mul(t[5], t[1], t[4])   // j = h*i
+	subAssign(t[0], &p1[1]) // s2 - y1
+	doubleAssign(t[0])      // r = 2*(s2 - y1)
+	square(t[6], t[0])      // r^2
+	subAssign(t[6], t[5])   // r^2 - j
+	mul(t[3], &p1[0], t[4]) // v = x1 * i
+	double(t[4], t[3])      // 2*v
+	sub(&r[0], t[6], t[4])  // x3 = r^2 - j - 2*v
+	sub(t[4], t[3], &r[0])  // v - x3
+	mul(t[6], &p1[1], t[5]) // y1 * j
+	doubleAssign(t[6])      // 2 * y1 * j
+	mul(t[0], t[0], t[4])   // r * (v - x3)
+	sub(&r[1], t[0], t[6])  // y3 = r * (v - x3) - (2 * y1 * j)
+	add(t[0], &p1[2], t[1]) // z1 + h
+	square(t[0], t[0])      // (z1 + h)^2
+	subAssign(t[0], t[7])   // (z1 + h)^2 - z1z1
+	sub(&r[2], t[0], t[2])  // z3 = (z1 + z2)^2 - z1z1 - hh
 	return r
 }
 
@@ -452,18 +452,18 @@ func (g *G1) Double(r, p *PointG1) *PointG1 {
 	square(t[2], t[1])      // c = b^2
 	add(t[1], &p[0], t[1])  // b + x1
 	square(t[1], t[1])      // (b + x1)^2
-	sub(t[1], t[1], t[0])   // (b + x1)^2 - a
-	sub(t[1], t[1], t[2])   // (b + x1)^2 - a - c
-	double(t[1], t[1])      // d = 2((b+x1)^2 - a - c)
+	subAssign(t[1], t[0])   // (b + x1)^2 - a
+	subAssign(t[1], t[2])   // (b + x1)^2 - a - c
+	doubleAssign(t[1])      // d = 2((b+x1)^2 - a - c)
 	double(t[3], t[0])      // 2a
-	add(t[0], t[3], t[0])   // e = 3a
+	addAssign(t[0], t[3])   // e = 3a
 	square(t[4], t[0])      // f = e^2
 	double(t[3], t[1])      // 2d
 	sub(&r[0], t[4], t[3])  // x3 = f - 2d
-	sub(t[1], t[1], &r[0])  // d-x3
-	double(t[2], t[2])      //
-	double(t[2], t[2])      //
-	double(t[2], t[2])      // 8c
+	subAssign(t[1], &r[0])  // d-x3
+	doubleAssign(t[2])      //
+	doubleAssign(t[2])      //
+	doubleAssign(t[2])      // 8c
 	mul(t[0], t[0], t[1])   // e * (d - x3)
 	sub(t[1], t[0], t[2])   // x3 = e * (d - x3) - 8c
 	mul(t[0], &p[1], &p[2]) // y1 * z1
