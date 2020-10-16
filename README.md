@@ -10,7 +10,7 @@ x86 optimized base field is generated with [kilic/fp](https://github.com/kilic/f
 
 #### Scalar Field
 
-Standart big.Int module is currently used for scalar field implementation. x86 optimized faster field implementation is planned to be added.
+Both standart big.Int module and x86 optimized implementation are available for scalar field elements and opereations.
 
 #### Serialization
 
