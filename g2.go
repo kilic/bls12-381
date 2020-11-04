@@ -6,9 +6,8 @@ import (
 	"math/big"
 )
 
-// PointG2 is type for point in G2.
-// PointG2 is both used for Affine and Jacobian point representation.
-// If z is equal to one the point is accounted as in affine form.
+// PointG2 is type for point in G2 and used for both affine and Jacobian representation.
+// A point is accounted as in affine form if z is equal to one.
 type PointG2 [3]fe2
 
 // Set copies valeus of one point to another.
@@ -337,7 +336,7 @@ func (g *G2) Affine(p *PointG2) *PointG2 {
 	return p
 }
 
-// Affine returns the affine representation of the given point
+// AffineBatch given multiple of points returns affine representations
 func (g *G2) AffineBatch(p []*PointG2) {
 	inverses := make([]fe2, len(p))
 	for i := 0; i < len(p); i++ {
