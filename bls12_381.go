@@ -135,7 +135,7 @@ var G2One = g2One
 var qinp uint64 = 0xfffffffeffffffff
 
 // modulus = p
-var qmodulus = fe{0xffffffff00000001, 0x53bda402fffe5bfe, 0x3339d80809a1d805, 0x73eda753299d7d48}
+var qmodulus = Fr{0xffffffff00000001, 0x53bda402fffe5bfe, 0x3339d80809a1d805, 0x73eda753299d7d48}
 
 // sr1 = sr mod p
 var sr1 = &Fr{0x00000001fffffffe, 0x5884b7fa00034802, 0x998c4fefecbc4ff5, 0x1824b159acc5056f}

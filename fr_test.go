@@ -363,3 +363,31 @@ func TestFrExponentiation(t *testing.T) {
 		}
 	}
 }
+
+func TestFrInversion(t *testing.T) {
+	for i := 0; i < fuz; i++ {
+		u := new(Fr)
+		zero, one := new(Fr).Zero(), new(Fr).RedOne()
+		u.Inverse(zero)
+		if !u.Equal(zero) {
+			t.Fatal("(0^-1) == 0)")
+		}
+		u.Inverse(one)
+		if !u.IsRedOne() {
+			t.Fatal("(1^-1) == 1)")
+		}
+		a, _ := new(Fr).Rand(rand.Reader)
+		u.Inverse(a)
+		mulFR(u, u, a)
+		if !u.Equal(one) {
+			t.Fatal("(r*a) * r*(a^-1) == r)")
+		}
+		v := new(Fr)
+		z := new(big.Int)
+		u.Exp(a, z.Sub(qBig, big.NewInt(2)))
+		v.Inverse(a)
+		if !v.Equal(u) {
+			t.Fatal("a^(p-2) == a^-1")
+		}
+	}
+}

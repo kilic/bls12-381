@@ -2191,6 +2191,29 @@ TEXT ·addFR(SB), NOSPLIT, $0-24
 /* end                                     */
 
 
+// func laddAssignFR(a *[4]uint64, b *[4]uint64)
+TEXT ·laddAssignFR(SB), NOSPLIT, $0-16
+	// |
+	MOVQ a+0(FP), DI
+	MOVQ b+8(FP), SI
+
+	// |
+	MOVQ (DI), CX
+	MOVQ 8(DI), DX
+	MOVQ 16(DI), R8
+	MOVQ 24(DI), R9
+	ADDQ (SI), CX
+	ADCQ 8(SI), DX
+	ADCQ 16(SI), R8
+	ADCQ 24(SI), R9
+	MOVQ    CX, (DI)
+	MOVQ    DX, 8(DI)
+	MOVQ    R8, 16(DI)
+	MOVQ    R9, 24(DI)
+	RET
+/* end                                     */
+
+
 // func doubleFR(c *[4]uint64, a *[4]uint64)
 TEXT ·doubleFR(SB), NOSPLIT, $0-16
 	// |
@@ -2262,6 +2285,28 @@ TEXT ·subFR(SB), NOSPLIT, $0-24
 	ADCQ R12, R9
 
 	MOVQ c+0(FP), DI
+	MOVQ CX, (DI)
+	MOVQ DX, 8(DI)
+	MOVQ R8, 16(DI)
+	MOVQ R9, 24(DI)
+	RET
+/* end                                     */
+
+
+// func lsubAssignFR(a *[4]uint64, b *[4]uint64)
+TEXT ·lsubAssignFR(SB), NOSPLIT, $0-16
+	// |
+	MOVQ a+0(FP), DI
+	MOVQ b+8(FP), SI
+
+	MOVQ (DI), CX
+	MOVQ 8(DI), DX
+	MOVQ 16(DI), R8
+	MOVQ 24(DI), R9
+	SUBQ (SI), CX
+	SBBQ 8(SI), DX
+	SBBQ 16(SI), R8
+	SBBQ 24(SI), R9
 	MOVQ CX, (DI)
 	MOVQ DX, 8(DI)
 	MOVQ R8, 16(DI)

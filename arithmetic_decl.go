@@ -70,10 +70,16 @@ func mulADX(c, a, b *fe)
 func addFR(c, a, b *Fr)
 
 //go:noescape
+func laddAssignFR(a, b *Fr)
+
+//go:noescape
 func doubleFR(c, a *Fr)
 
 //go:noescape
 func subFR(c, a, b *Fr)
+
+//go:noescape
+func lsubAssignFR(a, b *Fr)
 
 //go:noescape
 func _negFR(c, a *Fr)

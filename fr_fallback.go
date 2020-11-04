@@ -45,6 +45,15 @@ func addFR(z, x, y *Fr) {
 	}
 }
 
+func laddAssignFR(z, y *Fr) {
+	var carry uint64
+
+	z[0], carry = bits.Add64(z[0], y[0], 0)
+	z[1], carry = bits.Add64(z[1], y[1], carry)
+	z[2], carry = bits.Add64(z[2], y[2], carry)
+	z[3], _ = bits.Add64(z[3], y[3], carry)
+}
+
 func doubleFR(z, x *Fr) {
 	var carry uint64
 
@@ -77,6 +86,14 @@ func subFR(z, x, y *Fr) {
 		z[2], c = bits.Add64(z[2], 3691218898639771653, c)
 		z[3], _ = bits.Add64(z[3], 8353516859464449352, c)
 	}
+}
+
+func lsubAssignFR(z, y *Fr) {
+	var b uint64
+	z[0], b = bits.Sub64(z[0], y[0], 0)
+	z[1], b = bits.Sub64(z[1], y[1], b)
+	z[2], b = bits.Sub64(z[2], y[2], b)
+	z[3], b = bits.Sub64(z[3], y[3], b)
 }
 
 func negFR(z, x *Fr) {

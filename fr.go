@@ -10,6 +10,7 @@ import (
 const frByteSize = 32
 const frBitSize = 255
 const frNumberOfLimbs = 4
+const fourWordBitSize = 256
 
 type Fr [4]uint64
 
@@ -145,7 +146,7 @@ func (e *Fr) Equal(e2 *Fr) bool {
 }
 
 func (e *Fr) Cmp(e1 *Fr) int {
-	for i := 4; i >= 0; i-- {
+	for i := frNumberOfLimbs - 1; i >= 0; i-- {
 		if e[i] > e1[i] {
 			return 1
 		} else if e[i] < e1[i] {
@@ -173,11 +174,18 @@ func (e *Fr) div2() {
 	e[3] = e[3] >> 1
 }
 
-func (e *Fr) mul2() {
+func (e *Fr) mul2() uint64 {
+	c := e[3] >> 63
 	e[3] = e[3]<<1 | e[2]>>63
 	e[2] = e[2]<<1 | e[1]>>63
 	e[1] = e[1]<<1 | e[0]>>63
 	e[0] = e[0] << 1
+	return c
+}
+
+func (e *Fr) isEven() bool {
+	var mask uint64 = 1
+	return e[0]&mask == 0
 }
 
 func (e *Fr) Bit(at int) bool {
@@ -244,4 +252,65 @@ func (e *Fr) Exp(a *Fr, ee *big.Int) {
 		}
 	}
 	e.Set(z)
+}
+
+func (e *Fr) Inverse(ei *Fr) {
+	if ei.IsZero() {
+		e.Zero()
+		return
+	}
+	u := new(Fr).Set(q)
+	v := new(Fr).Set(ei)
+	s := &Fr{1}
+	r := &Fr{0}
+	var k int
+	var z uint64
+	var found = false
+	// Phase 1
+	for i := 0; i < fourWordBitSize*2; i++ {
+		if v.IsZero() {
+			found = true
+			break
+		}
+		if u.isEven() {
+			u.div2()
+			s.mul2()
+		} else if v.isEven() {
+			v.div2()
+			z += r.mul2()
+		} else if u.Cmp(v) == 1 {
+			lsubAssignFR(u, v)
+			u.div2()
+			laddAssignFR(r, s)
+			s.mul2()
+		} else {
+			lsubAssignFR(v, u)
+			v.div2()
+			laddAssignFR(s, r)
+			z += r.mul2()
+		}
+		k += 1
+	}
+
+	if !found {
+		e.Zero()
+		return
+	}
+
+	if k < frBitSize || k > frBitSize+fourWordBitSize {
+		e.Zero()
+		return
+	}
+
+	if r.Cmp(q) != -1 || z > 0 {
+		lsubAssignFR(r, q)
+	}
+	u.Set(q)
+	lsubAssignFR(u, r)
+
+	// Phase 2
+	for i := k; i < 2*fourWordBitSize; i++ {
+		doubleFR(u, u)
+	}
+	e.Set(u)
 }
