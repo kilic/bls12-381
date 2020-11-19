@@ -13,6 +13,7 @@ const frNumberOfLimbs = 4
 const fourWordBitSize = 256
 
 type Fr [4]uint64
+type wideFr [8]uint64
 
 func NewFr() *Fr {
 	return &Fr{}
@@ -313,4 +314,52 @@ func (e *Fr) Inverse(ei *Fr) {
 		doubleFR(u, u)
 	}
 	e.Set(u)
+}
+
+func (ew *wideFr) mul(a, b *Fr) {
+	lmulFR(ew, a, b)
+}
+
+func (ew *wideFr) add(a *wideFr) {
+	addwFR(ew, a)
+}
+
+func (ew *wideFr) round() *Fr {
+	ew.add(halfR)
+	return ew.high()
+}
+
+func (ew *wideFr) high() *Fr {
+	e := new(Fr)
+	e[0] = ew[4]
+	e[1] = ew[5]
+	e[2] = ew[6]
+	e[3] = ew[7]
+	return e
+}
+
+func (ew *wideFr) low() *Fr {
+	e := new(Fr)
+	e[0] = ew[0]
+	e[1] = ew[1]
+	e[2] = ew[2]
+	e[3] = ew[3]
+	return e
+}
+
+func (e *wideFr) bytes() []byte {
+	out := make([]byte, frByteSize*2)
+	var a int
+	for i := 0; i < frNumberOfLimbs*2; i++ {
+		a = frByteSize*2 - i*8
+		out[a-1] = byte(e[i])
+		out[a-2] = byte(e[i] >> 8)
+		out[a-3] = byte(e[i] >> 16)
+		out[a-4] = byte(e[i] >> 24)
+		out[a-5] = byte(e[i] >> 32)
+		out[a-6] = byte(e[i] >> 40)
+		out[a-7] = byte(e[i] >> 48)
+		out[a-8] = byte(e[i] >> 56)
+	}
+	return out
 }

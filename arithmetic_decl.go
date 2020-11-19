@@ -10,6 +10,7 @@ func init() {
 	if !cpu.X86.HasADX || !cpu.X86.HasBMI2 {
 		mul = mulNoADX
 		mulFR = mulNoADXFR
+		lmulFR = lmulNoADXFR
 	}
 }
 
@@ -66,6 +67,21 @@ func mulNoADX(c, a, b *fe)
 //go:noescape
 func mulADX(c, a, b *fe)
 
+var mulFR func(c, a, b *Fr) = mulADXFR
+var lmulFR func(c *wideFr, a, b *Fr) = lmulADXFR
+
+func squareFR(c, a *Fr) {
+	mulFR(c, a, a)
+}
+
+func negFR(c, a *Fr) {
+	if a.IsZero() {
+		c.Set(a)
+	} else {
+		_negFR(c, a)
+	}
+}
+
 //go:noescape
 func addFR(c, a, b *Fr)
 
@@ -90,16 +106,11 @@ func mulNoADXFR(c, a, b *Fr)
 //go:noescape
 func mulADXFR(c, a, b *Fr)
 
-var mulFR func(c, a, b *Fr) = mulADXFR
+//go:noescape
+func lmulADXFR(c *wideFr, a, b *Fr)
 
-func squareFR(c, a *Fr) {
-	mulFR(c, a, a)
-}
+//go:noescape
+func lmulNoADXFR(c *wideFr, a, b *Fr)
 
-func negFR(c, a *Fr) {
-	if a.IsZero() {
-		c.Set(a)
-	} else {
-		_negFR(c, a)
-	}
-}
+//go:noescape
+func addwFR(a, b *wideFr)

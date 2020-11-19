@@ -3194,3 +3194,365 @@ TEXT ·mulADXFR(SB), NOSPLIT, $0-24
 /* end                                     */
 
 
+TEXT ·addwFR(SB), NOSPLIT, $0-16
+	// |
+	MOVQ a+0(FP), DI
+	MOVQ b+8(FP), SI
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+	MOVQ 48(DI), R14
+	MOVQ 56(DI), R15
+
+	// |
+	ADDQ (SI), R8
+	ADCQ 8(SI), R9
+	ADCQ 16(SI), R10
+	ADCQ 24(SI), R11
+	ADCQ 32(SI), R12
+	ADCQ 40(SI), R13
+	ADCQ 48(SI), R14
+	ADCQ 56(SI), R15
+
+	// |
+	MOVQ R8, (DI)
+	MOVQ R9, 8(DI)
+	MOVQ R10, 16(DI)
+	MOVQ R11, 24(DI)
+	MOVQ R12, 32(DI)
+	MOVQ R13, 40(DI)
+	MOVQ R14, 48(DI)
+	MOVQ R15, 56(DI)
+	RET
+/* end                                     */
+
+// func lmulNoADXFR(c *[8]uint64, a *[4]uint64, b *[4]uint64)
+TEXT ·lmulNoADXFR(SB), NOSPLIT, $0-24
+	// | 
+
+/* inputs                                  */
+
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+	MOVQ $0x00, R10
+	MOVQ $0x00, R11
+	MOVQ $0x00, R12
+	MOVQ $0x00, R13
+	MOVQ $0x00, R14
+
+	// | 
+
+/* i = 0                                   */
+
+	// | a0 @ CX
+	MOVQ (DI), CX
+
+	// | a0 * b0 
+	MOVQ (SI), AX
+	MULQ CX
+	MOVQ AX, R8
+	MOVQ DX, R9
+
+	// | a0 * b1 
+	MOVQ 8(SI), AX
+	MULQ CX
+	ADDQ AX, R9
+	ADCQ DX, R10
+
+	// | a0 * b2 
+	MOVQ 16(SI), AX
+	MULQ CX
+	ADDQ AX, R10
+	ADCQ DX, R11
+
+	// | a0 * b3 
+	MOVQ 24(SI), AX
+	MULQ CX
+	ADDQ AX, R11
+	ADCQ DX, R12
+
+	// | 
+
+/* i = 1                                   */
+
+	// | a1 @ CX
+	MOVQ 8(DI), CX
+	MOVQ $0x00, BX
+
+	// | a1 * b0 
+	MOVQ (SI), AX
+	MULQ CX
+	ADDQ AX, R9
+	ADCQ DX, R10
+	ADCQ $0x00, R11
+	ADCQ $0x00, BX
+
+	// | a1 * b1 
+	MOVQ 8(SI), AX
+	MULQ CX
+	ADDQ AX, R10
+	ADCQ DX, R11
+	ADCQ BX, R12
+	MOVQ $0x00, BX
+	ADCQ $0x00, BX
+
+	// | a1 * b2 
+	MOVQ 16(SI), AX
+	MULQ CX
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ BX, R13
+
+	// | a1 * b3 
+	MOVQ 24(SI), AX
+	MULQ CX
+	ADDQ AX, R12
+	ADCQ DX, R13
+
+	// | 
+
+/* i = 2                                   */
+
+	// | a2 @ CX
+	MOVQ 16(DI), CX
+	MOVQ $0x00, BX
+
+	// | a2 * b0 
+	MOVQ (SI), AX
+	MULQ CX
+	ADDQ AX, R10
+	ADCQ DX, R11
+	ADCQ $0x00, R12
+	ADCQ $0x00, BX
+
+	// | a2 * b1 
+	MOVQ 8(SI), AX
+	MULQ CX
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ BX, R13
+	MOVQ $0x00, BX
+	ADCQ $0x00, BX
+
+	// | a2 * b2 
+	MOVQ 16(SI), AX
+	MULQ CX
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ BX, R14
+
+	// | a2 * b3 
+	MOVQ 24(SI), AX
+	MULQ CX
+	ADDQ AX, R13
+	ADCQ DX, R14
+
+	// | 
+
+/* i = 3                                   */
+
+	// | a3 @ CX
+	MOVQ 24(DI), CX
+	MOVQ $0x00, BX
+
+	// | a3 * b0 
+	MOVQ (SI), AX
+	MULQ CX
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+	ADCQ $0x00, BX
+
+	// | a3 * b1 
+	MOVQ 8(SI), AX
+	MULQ CX
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ BX, R14
+	MOVQ $0x00, BX
+	ADCQ $0x00, BX
+
+	// | a3 * b2 
+	MOVQ 16(SI), AX
+	MULQ CX
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, BX
+
+	// | a3 * b3 
+	MOVQ 24(SI), AX
+	MULQ CX
+	ADDQ AX, R14
+	ADCQ DX, BX
+
+	// | 
+
+/* 			                                   */
+
+	// | 
+	// | W
+	// | 0   R8        | 1   R9        | 2   R10       | 3   R11       
+	// | 4   R12       | 5   R13       | 6   R14       | 7   BX      
+
+	MOVQ c+0(FP), AX
+	MOVQ R8, (AX)
+	MOVQ R9, 8(AX)
+	MOVQ R10, 16(AX)
+	MOVQ R11, 24(AX)
+	MOVQ R12, 32(AX)
+	MOVQ R13, 40(AX)
+	MOVQ R14, 48(AX)
+	MOVQ BX, 56(AX)
+
+	RET
+/* end 			                                 */
+
+
+// func lmulADXFR(c *[8]uint64, a *[4]uint64, b *[4]uint64)
+TEXT ·lmulADXFR(SB), NOSPLIT, $0-24
+	// | 
+
+/* inputs                                  */
+
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+	XORQ AX, AX
+
+	// | 
+
+/* i = 0                                   */
+
+	// | a0 @ DX
+	MOVQ (DI), DX
+
+	// | a0 * b0 
+	MULXQ (SI), CX, R8
+
+	// | a0 * b1 
+	MULXQ 8(SI), AX, R9
+	ADCXQ AX, R8
+
+	// | a0 * b2 
+	MULXQ 16(SI), AX, R10
+	ADCXQ AX, R9
+
+	// | a0 * b3 
+	MULXQ 24(SI), AX, R11
+	ADCXQ AX, R10
+	ADCQ  $0x00, R11
+
+	// | 
+
+/* i = 1                                   */
+
+	// | a1 @ DX
+	MOVQ 8(DI), DX
+	XORQ R12, R12
+
+	// | a1 * b0 
+	MULXQ (SI), AX, BX
+	ADOXQ AX, R8
+	ADCXQ BX, R9
+
+	// | a1 * b1 
+	MULXQ 8(SI), AX, BX
+	ADOXQ AX, R9
+	ADCXQ BX, R10
+
+	// | a1 * b2 
+	MULXQ 16(SI), AX, BX
+	ADOXQ AX, R10
+	ADCXQ BX, R11
+
+	// | a1 * b3 
+	MULXQ 24(SI), AX, BX
+	ADOXQ AX, R11
+	ADOXQ R12, R12
+	ADCXQ BX, R12
+
+	// | 
+
+/* i = 2                                   */
+
+	// | a2 @ DX
+	MOVQ 16(DI), DX
+	XORQ R13, R13
+
+	// | a2 * b0 
+	MULXQ (SI), AX, BX
+	ADOXQ AX, R9
+	ADCXQ BX, R10
+
+	// | a2 * b1 
+	MULXQ 8(SI), AX, BX
+	ADOXQ AX, R10
+	ADCXQ BX, R11
+
+	// | a2 * b2 
+	MULXQ 16(SI), AX, BX
+	ADOXQ AX, R11
+	ADCXQ BX, R12
+
+	// | a2 * b3 
+	MULXQ 24(SI), AX, BX
+	ADOXQ AX, R12
+	ADOXQ R13, R13
+	ADCXQ BX, R13
+
+	// | 
+
+/* i = 3                                   */
+
+	// | a3 @ DX
+	MOVQ 24(DI), DX
+	XORQ DI, DI
+
+	// | a3 * b0 
+	MULXQ (SI), AX, BX
+	ADOXQ AX, R10
+	ADCXQ BX, R11
+
+	// | a3 * b1 
+	MULXQ 8(SI), AX, BX
+	ADOXQ AX, R11
+	ADCXQ BX, R12
+
+	// | a3 * b2 
+	MULXQ 16(SI), AX, BX
+	ADOXQ AX, R12
+	ADCXQ BX, R13
+
+	// | a3 * b3 
+	MULXQ 24(SI), AX, BX
+	ADOXQ AX, R13
+	ADOXQ BX, DI
+	ADCQ  $0x00, DI
+
+	// | 
+
+/* 			                                   */
+
+	// | 
+	// | W
+	// | 0   CX        | 1   R8        | 2   R9        | 3   R10       
+	// | 4   R11       | 5   R12       | 6   R13       | 7   DI        
+
+
+	MOVQ c+0(FP), AX
+	MOVQ CX, (AX)
+	MOVQ R8, 8(AX)
+	MOVQ R9, 16(AX)
+	MOVQ R10, 24(AX)
+	MOVQ R11, 32(AX)
+	MOVQ R12, 40(AX)
+	MOVQ R13, 48(AX)
+	MOVQ DI, 56(AX)
+
+	RET
+
+/* end                                     */
