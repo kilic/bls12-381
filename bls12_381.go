@@ -287,4 +287,5 @@ var frobeniusCoeffs12 = [12]fe2{
 
 // x
 
-var x = bigFromHex("0xd201000000010000")
+// var x = bigFromHex("0xd201000000010000")
+var x uint64 = 0xd201000000010000

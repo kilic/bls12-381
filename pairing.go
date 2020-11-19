@@ -145,7 +145,7 @@ func (e *Engine) precompute() [][68]fe6 {
 		j := 0
 		for k := 62; k >= 0; k-- {
 			e.doublingStep(&coeffs[i][j], r)
-			if x.Bit(k) != 0 {
+			if x&(1<<k) != 0 {
 				j++
 				e.additionStep(&coeffs[i][j], r, e.pairs[i].g2)
 			}
@@ -173,7 +173,7 @@ func (e *Engine) millerLoop(f *fe12) {
 			e.fp12.square(f, f)
 		}
 		e.lineEval(f, coeffs, j)
-		if x.Bit(i) != 0 {
+		if x&(1<<i) != 0 {
 			j++
 			e.lineEval(f, coeffs, j)
 		}
