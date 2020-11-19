@@ -25,6 +25,15 @@ func (g *G1) rand() *PointG1 {
 	return g.MulScalarBig(&PointG1{}, g.one(), k)
 }
 
+func (g *G1) randAffine() *PointG1 {
+	k, err := rand.Int(rand.Reader, qBig)
+	if err != nil {
+		panic(err)
+	}
+	p := g.MulScalarBig(&PointG1{}, g.one(), k)
+	return g.Affine(p)
+}
+
 func TestG1Serialization(t *testing.T) {
 	var err error
 	g1 := NewG1()

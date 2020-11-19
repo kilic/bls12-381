@@ -2,7 +2,6 @@ package bls12381
 
 import (
 	"crypto/rand"
-	"errors"
 	"io"
 	"math/big"
 )
@@ -65,34 +64,32 @@ func (e *Fr) RedFromBytes(in []byte) *Fr {
 	return e
 }
 
-func (e *Fr) setBytes(in []byte) {
+func (e *Fr) setBytes(in []byte) *Fr {
 	u := new(big.Int).SetBytes(in)
 	_ = e.setBig(u)
+	return e
 }
 
-func (e *Fr) setBig(in *big.Int) error {
-	zero := new(big.Int)
+func (e *Fr) setBig(in *big.Int) *Fr {
 	e.Zero()
-	c := in.Cmp(zero)
-	if c == -1 {
-		return errors.New("cannot set negative element")
-	} else if c == 0 {
-		return nil
-	}
-	_in := new(big.Int)
-	c = in.Cmp(qBig)
-	if c == 0 {
-		return nil
-	} else if c == -1 {
-		_in.Set(in)
-	} else {
-		_in = new(big.Int).Mod(in, qBig)
+	_in := new(big.Int).Set(in)
+	zero := new(big.Int)
+	c0 := _in.Cmp(zero)
+	c1 := _in.Cmp(qBig)
+	if c0 == -1 || c1 == 1 {
+		_in.Mod(_in, qBig)
 	}
 	words := _in.Bits()
 	for i := 0; i < len(words); i++ {
 		e[i] = uint64(words[i])
 	}
 	return nil
+}
+
+func (e *Fr) setUInt64(n uint64) *Fr {
+	e.Zero()
+	e[0] = n
+	return e
 }
 
 func (e *Fr) ToBytes() []byte {

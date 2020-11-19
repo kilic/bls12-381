@@ -23,9 +23,11 @@ var glvB1Big = bigFromHex("0xac45a4010001a40200000000ffffffff")
 var glvB2 = &Fr{0x0000000100000000, 0xac45a4010001a402, 0, 0}
 var glvB2Big = bigFromHex("0xac45a4010001a4020000000100000000")
 
-// glvLambda1 = x^2 -1
+// glvLambda1 = x^2 - 1
 var glvLambda1 = &Fr{0x00000000ffffffff, 0xac45a4010001a402, 0, 0}
 var glvLambda1Big = bigFromHex("0xac45a4010001a40200000000ffffffff")
+
+// var glvLambda1Alt = &Fr{0xfffffffe00000001, 0xa7780001fffcb7fc, 0x3339d80809a1d804, 0x73eda753299d7d48}
 
 // halfR = 2**256 / 2
 var halfR = &wideFr{0, 0, 0, 0x8000000000000000, 0, 0, 0}
@@ -34,16 +36,14 @@ var halfRBig = bigFromHex("0x800000000000000000000000000000000000000000000000000
 // r128 = 2**128 - 1
 var r128 = &Fr{0xffffffffffffffff, 0xffffffffffffffff, 0, 0}
 
+// glvPhi = 0x1a0111ea397fe699ec02408663d4de85aa0d857d89759ad4897d29650fb85f9b409427eb4f49fffd8bfd00000000aaac
+var glvPhi = &fe{0xcd03c9e48671f071, 0x5dab22461fcda5d2, 0x587042afd3851b95, 0x8eb60ebe01bacb9e, 0x03f97d6e83d050d2, 0x18f0206554638741}
+
+// var glvPhiAlt = &fe{ 0x30f1361b798a64e8, 0xf3b8ddab7ece5a2a, 0x16a8ca3ac61577f7, 0xc26a2ff874fd029b, 0x3636b76660701c6e, 0x051ba4ab241b6160, }
+
 type glvVector struct {
 	m1   *Fr
 	m2   *Fr
-	neg1 bool
-	neg2 bool
-}
-
-type glvVectorBig struct {
-	m1   *big.Int
-	m2   *big.Int
 	neg1 bool
 	neg2 bool
 }
