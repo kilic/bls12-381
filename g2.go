@@ -10,6 +10,8 @@ import (
 // A point is accounted as in affine form if z is equal to one.
 type PointG2 [3]fe2
 
+var wnafMulWindowG2 uint = 6
+
 // Set copies valeus of one point to another.
 func (p *PointG2) Set(p2 *PointG2) *PointG2 {
 	p[0].set(&p2[0])
@@ -631,9 +633,8 @@ func (g *G2) MultiExp(r *PointG2, points []*PointG2, scalars []*Fr) (*PointG2, e
 }
 
 func (g *G2) wnafMulBig(c, p *PointG2, e *big.Int) *PointG2 {
-	windowSize := 6
 
-	l := (1 << (windowSize - 1))
+	l := (1 << (wnafMulWindowG2 - 1))
 	tablePositive := make([]PointG2, l)
 	tableNegative := make([]PointG2, l)
 
@@ -653,7 +654,7 @@ func (g *G2) wnafMulBig(c, p *PointG2, e *big.Int) *PointG2 {
 		g.Neg(&tableNegative[i], acc)
 	}
 
-	wnaf := bigToWNAF(e, windowSize)
+	wnaf := bigToWNAF(e, wnafMulWindowG2)
 
 	q := g.Zero()
 
@@ -676,9 +677,8 @@ func (g *G2) wnafMulBig(c, p *PointG2, e *big.Int) *PointG2 {
 }
 
 func (g *G2) wnafMul(c, p *PointG2, e *Fr) *PointG2 {
-	windowSize := 6
 
-	l := (1 << (windowSize - 1))
+	l := (1 << (wnafMulWindowG2 - 1))
 	tablePositive := make([]PointG2, l)
 	tableNegative := make([]PointG2, l)
 
@@ -698,7 +698,7 @@ func (g *G2) wnafMul(c, p *PointG2, e *Fr) *PointG2 {
 		g.Neg(&tableNegative[i], acc)
 	}
 
-	wnaf, _ := e.toWNAF(windowSize)
+	wnaf := e.toWNAF(wnafMulWindowG2)
 
 	q := g.Zero()
 

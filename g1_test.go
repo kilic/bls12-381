@@ -221,6 +221,36 @@ func TestG1MixedAdd(t *testing.T) {
 	}
 }
 
+func TestG1MultiplicationCross(t *testing.T) {
+	g := NewG1()
+	for i := 0; i < fuz; i++ {
+
+		a := g.randAffine()
+		s, _ := new(Fr).Rand(rand.Reader)
+		sBig := s.ToBig()
+		res0, res1, res2, res3, res4 := g.New(), g.New(), g.New(), g.New(), g.New()
+
+		g.mulScalar(res0, a, s)
+		g.glvMulFr(res1, a, s)
+		g.glvMulBig(res2, a, sBig)
+		g.wnafMulFr(res3, a, s)
+		g.wnafMulBig(res4, a, sBig)
+
+		if !g.Equal(res0, res1) {
+			t.Fatal("cross multiplication failed (glv, fr)", i)
+		}
+		if !g.Equal(res0, res2) {
+			t.Fatal("cross multiplication failed (glv, big)", i)
+		}
+		if !g.Equal(res0, res3) {
+			t.Fatal("cross multiplication failed (wnaf, fr)", i)
+		}
+		if !g.Equal(res0, res4) {
+			t.Fatal("cross multiplication failed (wnaf, big)", i)
+		}
+	}
+}
+
 func TestG1MultiplicativePropertiesBig(t *testing.T) {
 	g := NewG1()
 	t0, t1 := g.New(), g.New()
@@ -579,25 +609,62 @@ func BenchmarkG1Add(t *testing.B) {
 	}
 }
 
-func BenchmarkG1MulBig(t *testing.B) {
-	g1 := NewG1()
-	a, e, c := g1.rand(), q, PointG1{}
-	t.ResetTimer()
-	for i := 0; i < t.N; i++ {
-		g1.MulScalar(&c, a, e)
+func BenchmarkG1MulWNAF(t *testing.B) {
+	g := NewG1()
+	p := new(PointG1).Set(&g1One)
+	s, _ := new(Fr).Rand(rand.Reader)
+	sBig := s.ToBig()
+	res := new(PointG1)
+	t.Run("Naive", func(t *testing.B) {
+		t.ResetTimer()
+		for i := 0; i < t.N; i++ {
+			g.mulScalar(res, p, s)
+		}
+	})
+	for i := 1; i < 8; i++ {
+		wnafMulWindowG1 = uint(i)
+		t.Run(fmt.Sprintf("Fr, window: %d", i), func(t *testing.B) {
+			t.ResetTimer()
+			for i := 0; i < t.N; i++ {
+				g.wnafMulFr(res, p, s)
+			}
+		})
+		t.Run(fmt.Sprintf("Big, window: %d", i), func(t *testing.B) {
+			t.ResetTimer()
+			for i := 0; i < t.N; i++ {
+				g.wnafMulBig(res, p, sBig)
+			}
+		})
 	}
 }
 
-func BenchmarkG1Mul(t *testing.B) {
-	g1 := NewG1()
-	a, c := g1.rand(), PointG1{}
-	e, err := new(Fr).Rand(rand.Reader)
-	if err != nil {
-		t.Error(err)
-	}
-	t.ResetTimer()
-	for i := 0; i < t.N; i++ {
-		g1.MulScalar(&c, a, e)
+func BenchmarkG1MulGLV(t *testing.B) {
+
+	g := NewG1()
+	p := new(PointG1).Set(&g1One)
+	s, _ := new(Fr).Rand(rand.Reader)
+	sBig := s.ToBig()
+	res := new(PointG1)
+	t.Run("Naive", func(t *testing.B) {
+		t.ResetTimer()
+		for i := 0; i < t.N; i++ {
+			g.mulScalar(res, p, s)
+		}
+	})
+	for i := 1; i < 8; i++ {
+		glvMulWindowG1 = uint(i)
+		t.Run(fmt.Sprintf("Fr, window: %d", i), func(t *testing.B) {
+			t.ResetTimer()
+			for i := 0; i < t.N; i++ {
+				g.glvMulFr(res, p, s)
+			}
+		})
+		t.Run(fmt.Sprintf("Big, window: %d", i), func(t *testing.B) {
+			t.ResetTimer()
+			for i := 0; i < t.N; i++ {
+				g.glvMulBig(res, p, sBig)
+			}
+		})
 	}
 }
 

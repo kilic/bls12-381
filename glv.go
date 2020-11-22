@@ -27,7 +27,7 @@ var glvB2Big = bigFromHex("0xac45a4010001a4020000000100000000")
 var glvLambda1 = &Fr{0x00000000ffffffff, 0xac45a4010001a402, 0, 0}
 var glvLambda1Big = bigFromHex("0xac45a4010001a40200000000ffffffff")
 
-// var glvLambda1Alt = &Fr{0xfffffffe00000001, 0xa7780001fffcb7fc, 0x3339d80809a1d804, 0x73eda753299d7d48}
+// var glvLambdaZexe = &Fr{0xfffffffe00000001, 0xa7780001fffcb7fc, 0x3339d80809a1d804, 0x73eda753299d7d48}
 
 // halfR = 2**256 / 2
 var halfR = &wideFr{0, 0, 0, 0x8000000000000000, 0, 0, 0}
@@ -39,16 +39,51 @@ var r128 = &Fr{0xffffffffffffffff, 0xffffffffffffffff, 0, 0}
 // glvPhi = 0x1a0111ea397fe699ec02408663d4de85aa0d857d89759ad4897d29650fb85f9b409427eb4f49fffd8bfd00000000aaac
 var glvPhi = &fe{0xcd03c9e48671f071, 0x5dab22461fcda5d2, 0x587042afd3851b95, 0x8eb60ebe01bacb9e, 0x03f97d6e83d050d2, 0x18f0206554638741}
 
-// var glvPhiAlt = &fe{ 0x30f1361b798a64e8, 0xf3b8ddab7ece5a2a, 0x16a8ca3ac61577f7, 0xc26a2ff874fd029b, 0x3636b76660701c6e, 0x051ba4ab241b6160, }
+// var glvPhiZexe = &fe{0x30f1361b798a64e8, 0xf3b8ddab7ece5a2a, 0x16a8ca3ac61577f7, 0xc26a2ff874fd029b, 0x3636b76660701c6e, 0x051ba4ab241b6160}
 
-type glvVector struct {
-	m1   *Fr
-	m2   *Fr
+var glvMulWindowG1 uint = 4
+
+type glvVectorG1 interface {
+	wnaf(w uint) (nafNumber, nafNumber)
+}
+
+type glvVectorG1Fr struct {
+	k1   *Fr
+	k2   *Fr
 	neg1 bool
 	neg2 bool
 }
 
-func decompose(m *Fr) *glvVector {
+type glvVectorG1Big struct {
+	k1 *big.Int
+	k2 *big.Int
+}
+
+func (v *glvVectorG1Fr) wnaf(w uint) (nafNumber, nafNumber) {
+	naf1 := v.k1.toWNAF(w)
+	naf2 := v.k2.toWNAF(w)
+	if v.neg1 {
+		naf1.neg()
+	}
+	if !v.neg2 {
+		naf2.neg()
+	}
+	return naf1, naf2
+}
+
+func (v *glvVectorG1Big) wnaf(w uint) (nafNumber, nafNumber) {
+	naf1, naf2 := bigToWNAF(v.k1, w), bigToWNAF(v.k2, w)
+	zero := new(big.Int)
+	if v.k1.Cmp(zero) < 0 {
+		naf1.neg()
+	}
+	if v.k2.Cmp(zero) > 0 {
+		naf2.neg()
+	}
+	return naf1, naf2
+}
+
+func decompose(m *Fr) *glvVectorG1Fr {
 	// Guide to Pairing Based Cryptography
 	// 6.3.2. Decompositions for the k = 12 BLS Family
 
@@ -64,29 +99,29 @@ func decompose(m *Fr) *glvVector {
 	// z2 = x^2 * round(m / r)
 	z2.Mul(alpha2, glvB2)
 
-	a1, a2 := new(Fr), new(Fr)
-	// a1 = m - z1 - alpha2
-	a1.Sub(m, z1)
-	a1.Sub(a1, alpha2)
+	k1, k2 := new(Fr), new(Fr)
+	// k1 = m - z1 - alpha2
+	k1.Sub(m, z1)
+	k1.Sub(k1, alpha2)
 
-	// a2 = z2 - alpha1
-	a2.Sub(z2, alpha1)
+	// k2 = z2 - alpha1
+	k2.Sub(z2, alpha1)
 
-	v := &glvVector{}
-	if a1.Cmp(r128) == 1 {
-		a1.Neg(a1)
+	v := &glvVectorG1Fr{}
+	if k1.Cmp(r128) == 1 {
+		k1.Neg(k1)
 		v.neg1 = true
 	}
-	v.m1 = new(Fr).Set(a1)
-	if a2.Cmp(r128) == 1 {
-		a2.Neg(a2)
+	v.k1 = new(Fr).Set(k1)
+	if k2.Cmp(r128) == 1 {
+		k2.Neg(k2)
 		v.neg2 = true
 	}
-	v.m2 = new(Fr).Set(a2)
+	v.k2 = new(Fr).Set(k2)
 	return v
 }
 
-func decomposeBig(m *big.Int) (*big.Int, *big.Int) {
+func decomposeBig(m *big.Int) *glvVectorG1Big {
 	// Guide to Pairing Based Cryptography
 	// 6.3.2. Decompositions for the k = 12 BLS Family
 
@@ -106,16 +141,16 @@ func decomposeBig(m *big.Int) (*big.Int, *big.Int) {
 	// z2 = x^2 * round(m / r)
 	z2.Mul(alpha2, glvB2Big).Mod(z2, qBig)
 
-	a1, a2 := new(big.Int), new(big.Int)
+	k1, k2 := new(big.Int), new(big.Int)
 
-	// a1 = m - z1 - alpha2
-	a1.Sub(m, z1)
-	a1.Sub(a1, alpha2)
+	// k1 = m - z1 - alpha2
+	k1.Sub(m, z1)
+	k1.Sub(k1, alpha2)
 
-	// a2 = z2 - alpha1
-	a2.Sub(z2, alpha1)
+	// k2 = z2 - alpha1
+	k2.Sub(z2, alpha1)
 
-	return a1, a2
+	return &glvVectorG1Big{k1, k2}
 }
 
 func x2mr(m *Fr) *Fr {
@@ -132,4 +167,20 @@ func mr(m *Fr) *Fr {
 	a.mul(m, glvQ2)
 	// round(m * R / q)
 	return a.round()
+}
+
+func phi(a, b *fe) {
+	// a = b * phi
+	mul(a, b, glvPhi)
+}
+
+func (g *G1) glvEndomorphism(r, p *PointG1) {
+	t := g.Affine(p)
+	if g.IsZero(p) {
+		r.Zero()
+		return
+	}
+	r[1].set(&t[1])
+	phi(&r[0], &t[0])
+	r[2].one()
 }

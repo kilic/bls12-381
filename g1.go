@@ -10,6 +10,8 @@ import (
 // A point is accounted as in affine form if z is equal to one.
 type PointG1 [3]fe
 
+var wnafMulWindowG1 uint = 5
+
 func (p *PointG1) Set(p2 *PointG1) *PointG1 {
 	p[0].set(&p2[0])
 	p[1].set(&p2[1])
@@ -312,19 +314,25 @@ func (g *G1) IsAffine(p *PointG1) bool {
 
 // Affine returns the affine representation of the given point
 func (g *G1) Affine(p *PointG1) *PointG1 {
+	return g.affine(p, p)
+}
+
+func (g *G1) affine(r, p *PointG1) *PointG1 {
 	if g.IsZero(p) {
-		return p
+		return r.Zero()
 	}
 	if !g.IsAffine(p) {
 		t := g.t
 		inverse(t[0], &p[2])    // z^-1
 		square(t[1], t[0])      // z^-2
-		mul(&p[0], &p[0], t[1]) // x = x * z^-2
+		mul(&r[0], &p[0], t[1]) // x = x * z^-2
 		mul(t[0], t[0], t[1])   // z^-3
-		mul(&p[1], &p[1], t[0]) // y = y * z^-3
-		p[2].one()              // z = 1
+		mul(&r[1], &p[1], t[0]) // y = y * z^-3
+		r[2].one()              // z = 1
+	} else {
+		r.Set(p)
 	}
-	return p
+	return r
 }
 
 // AffineBatch given multiple of points returns affine representations
@@ -348,6 +356,7 @@ func (g *G1) AffineBatch(p []*PointG1) {
 
 // Add adds two G1 points p1, p2 and assigns the result to point at first argument.
 func (g *G1) Add(r, p1, p2 *PointG1) *PointG1 {
+
 	// http://www.hyperelliptic.org/EFD/gp/auto-shortw-jacobian-0.html#addition-add-2007-bl
 	if g.IsZero(p1) {
 		return r.Set(p2)
@@ -355,6 +364,10 @@ func (g *G1) Add(r, p1, p2 *PointG1) *PointG1 {
 	if g.IsZero(p2) {
 		return r.Set(p1)
 	}
+	if g.IsAffine(p2) {
+		return g.AddMixed(r, p1, p2)
+	}
+
 	t := g.t
 	square(t[7], &p1[2])    // z1z1
 	mul(t[1], &p2[0], t[7]) // u2 = x2 * z1z1
@@ -443,7 +456,7 @@ func (g *G1) AddMixed(r, p1, p2 *PointG1) *PointG1 {
 func (g *G1) Double(r, p *PointG1) *PointG1 {
 	// http://www.hyperelliptic.org/EFD/gp/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
 	if g.IsZero(p) {
-		return r.Set(p)
+		return r.Zero()
 	}
 	t := g.t
 	square(t[0], &p[0])     // a = x^2
@@ -488,21 +501,136 @@ func (g *G1) Sub(c, a, b *PointG1) *PointG1 {
 }
 
 // MulScalar multiplies a point by given scalar value in big.Int and assigns the result to point at first argument.
-func (g *G1) MulScalarBig(c, p *PointG1, e *big.Int) *PointG1 {
-	q, n := &PointG1{}, &PointG1{}
-	n.Set(p)
-	l := e.BitLen()
-	for i := 0; i < l; i++ {
-		if e.Bit(i) == 1 {
-			g.Add(q, q, n)
+func (g *G1) MulScalarBig(r, p *PointG1, e *big.Int) *PointG1 {
+	return g.glvMulBig(r, p, e)
+}
+
+// MulScalar multiplies a point by given scalar value and assigns the result to point at first argument.
+func (g *G1) MulScalar(r, p *PointG1, e *Fr) *PointG1 {
+	return g.glvMulFr(r, p, e)
+}
+
+func (g *G1) wnafMulFr(r, p *PointG1, e *Fr) *PointG1 {
+	wnaf := e.toWNAF(wnafMulWindowG1)
+	return g.wnafMul(r, p, wnaf)
+}
+
+func (g *G1) wnafMulBig(r, p *PointG1, e *big.Int) *PointG1 {
+	wnaf := bigToWNAF(e, wnafMulWindowG1)
+	return g.wnafMul(r, p, wnaf)
+}
+
+func (g *G1) wnafMul(c, p *PointG1, wnaf nafNumber) *PointG1 {
+
+	l := (1 << (wnafMulWindowG1 - 1))
+
+	twoP, acc := g.New(), new(PointG1).Set(p)
+	g.Double(twoP, p)
+	g.Affine(twoP)
+
+	// table = {p, 3p, 5p, ..., -p, -3p, -5p}
+	table := make([]*PointG1, l*2)
+	table[0], table[l] = g.New(), g.New()
+	table[0].Set(p)
+	g.Neg(table[l], table[0])
+
+	for i := 1; i < l; i++ {
+		g.AddMixed(acc, acc, twoP)
+		table[i], table[i+l] = g.New(), g.New()
+		table[i].Set(acc)
+		g.Neg(table[i+l], table[i])
+	}
+
+	q := g.Zero()
+	for i := len(wnaf) - 1; i >= 0; i-- {
+		if wnaf[i] > 0 {
+			g.Add(q, q, table[wnaf[i]>>1])
+		} else if wnaf[i] < 0 {
+			g.Add(q, q, table[((-wnaf[i])>>1)+l])
 		}
-		g.Double(n, n)
+		if i != 0 {
+			g.Double(q, q)
+		}
 	}
 	return c.Set(q)
 }
 
-// MulScalar multiplies a point by given scalar value and assigns the result to point at first argument.
-func (g *G1) MulScalar(c, p *PointG1, e *Fr) *PointG1 {
+func (g *G1) glvMulBig(r, p *PointG1, e *big.Int) *PointG1 {
+	v := decomposeBig(e)
+	return g.glvMul(r, p, v)
+
+}
+
+func (g *G1) glvMulFr(r, p *PointG1, e *Fr) *PointG1 {
+	v := decompose(e)
+	return g.glvMul(r, p, v)
+}
+
+func (g *G1) glvMul(r, p0 *PointG1, v glvVectorG1) *PointG1 {
+
+	w := glvMulWindowG1
+	l := 1 << (w - 1)
+
+	// prepare tables
+	// tableK1 = {P, 3P, 5P, ...}
+	// tableK2 = {λP, 3λP, 5λP, ...}
+	tableK1, tableK2 := make([]*PointG1, l), make([]*PointG1, l)
+	double := g.New()
+	g.Double(double, p0)
+	g.affine(double, double)
+	tableK1[0] = new(PointG1)
+	tableK1[0].Set(p0)
+	for i := 1; i < l; i++ {
+		tableK1[i] = new(PointG1)
+		g.AddMixed(tableK1[i], tableK1[i-1], double)
+	}
+	g.AffineBatch(tableK1)
+	for i := 0; i < l; i++ {
+		tableK2[i] = new(PointG1)
+		g.glvEndomorphism(tableK2[i], tableK1[i])
+	}
+
+	// recode small scalars
+	naf1, naf2 := v.wnaf(w)
+	lenNAF1, lenNAF2 := len(naf1), len(naf2)
+	lenNAF := lenNAF1
+	if lenNAF2 > lenNAF {
+		lenNAF = lenNAF2
+	}
+
+	acc, p1 := g.New(), g.New()
+
+	// function for naf addition
+	add := func(table []*PointG1, naf int) {
+		if naf != 0 {
+			nafAbs := naf
+			if nafAbs < 0 {
+				nafAbs = -nafAbs
+			}
+			p1.Set(table[nafAbs>>1])
+			if naf < 0 {
+				g.Neg(p1, p1)
+			}
+			g.AddMixed(acc, acc, p1)
+		}
+	}
+
+	// sliding
+	for i := lenNAF - 1; i >= 0; i-- {
+		if i < lenNAF1 {
+			add(tableK1, naf1[i])
+		}
+		if i < lenNAF2 {
+			add(tableK2, naf2[i])
+		}
+		if i != 0 {
+			g.Double(acc, acc)
+		}
+	}
+	return r.Set(acc)
+}
+
+func (g *G1) mulScalar(c, p *PointG1, e *Fr) *PointG1 {
 	q, n := &PointG1{}, &PointG1{}
 	n.Set(p)
 	for i := 0; i < frBitSize; i++ {
@@ -512,11 +640,6 @@ func (g *G1) MulScalar(c, p *PointG1, e *Fr) *PointG1 {
 		g.Double(n, n)
 	}
 	return c.Set(q)
-}
-
-// ClearCofactor maps given a G1 point to correct subgroup
-func (g *G1) ClearCofactor(p *PointG1) {
-	g.MulScalarBig(p, p, cofactorEFFG1)
 }
 
 // MultiExpBig calculates multi exponentiation. Scalar values are received as big.Int type.
@@ -619,6 +742,11 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, scalars []*Fr) (*PointG1, e
 		g.AddMixed(acc, acc, windows[i])
 	}
 	return r.Set(acc), nil
+}
+
+// ClearCofactor maps given a G1 point to correct subgroup
+func (g *G1) ClearCofactor(p *PointG1) {
+	g.MulScalarBig(p, p, cofactorEFFG1)
 }
 
 // MapToCurve given a byte slice returns a valid G1 point.
