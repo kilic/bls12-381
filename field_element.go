@@ -23,7 +23,7 @@ type fe6 /**			***/ [3]fe2
 // Representation follows c[0] + c[1] * w encoding order.
 type fe12 /**			***/ [2]fe6
 
-func (fe *fe) setBytes(in []byte) *fe {
+func (fe *fe) fromBytes(in []byte) *fe {
 	l := len(in)
 	if l >= fpByteSize {
 		l = fpByteSize
@@ -41,11 +41,11 @@ func (fe *fe) setBytes(in []byte) *fe {
 	return fe
 }
 
-func (fe *fe) setBig(a *big.Int) *fe {
-	return fe.setBytes(a.Bytes())
+func (fe *fe) fromBig(a *big.Int) *fe {
+	return fe.fromBytes(a.Bytes())
 }
 
-func (fe *fe) setString(s string) (*fe, error) {
+func (fe *fe) fromString(s string) (*fe, error) {
 	if s[:2] == "0x" {
 		s = s[2:]
 	}
@@ -53,7 +53,7 @@ func (fe *fe) setString(s string) (*fe, error) {
 	if err != nil {
 		return nil, err
 	}
-	return fe.setBytes(bytes), nil
+	return fe.fromBytes(bytes), nil
 }
 
 func (fe *fe) set(fe2 *fe) *fe {
@@ -113,7 +113,7 @@ func (fe *fe) rand(r io.Reader) (*fe, error) {
 	if err != nil {
 		return nil, err
 	}
-	return fe.setBig(bi), nil
+	return fe.fromBig(bi), nil
 }
 
 func (fe *fe) isValid() bool {

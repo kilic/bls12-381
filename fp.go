@@ -10,7 +10,7 @@ func fromBytes(in []byte) (*fe, error) {
 	if len(in) != fpByteSize {
 		return nil, errors.New("input string should be equal 48 bytes")
 	}
-	fe.setBytes(in)
+	fe.fromBytes(in)
 	if !fe.isValid() {
 		return nil, errors.New("must be less than modulus")
 	}
@@ -50,7 +50,7 @@ func from64Bytes(in []byte) (*fe, error) {
 }
 
 func fromBig(in *big.Int) (*fe, error) {
-	fe := new(fe).setBig(in)
+	fe := new(fe).fromBig(in)
 	if !fe.isValid() {
 		return nil, errors.New("invalid input string")
 	}
@@ -59,7 +59,7 @@ func fromBig(in *big.Int) (*fe, error) {
 }
 
 func fromString(in string) (*fe, error) {
-	fe, err := new(fe).setString(in)
+	fe, err := new(fe).fromString(in)
 	if err != nil {
 		return nil, err
 	}

@@ -31,9 +31,9 @@ func (e *Fr) toWNAF(w uint) nafNumber {
 			}
 			naf = append(naf, int(nafSign))
 			if nafSign < 0 {
-				laddAssignFR(ee, z.setUInt64(uint64(-nafSign)))
+				laddAssignFR(ee, z.setUint64(uint64(-nafSign)))
 			} else {
-				lsubAssignFR(ee, z.setUInt64(uint64(nafSign)))
+				lsubAssignFR(ee, z.setUint64(uint64(nafSign)))
 			}
 		} else {
 			naf = append(naf, 0)
@@ -51,7 +51,7 @@ func (e *Fr) fromWNAF(naf nafNumber, w uint) *Fr {
 	l := (1 << (w - 1))
 	table := make([]*Fr, l)
 	table[0] = new(Fr).One()
-	two := new(Fr).setUInt64(2)
+	two := new(Fr).setUint64(2)
 	for i := 1; i < l; i++ {
 		table[i] = new(Fr)
 		table[i].Add(table[i-1], two)

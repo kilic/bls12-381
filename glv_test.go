@@ -9,7 +9,7 @@ import (
 func TestGLVConstruction(t *testing.T) {
 	t.Run("Parameters", func(t *testing.T) {
 		t0, t1 := new(Fr), new(Fr)
-		one := new(Fr).setUInt64(1)
+		one := new(Fr).setUint64(1)
 		t0.Square(glvLambda)
 		t0.Add(t0, glvLambda)
 		t1.Sub(q, one)

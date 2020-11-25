@@ -23,7 +23,7 @@ func (e *Fr) Rand(r io.Reader) (*Fr, error) {
 	if err != nil {
 		return nil, err
 	}
-	_ = e.setBig(bi)
+	_ = e.fromBig(bi)
 	return e, nil
 }
 
@@ -54,23 +54,23 @@ func (e *Fr) RedOne() *Fr {
 }
 
 func (e *Fr) FromBytes(in []byte) *Fr {
-	e.setBytes(in)
+	e.fromBytes(in)
 	return e
 }
 
 func (e *Fr) RedFromBytes(in []byte) *Fr {
-	e.setBytes(in)
+	e.fromBytes(in)
 	e.toMont()
 	return e
 }
 
-func (e *Fr) setBytes(in []byte) *Fr {
+func (e *Fr) fromBytes(in []byte) *Fr {
 	u := new(big.Int).SetBytes(in)
-	_ = e.setBig(u)
+	_ = e.fromBig(u)
 	return e
 }
 
-func (e *Fr) setBig(in *big.Int) *Fr {
+func (e *Fr) fromBig(in *big.Int) *Fr {
 	e.Zero()
 	_in := new(big.Int).Set(in)
 	zero := new(big.Int)
@@ -83,10 +83,10 @@ func (e *Fr) setBig(in *big.Int) *Fr {
 	for i := 0; i < len(words); i++ {
 		e[i] = uint64(words[i])
 	}
-	return nil
+	return e
 }
 
-func (e *Fr) setUInt64(n uint64) *Fr {
+func (e *Fr) setUint64(n uint64) *Fr {
 	e.Zero()
 	e[0] = n
 	return e

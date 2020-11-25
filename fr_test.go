@@ -50,7 +50,7 @@ func TestFrSerialization(t *testing.T) {
 		t.Fatal(err)
 	}
 	b := new(Fr)
-	b.setBytes(a.bytes())
+	b.fromBytes(a.bytes())
 	if !a.Equal(b) {
 		t.Fatal("serialization failed, set bytes")
 	}
