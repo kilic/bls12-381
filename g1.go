@@ -367,7 +367,6 @@ func (g *G1) Add(r, p1, p2 *PointG1) *PointG1 {
 	if g.IsAffine(p2) {
 		return g.AddMixed(r, p1, p2)
 	}
-
 	t := g.t
 	square(t[7], &p1[2])    // z1z1
 	mul(t[1], &p2[0], t[7]) // u2 = x2 * z1z1
@@ -409,7 +408,7 @@ func (g *G1) Add(r, p1, p2 *PointG1) *PointG1 {
 }
 
 // Add adds two G1 points p1, p2 and assigns the result to point at first argument.
-// Expects point p2 in affine form.
+// Expects the second point p2 in affine form.
 func (g *G1) AddMixed(r, p1, p2 *PointG1) *PointG1 {
 	// http://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-madd-2007-bl
 	if g.IsZero(p1) {
@@ -556,14 +555,12 @@ func (g *G1) wnafMul(c, p *PointG1, wnaf nafNumber) *PointG1 {
 }
 
 func (g *G1) glvMulBig(r, p *PointG1, e *big.Int) *PointG1 {
-	v := decomposeBig(e)
-	return g.glvMul(r, p, v)
+	return g.glvMul(r, p, new(glvVectorG1Big).new(e))
 
 }
 
 func (g *G1) glvMulFr(r, p *PointG1, e *Fr) *PointG1 {
-	v := decompose(e)
-	return g.glvMul(r, p, v)
+	return g.glvMul(r, p, new(glvVectorG1Fr).new(e))
 }
 
 func (g *G1) glvMul(r, p0 *PointG1, v glvVectorG1) *PointG1 {
