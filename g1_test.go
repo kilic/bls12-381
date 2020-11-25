@@ -251,44 +251,6 @@ func TestG1MultiplicationCross(t *testing.T) {
 	}
 }
 
-func TestG1MultiplicativePropertiesBig(t *testing.T) {
-	g := NewG1()
-	t0, t1 := g.New(), g.New()
-	zero := g.Zero()
-	for i := 0; i < fuz; i++ {
-		a := g.rand()
-		s1, s2, s3 := randScalar(qBig), randScalar(qBig), randScalar(qBig)
-		sone := big.NewInt(1)
-		g.MulScalarBig(t0, zero, s1)
-		if !g.Equal(t0, zero) {
-			t.Fatal(" 0 ^ s == 0")
-		}
-		g.MulScalarBig(t0, a, sone)
-		if !g.Equal(t0, a) {
-			t.Fatal(" a ^ 1 == a")
-		}
-		g.MulScalarBig(t0, zero, s1)
-		if !g.Equal(t0, zero) {
-			t.Fatal(" 0 ^ s == a")
-		}
-		g.MulScalarBig(t0, a, s1)
-		g.MulScalarBig(t0, t0, s2)
-		s3.Mul(s1, s2)
-		g.MulScalarBig(t1, a, s3)
-		if !g.Equal(t0, t1) {
-			t.Errorf(" (a ^ s1) ^ s2 == a ^ (s1 * s2)")
-		}
-		g.MulScalarBig(t0, a, s1)
-		g.MulScalarBig(t1, a, s2)
-		g.Add(t0, t0, t1)
-		s3.Add(s1, s2)
-		g.MulScalarBig(t1, a, s3)
-		if !g.Equal(t0, t1) {
-			t.Errorf(" (a ^ s1) + (a ^ s2) == a ^ (s1 + s2)")
-		}
-	}
-}
-
 func TestG1MultiplicativeProperties(t *testing.T) {
 	g := NewG1()
 	t0, t1 := g.New(), g.New()
