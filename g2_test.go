@@ -236,93 +236,72 @@ func TestG2MixedAdd(t *testing.T) {
 	}
 }
 
+func TestG2MultiplicationCross(t *testing.T) {
+	g := NewG2()
+	for i := 0; i < fuz; i++ {
+
+		a := g.randAffine()
+		s, _ := new(Fr).Rand(rand.Reader)
+		sBig := s.ToBig()
+		res0, res1, res2, res3, res4 := g.New(), g.New(), g.New(), g.New(), g.New()
+
+		g.mulScalar(res0, a, s)
+		g.glvMulFr(res1, a, s)
+		g.glvMulBig(res2, a, sBig)
+		g.wnafMulFr(res3, a, s)
+		g.wnafMulBig(res4, a, sBig)
+
+		if !g.Equal(res0, res1) {
+			t.Fatal("cross multiplication failed (glv, fr)", i)
+		}
+		if !g.Equal(res0, res2) {
+			t.Fatal("cross multiplication failed (glv, big)", i)
+		}
+		if !g.Equal(res0, res3) {
+			t.Fatal("cross multiplication failed (wnaf, fr)", i)
+		}
+		if !g.Equal(res0, res4) {
+			t.Fatal("cross multiplication failed (wnaf, big)", i)
+		}
+	}
+}
+
 func TestG2MultiplicativeProperties(t *testing.T) {
 	g := NewG2()
 	t0, t1 := g.New(), g.New()
 	zero := g.Zero()
 	for i := 0; i < fuz; i++ {
 		a := g.rand()
-		s1, s2, s3 := randScalar(qBig), randScalar(qBig), randScalar(qBig)
-		sone := big.NewInt(1)
-		g.MulScalarBig(t0, zero, s1)
-		if !g.Equal(t0, zero) {
-			t.Fatal(" 0 ^ s == 0")
-		}
-		g.MulScalarBig(t0, a, sone)
-		if !g.Equal(t0, a) {
-			t.Fatal(" a ^ 1 == a")
-		}
-		g.MulScalarBig(t0, zero, s1)
-		if !g.Equal(t0, zero) {
-			t.Fatal(" 0 ^ s == a")
-		}
-		g.MulScalarBig(t0, a, s1)
-		g.MulScalarBig(t0, t0, s2)
-		s3.Mul(s1, s2)
-		g.MulScalarBig(t1, a, s3)
-		if !g.Equal(t0, t1) {
-			t.Errorf(" (a ^ s1) ^ s2 == a ^ (s1 * s2)")
-		}
-		g.MulScalarBig(t0, a, s1)
-		g.MulScalarBig(t1, a, s2)
-		g.Add(t0, t0, t1)
-		s3.Add(s1, s2)
-		g.MulScalarBig(t1, a, s3)
-		if !g.Equal(t0, t1) {
-			t.Errorf(" (a ^ s1) + (a ^ s2) == a ^ (s1 + s2)")
-		}
-	}
-}
-
-func TestWNAFMulAgainstNaive(t *testing.T) {
-	g2 := NewG2()
-	for i := 0; i < fuz; i++ {
-		a := g2.randCorrect()
-		c0, c1 := g2.new(), g2.new()
-		e, _ := new(Fr).Rand(rand.Reader)
-		g2.MulScalar(c0, a, e)
-		g2.wnafMul(c1, a, e)
-		if !g2.Equal(c0, c1) {
-			t.Fatal("wnaf against naive failed")
-		}
-	}
-}
-
-func TestG2MultiplicativePropertiesWNAF(t *testing.T) {
-	g := NewG2()
-	t0, t1 := g.new(), g.new()
-	zero := g.Zero()
-	for i := 0; i < fuz; i++ {
-		a := g.randCorrect()
 		s1, _ := new(Fr).Rand(rand.Reader)
 		s2, _ := new(Fr).Rand(rand.Reader)
 		s3, _ := new(Fr).Rand(rand.Reader)
-		g.wnafMul(t0, zero, s1)
+		sone := &Fr{1}
+		g.MulScalar(t0, zero, s1)
 		if !g.Equal(t0, zero) {
-			t.Fatalf(" 0 ^ s == 0")
+			t.Fatal(" 0 ^ s == 0")
 		}
-		g.wnafMul(t0, a, &Fr{1})
+		g.MulScalar(t0, a, sone)
 		if !g.Equal(t0, a) {
-			t.Fatalf(" a ^ 1 == a")
+			t.Fatal(" a ^ 1 == a")
 		}
-		g.wnafMul(t0, zero, s1)
+		g.MulScalar(t0, zero, s1)
 		if !g.Equal(t0, zero) {
-			t.Fatalf(" 0 ^ s == a")
+			t.Fatal(" 0 ^ s == a")
 		}
-		g.wnafMul(t0, a, s1)
-		g.wnafMul(t0, t0, s2)
+		g.MulScalar(t0, a, s1)
+		g.MulScalar(t0, t0, s2)
 		s3.Mul(s1, s2)
-		g.wnafMul(t1, a, s3)
+		g.MulScalar(t1, a, s3)
 		if !g.Equal(t0, t1) {
-			t.Errorf(" (a ^ s1) ^ s2 == a ^ (s1 * s2)")
+			t.Fatal(" (a ^ s1) ^ s2 == a ^ (s1 * s2)")
 		}
-		g.wnafMul(t0, a, s1)
-		g.wnafMul(t1, a, s2)
+		g.MulScalar(t0, a, s1)
+		g.MulScalar(t1, a, s2)
 		g.Add(t0, t0, t1)
 		s3.Add(s1, s2)
-		g.wnafMul(t1, a, s3)
+		g.MulScalar(t1, a, s3)
 		if !g.Equal(t0, t1) {
-			t.Errorf(" (a ^ s1) + (a ^ s2) == a ^ (s1 + s2)")
+			t.Fatal(" (a ^ s1) + (a ^ s2) == a ^ (s1 + s2)")
 		}
 	}
 }
@@ -638,31 +617,62 @@ func BenchmarkG2Add(t *testing.B) {
 		g2.Add(&c, a, b)
 	}
 }
-
-func BenchmarkG2MulBig(t *testing.B) {
-	g2 := NewG2()
-	a, e, c := g2.rand(), qBig, PointG2{}
-	t.ResetTimer()
-	for i := 0; i < t.N; i++ {
-		g2.MulScalarBig(&c, a, e)
-	}
-}
-
-func BenchmarkG2Mul(t *testing.B) {
-	g2 := NewG2()
-	a, e, c := g2.rand(), q, PointG2{}
-	t.ResetTimer()
-	for i := 0; i < t.N; i++ {
-		g2.MulScalar(&c, a, e)
-	}
-}
-
 func BenchmarkG2MulWNAF(t *testing.B) {
-	g2 := NewG2()
-	a, e, c := g2.rand(), q, PointG2{}
-	t.ResetTimer()
-	for i := 0; i < t.N; i++ {
-		g2.wnafMul(&c, a, e)
+	g := NewG2()
+	p := new(PointG2).Set(&g2One)
+	s, _ := new(Fr).Rand(rand.Reader)
+	sBig := s.ToBig()
+	res := new(PointG2)
+	t.Run("Naive", func(t *testing.B) {
+		t.ResetTimer()
+		for i := 0; i < t.N; i++ {
+			g.mulScalar(res, p, s)
+		}
+	})
+	for i := 1; i < 8; i++ {
+		wnafMulWindowG2 = uint(i)
+		t.Run(fmt.Sprintf("Fr, window: %d", i), func(t *testing.B) {
+			t.ResetTimer()
+			for i := 0; i < t.N; i++ {
+				g.wnafMulFr(res, p, s)
+			}
+		})
+		t.Run(fmt.Sprintf("Big, window: %d", i), func(t *testing.B) {
+			t.ResetTimer()
+			for i := 0; i < t.N; i++ {
+				g.wnafMulBig(res, p, sBig)
+			}
+		})
+	}
+}
+
+func BenchmarkG2MulGLV(t *testing.B) {
+
+	g := NewG2()
+	p := new(PointG2).Set(&g2One)
+	s, _ := new(Fr).Rand(rand.Reader)
+	sBig := s.ToBig()
+	res := new(PointG2)
+	t.Run("Naive", func(t *testing.B) {
+		t.ResetTimer()
+		for i := 0; i < t.N; i++ {
+			g.mulScalar(res, p, s)
+		}
+	})
+	for i := 1; i < 8; i++ {
+		glvMulWindowG2 = uint(i)
+		t.Run(fmt.Sprintf("Fr, window: %d", i), func(t *testing.B) {
+			t.ResetTimer()
+			for i := 0; i < t.N; i++ {
+				g.glvMulFr(res, p, s)
+			}
+		})
+		t.Run(fmt.Sprintf("Big, window: %d", i), func(t *testing.B) {
+			t.ResetTimer()
+			for i := 0; i < t.N; i++ {
+				g.glvMulBig(res, p, sBig)
+			}
+		})
 	}
 }
 

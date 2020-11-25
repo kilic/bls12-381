@@ -555,15 +555,15 @@ func (g *G1) wnafMul(c, p *PointG1, wnaf nafNumber) *PointG1 {
 }
 
 func (g *G1) glvMulBig(r, p *PointG1, e *big.Int) *PointG1 {
-	return g.glvMul(r, p, new(glvVectorG1Big).new(e))
+	return g.glvMul(r, p, new(glvVectorBig).new(e))
 
 }
 
 func (g *G1) glvMulFr(r, p *PointG1, e *Fr) *PointG1 {
-	return g.glvMul(r, p, new(glvVectorG1Fr).new(e))
+	return g.glvMul(r, p, new(glvVectorFr).new(e))
 }
 
-func (g *G1) glvMul(r, p0 *PointG1, v glvVectorG1) *PointG1 {
+func (g *G1) glvMul(r, p0 *PointG1, v glvVector) *PointG1 {
 
 	w := glvMulWindowG1
 	l := 1 << (w - 1)

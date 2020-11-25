@@ -323,19 +323,25 @@ func (g *G2) IsAffine(p *PointG2) bool {
 
 // Affine calculates affine form of given G2 point.
 func (g *G2) Affine(p *PointG2) *PointG2 {
+	return g.affine(p, p)
+}
+
+func (g *G2) affine(r, p *PointG2) *PointG2 {
 	if g.IsZero(p) {
-		return p
+		return r.Zero()
 	}
 	if !g.IsAffine(p) {
 		t := g.t
 		g.f.inverse(t[0], &p[2])   // z^-1
 		g.f.square(t[1], t[0])     // z^-2
-		g.f.mulAssign(&p[0], t[1]) // x = x * z^-2
+		g.f.mulAssign(&r[0], t[1]) // x = x * z^-2
 		g.f.mulAssign(t[0], t[1])  // z^-3
-		g.f.mulAssign(&p[1], t[0]) // y = y * z^-3
-		p[2].one()                 // z = 1
+		g.f.mulAssign(&r[1], t[0]) // y = y * z^-3
+		r[2].one()                 // z = 1
+	} else {
+		r.Set(p)
 	}
-	return p
+	return r
 }
 
 // AffineBatch given multiple of points returns affine representations
@@ -365,6 +371,9 @@ func (g *G2) Add(r, p1, p2 *PointG2) *PointG2 {
 	}
 	if g.IsZero(p2) {
 		return r.Set(p1)
+	}
+	if g.IsAffine(p2) {
+		return g.AddMixed(r, p1, p2)
 	}
 	t := g.t
 	g.f.square(t[7], &p1[2])    // z1z1
@@ -407,7 +416,7 @@ func (g *G2) Add(r, p1, p2 *PointG2) *PointG2 {
 }
 
 // Add adds two G1 points p1, p2 and assigns the result to point at first argument.
-// Expects point p2 in affine form.
+// Expects the second point p2 in affine form.
 func (g *G2) AddMixed(r, p1, p2 *PointG2) *PointG2 {
 	// http://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-madd-2007-bl
 	if g.IsZero(p1) {
@@ -525,6 +534,135 @@ func (g *G2) MulScalar(c, p *PointG2, e *Fr) *PointG2 {
 	return c.Set(q)
 }
 
+func (g *G2) mulScalar(c, p *PointG2, e *Fr) *PointG2 {
+	q, n := &PointG2{}, &PointG2{}
+	n.Set(p)
+	for i := 0; i < frBitSize; i++ {
+		if e.Bit(i) {
+			g.Add(q, q, n)
+		}
+		g.Double(n, n)
+	}
+	return c.Set(q)
+}
+
+func (g *G2) wnafMulFr(r, p *PointG2, e *Fr) *PointG2 {
+	wnaf := e.toWNAF(wnafMulWindowG2)
+	return g.wnafMul(r, p, wnaf)
+}
+
+func (g *G2) wnafMulBig(r, p *PointG2, e *big.Int) *PointG2 {
+	wnaf := bigToWNAF(e, wnafMulWindowG2)
+	return g.wnafMul(r, p, wnaf)
+}
+
+func (g *G2) wnafMul(c, p *PointG2, wnaf nafNumber) *PointG2 {
+
+	l := (1 << (wnafMulWindowG2 - 1))
+
+	twoP, acc := g.New(), new(PointG2).Set(p)
+	g.Double(twoP, p)
+	g.Affine(twoP)
+
+	// table = {p, 3p, 5p, ..., -p, -3p, -5p}
+	table := make([]*PointG2, l*2)
+	table[0], table[l] = g.New(), g.New()
+	table[0].Set(p)
+	g.Neg(table[l], table[0])
+
+	for i := 1; i < l; i++ {
+		g.AddMixed(acc, acc, twoP)
+		table[i], table[i+l] = g.New(), g.New()
+		table[i].Set(acc)
+		g.Neg(table[i+l], table[i])
+	}
+
+	q := g.Zero()
+	for i := len(wnaf) - 1; i >= 0; i-- {
+		if wnaf[i] > 0 {
+			g.Add(q, q, table[wnaf[i]>>1])
+		} else if wnaf[i] < 0 {
+			g.Add(q, q, table[((-wnaf[i])>>1)+l])
+		}
+		if i != 0 {
+			g.Double(q, q)
+		}
+	}
+	return c.Set(q)
+}
+
+func (g *G2) glvMulBig(r, p *PointG2, e *big.Int) *PointG2 {
+	return g.glvMul(r, p, new(glvVectorBig).new(e))
+}
+
+func (g *G2) glvMulFr(r, p *PointG2, e *Fr) *PointG2 {
+	return g.glvMul(r, p, new(glvVectorFr).new(e))
+}
+
+func (g *G2) glvMul(r, p0 *PointG2, v glvVector) *PointG2 {
+
+	w := glvMulWindowG2
+	l := 1 << (w - 1)
+
+	// prepare tables
+	// tableK1 = {P, 3P, 5P, ...}
+	// tableK2 = {λP, 3λP, 5λP, ...}
+	tableK1, tableK2 := make([]*PointG2, l), make([]*PointG2, l)
+	double := g.New()
+	g.Double(double, p0)
+	g.affine(double, double)
+	tableK1[0] = new(PointG2)
+	tableK1[0].Set(p0)
+	for i := 1; i < l; i++ {
+		tableK1[i] = new(PointG2)
+		g.AddMixed(tableK1[i], tableK1[i-1], double)
+	}
+	g.AffineBatch(tableK1)
+	for i := 0; i < l; i++ {
+		tableK2[i] = new(PointG2)
+		g.glvEndomorphism(tableK2[i], tableK1[i])
+	}
+
+	// recode small scalars
+	naf1, naf2 := v.wnaf(w)
+	lenNAF1, lenNAF2 := len(naf1), len(naf2)
+	lenNAF := lenNAF1
+	if lenNAF2 > lenNAF {
+		lenNAF = lenNAF2
+	}
+
+	acc, p1 := g.New(), g.New()
+
+	// function for naf addition
+	add := func(table []*PointG2, naf int) {
+		if naf != 0 {
+			nafAbs := naf
+			if nafAbs < 0 {
+				nafAbs = -nafAbs
+			}
+			p1.Set(table[nafAbs>>1])
+			if naf < 0 {
+				g.Neg(p1, p1)
+			}
+			g.AddMixed(acc, acc, p1)
+		}
+	}
+
+	// sliding
+	for i := lenNAF - 1; i >= 0; i-- {
+		if i < lenNAF1 {
+			add(tableK1, naf1[i])
+		}
+		if i < lenNAF2 {
+			add(tableK2, naf2[i])
+		}
+		if i != 0 {
+			g.Double(acc, acc)
+		}
+	}
+	return r.Set(acc)
+}
+
 // ClearCofactor maps given a G2 point to correct subgroup
 func (g *G2) ClearCofactor(p *PointG2) *PointG2 {
 	return g.wnafMulBig(p, p, cofactorEFFG2)
@@ -630,94 +768,6 @@ func (g *G2) MultiExp(r *PointG2, points []*PointG2, scalars []*Fr) (*PointG2, e
 		g.AddMixed(acc, acc, windows[i])
 	}
 	return r.Set(acc), nil
-}
-
-func (g *G2) wnafMulBig(c, p *PointG2, e *big.Int) *PointG2 {
-
-	l := (1 << (wnafMulWindowG2 - 1))
-	tablePositive := make([]PointG2, l)
-	tableNegative := make([]PointG2, l)
-
-	twoP, acc := g.New(), new(PointG2).Set(p)
-	g.Double(twoP, p)
-
-	// p
-	tablePositive[0].Set(acc)
-	// -p
-	g.Neg(&tableNegative[0], acc)
-
-	for i := 1; i < l; i++ {
-		g.Add(acc, acc, twoP)
-		// 3p, 5p, 7p ...
-		tablePositive[i].Set(acc)
-		// -3p, -5p, -7p ...
-		g.Neg(&tableNegative[i], acc)
-	}
-
-	wnaf := bigToWNAF(e, wnafMulWindowG2)
-
-	q := g.Zero()
-
-	for i := len(wnaf) - 1; i >= 0; i-- {
-
-		if wnaf[i] > 0 {
-
-			g.Add(q, q, &tablePositive[wnaf[i]>>1])
-		} else if wnaf[i] < 0 {
-
-			g.Add(q, q, &tableNegative[(-wnaf[i])>>1])
-		}
-
-		if i != 0 {
-			g.Double(q, q)
-		}
-
-	}
-	return c.Set(q)
-}
-
-func (g *G2) wnafMul(c, p *PointG2, e *Fr) *PointG2 {
-
-	l := (1 << (wnafMulWindowG2 - 1))
-	tablePositive := make([]PointG2, l)
-	tableNegative := make([]PointG2, l)
-
-	twoP, acc := g.New(), new(PointG2).Set(p)
-	g.Double(twoP, p)
-
-	// p
-	tablePositive[0].Set(acc)
-	// -p
-	g.Neg(&tableNegative[0], acc)
-
-	for i := 1; i < l; i++ {
-		g.Add(acc, acc, twoP)
-		// 3p, 5p, 7p ...
-		tablePositive[i].Set(acc)
-		// -3p, -5p, -7p ...
-		g.Neg(&tableNegative[i], acc)
-	}
-
-	wnaf := e.toWNAF(wnafMulWindowG2)
-
-	q := g.Zero()
-
-	for i := len(wnaf) - 1; i >= 0; i-- {
-
-		if wnaf[i] > 0 {
-
-			g.Add(q, q, &tablePositive[wnaf[i]>>1])
-		} else if wnaf[i] < 0 {
-
-			g.Add(q, q, &tableNegative[(-wnaf[i])>>1])
-		}
-
-		if i != 0 {
-			g.Double(q, q)
-		}
-
-	}
-	return c.Set(q)
 }
 
 // MapToCurve given a byte slice returns a valid G2 point.

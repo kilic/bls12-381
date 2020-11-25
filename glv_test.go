@@ -7,32 +7,49 @@ import (
 )
 
 func TestGLVConstruction(t *testing.T) {
-
 	t.Run("Parameters", func(t *testing.T) {
 		t0, t1 := new(Fr), new(Fr)
 		one := new(Fr).setUInt64(1)
-		t0.Square(glvLambda1)
-		t0.Add(t0, glvLambda1)
+		t0.Square(glvLambda)
+		t0.Add(t0, glvLambda)
 		t1.Sub(q, one)
 		if !t0.Equal(t1) {
-			t.Fatal("lambda^2 + lambda + 1 = 0")
+			t.Fatal("lambda1^2 + lambda1 + 1 = 0")
 		}
 		c0 := new(fe)
-		square(c0, glvPhi)
-		mul(c0, c0, glvPhi)
+		square(c0, glvPhi1)
+		mul(c0, c0, glvPhi1)
 		if !c0.isOne() {
-			t.Fatal("phi^3 = 1")
+			t.Fatal("phi1^3 = 1")
+		}
+		square(c0, glvPhi2)
+		mul(c0, c0, glvPhi2)
+		if !c0.isOne() {
+			t.Fatal("phi2^3 = 1")
 		}
 	})
 	t.Run("Endomorphism G1", func(t *testing.T) {
 		g := NewG1()
 		{
 			p0, p1 := g.randAffine(), g.New()
-			g.MulScalar(p1, p0, glvLambda1)
+			g.MulScalar(p1, p0, glvLambda)
 			g.Affine(p1)
-			x := g.New()
-			g.glvEndomorphism(x, p0)
-			if !g.Equal(x, p1) {
+			r := g.New()
+			g.glvEndomorphism(r, p0)
+			if !g.Equal(r, p1) {
+				t.Fatal("f(x, y) = (phi * x, y)")
+			}
+		}
+	})
+	t.Run("Endomorphism G2", func(t *testing.T) {
+		g := NewG2()
+		{
+			p0, p1 := g.randAffine(), g.New()
+			g.MulScalar(p1, p0, glvLambda)
+			g.Affine(p1)
+			r := g.New()
+			g.glvEndomorphism(r, p0)
+			if !g.Equal(r, p1) {
 				t.Fatal("f(x, y) = (phi * x, y)")
 			}
 		}
@@ -44,10 +61,10 @@ func TestGLVConstruction(t *testing.T) {
 				t.Fatal(err)
 			}
 			mBig := m.ToBig()
-			var vFr *glvVectorG1Fr
-			var vBig *glvVectorG1Big
+			var vFr *glvVectorFr
+			var vBig *glvVectorBig
 			{
-				vFr = decompose(m)
+				vFr = new(glvVectorFr).new(m)
 				v := vFr
 
 				if v.k1.Cmp(r128) >= 0 {
@@ -59,17 +76,17 @@ func TestGLVConstruction(t *testing.T) {
 
 				k := new(Fr)
 				if v.neg1 && v.neg2 {
-					k.Mul(glvLambda1, v.k2)
+					k.Mul(glvLambda, v.k2)
 					k.Sub(k, v.k1)
 				} else if v.neg1 {
-					k.Mul(glvLambda1, v.k2)
+					k.Mul(glvLambda, v.k2)
 					k.Add(k, v.k1)
 					k.Neg(k)
 				} else if v.neg2 {
-					k.Mul(glvLambda1, v.k2)
+					k.Mul(glvLambda, v.k2)
 					k.Add(v.k1, k)
 				} else {
-					k.Mul(glvLambda1, v.k2)
+					k.Mul(glvLambda, v.k2)
 					k.Sub(v.k1, k)
 				}
 
@@ -80,7 +97,7 @@ func TestGLVConstruction(t *testing.T) {
 
 			r128Big := r128.ToBig()
 			{
-				vBig = decomposeBig(mBig)
+				vBig = new(glvVectorBig).new(mBig)
 
 				if new(big.Int).Abs(vBig.k1).Cmp(r128Big) >= 0 {
 					t.Fatal("bad scalar component, big k1")
@@ -90,7 +107,7 @@ func TestGLVConstruction(t *testing.T) {
 				}
 
 				k := new(big.Int)
-				k.Mul(glvLambda1Big, vBig.k2)
+				k.Mul(glvLambdaBig, vBig.k2)
 				k.Sub(vBig.k1, k).Mod(k, qBig)
 				if k.Cmp(mBig) != 0 {
 					t.Fatal("scalar decomposing with big.Int failed", i)
