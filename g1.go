@@ -65,20 +65,20 @@ func (g *G1) Q() *big.Int {
 // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 	if len(uncompressed) != 2*fpByteSize {
-		return nil, errors.New("input string should be equal or larger than 96")
+		return nil, errors.New("input string length must be equal to 96 bytes")
 	}
 	var in [2 * fpByteSize]byte
 	copy(in[:], uncompressed[:2*fpByteSize])
 	if in[0]&(1<<7) != 0 {
-		return nil, errors.New("input string should be equal or larger than 96")
+		return nil, errors.New("compression flag must be zero")
 	}
 	if in[0]&(1<<5) != 0 {
-		return nil, errors.New("input string should be equal or larger than 96")
+		return nil, errors.New("sort flag must be zero")
 	}
 	if in[0]&(1<<6) != 0 {
 		for i, v := range in {
 			if (i == 0 && v != 0x40) || (i != 0 && v != 0x00) {
-				return nil, errors.New("input string should be equal or larger than 96")
+				return nil, errors.New("input string must be zero when infinity flag is set")
 			}
 		}
 		return g.Zero(), nil
@@ -95,10 +95,10 @@ func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
 	z := new(fe).one()
 	p := &PointG1{*x, *y, *z}
 	if !g.IsOnCurve(p) {
-		return nil, errors.New("input string should be equal or larger than 96")
+		return nil, errors.New("point is not on curve")
 	}
 	if !g.InCorrectSubgroup(p) {
-		return nil, errors.New("input string should be equal or larger than 96")
+		return nil, errors.New("point is not on correct subgroup")
 	}
 	return p, nil
 }
@@ -125,18 +125,18 @@ func (g *G1) ToUncompressed(p *PointG1) []byte {
 // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
 	if len(compressed) != fpByteSize {
-		return nil, errors.New("input string should be equal or larger than 48")
+		return nil, errors.New("input string length must be equal to 48 bytes")
 	}
 	var in [fpByteSize]byte
 	copy(in[:], compressed[:])
 	if in[0]&(1<<7) == 0 {
-		return nil, errors.New("compression flag should be set")
+		return nil, errors.New("compression flag must be set")
 	}
 	if in[0]&(1<<6) != 0 {
 		// in[0] == (1 << 6) + (1 << 7)
 		for i, v := range in {
 			if (i == 0 && v != 0xc0) || (i != 0 && v != 0x00) {
-				return nil, errors.New("input string should be zero when infinity flag is set")
+				return nil, errors.New("input string must be zero when infinity flag is set")
 			}
 		}
 		return g.Zero(), nil
@@ -203,7 +203,7 @@ func (g *G1) fromBytesUnchecked(in []byte) (*PointG1, error) {
 // (0, 0) is considered as infinity.
 func (g *G1) FromBytes(in []byte) (*PointG1, error) {
 	if len(in) != 2*fpByteSize {
-		return nil, errors.New("input string should be equal or larger than 96")
+		return nil, errors.New("input string length must be equal to 96 bytes")
 	}
 	p0, err := fromBytes(in[:fpByteSize])
 	if err != nil {
@@ -282,7 +282,7 @@ func (g *G1) Equal(p1, p2 *PointG1) bool {
 // InCorrectSubgroup checks whether given point is in correct subgroup.
 func (g *G1) InCorrectSubgroup(p *PointG1) bool {
 	tmp := &PointG1{}
-	g.MulScalar(tmp, p, q)
+	g.wnafMulFr(tmp, p, q)
 	return g.IsZero(tmp)
 }
 
@@ -499,14 +499,38 @@ func (g *G1) Sub(c, a, b *PointG1) *PointG1 {
 	return c
 }
 
+// MulScalar multiplies a point by given scalar value and assigns the result to point at first argument.
+func (g *G1) MulScalar(r, p *PointG1, e *Fr) *PointG1 {
+	return g.glvMulFr(r, p, e)
+}
+
 // MulScalar multiplies a point by given scalar value in big.Int and assigns the result to point at first argument.
 func (g *G1) MulScalarBig(r, p *PointG1, e *big.Int) *PointG1 {
 	return g.glvMulBig(r, p, e)
 }
 
-// MulScalar multiplies a point by given scalar value and assigns the result to point at first argument.
-func (g *G1) MulScalar(r, p *PointG1, e *Fr) *PointG1 {
-	return g.glvMulFr(r, p, e)
+func (g *G1) mulScalar(c, p *PointG1, e *Fr) *PointG1 {
+	q, n := &PointG1{}, &PointG1{}
+	n.Set(p)
+	for i := 0; i < frBitSize; i++ {
+		if e.Bit(i) {
+			g.Add(q, q, n)
+		}
+		g.Double(n, n)
+	}
+	return c.Set(q)
+}
+
+func (g *G1) mulScalarBig(c, p *PointG1, e *big.Int) *PointG1 {
+	q, n := &PointG1{}, &PointG1{}
+	n.Set(p)
+	for i := 0; i < frBitSize; i++ {
+		if e.Bit(i) == 1 {
+			g.Add(q, q, n)
+		}
+		g.Double(n, n)
+	}
+	return c.Set(q)
 }
 
 func (g *G1) wnafMulFr(r, p *PointG1, e *Fr) *PointG1 {
@@ -554,13 +578,12 @@ func (g *G1) wnafMul(c, p *PointG1, wnaf nafNumber) *PointG1 {
 	return c.Set(q)
 }
 
-func (g *G1) glvMulBig(r, p *PointG1, e *big.Int) *PointG1 {
-	return g.glvMul(r, p, new(glvVectorBig).new(e))
-
-}
-
 func (g *G1) glvMulFr(r, p *PointG1, e *Fr) *PointG1 {
 	return g.glvMul(r, p, new(glvVectorFr).new(e))
+}
+
+func (g *G1) glvMulBig(r, p *PointG1, e *big.Int) *PointG1 {
+	return g.glvMul(r, p, new(glvVectorBig).new(e))
 }
 
 func (g *G1) glvMul(r, p0 *PointG1, v glvVector) *PointG1 {
@@ -625,18 +648,6 @@ func (g *G1) glvMul(r, p0 *PointG1, v glvVector) *PointG1 {
 		}
 	}
 	return r.Set(acc)
-}
-
-func (g *G1) mulScalar(c, p *PointG1, e *Fr) *PointG1 {
-	q, n := &PointG1{}, &PointG1{}
-	n.Set(p)
-	for i := 0; i < frBitSize; i++ {
-		if e.Bit(i) {
-			g.Add(q, q, n)
-		}
-		g.Double(n, n)
-	}
-	return c.Set(q)
 }
 
 // MultiExpBig calculates multi exponentiation. Scalar values are received as big.Int type.
@@ -742,8 +753,8 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, scalars []*Fr) (*PointG1, e
 }
 
 // ClearCofactor maps given a G1 point to correct subgroup
-func (g *G1) ClearCofactor(p *PointG1) {
-	g.MulScalarBig(p, p, cofactorEFFG1)
+func (g *G1) ClearCofactor(p *PointG1) *PointG1 {
+	return g.MulScalarBig(p, p, cofactorEFFG1)
 }
 
 // MapToCurve given a byte slice returns a valid G1 point.

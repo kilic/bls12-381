@@ -74,20 +74,20 @@ func (g *G2) Q() *big.Int {
 // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G2) FromUncompressed(uncompressed []byte) (*PointG2, error) {
 	if len(uncompressed) != 4*fpByteSize {
-		return nil, errors.New("input string should be equal or larger than 192")
+		return nil, errors.New("input string length must be equal to 192 bytes")
 	}
 	var in [4 * fpByteSize]byte
 	copy(in[:], uncompressed[:4*fpByteSize])
 	if in[0]&(1<<7) != 0 {
-		return nil, errors.New("compression flag should be zero")
+		return nil, errors.New("compression flag must be zero")
 	}
 	if in[0]&(1<<5) != 0 {
-		return nil, errors.New("sort flag should be zero")
+		return nil, errors.New("sort flag must be zero")
 	}
 	if in[0]&(1<<6) != 0 {
 		for i, v := range in {
 			if (i == 0 && v != 0x40) || (i != 0 && v != 0x00) {
-				return nil, errors.New("input string should be zero when infinity flag is set")
+				return nil, errors.New("input string must be zero when infinity flag is set")
 			}
 		}
 		return g.Zero(), nil
@@ -134,18 +134,18 @@ func (g *G2) ToUncompressed(p *PointG2) []byte {
 // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
 func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 	if len(compressed) != 2*fpByteSize {
-		return nil, errors.New("input string should be equal or larger than 96")
+		return nil, errors.New("input string length must be equal to 96 bytes")
 	}
 	var in [2 * fpByteSize]byte
 	copy(in[:], compressed[:])
 	if in[0]&(1<<7) == 0 {
-		return nil, errors.New("bad compression")
+		return nil, errors.New("compression flag must be set")
 	}
 	if in[0]&(1<<6) != 0 {
 		// in[0] == (1 << 6) + (1 << 7)
 		for i, v := range in {
 			if (i == 0 && v != 0xc0) || (i != 0 && v != 0x00) {
-				return nil, errors.New("input string should be zero when infinity flag is set")
+				return nil, errors.New("input string must be zero when infinity flag is set")
 			}
 		}
 		return g.Zero(), nil
@@ -212,7 +212,7 @@ func (g *G2) fromBytesUnchecked(in []byte) (*PointG2, error) {
 // Point (0, 0) is considered as infinity.
 func (g *G2) FromBytes(in []byte) (*PointG2, error) {
 	if len(in) != 4*fpByteSize {
-		return nil, errors.New("input string should be equal or larger than 192")
+		return nil, errors.New("input string length must be equal to 192 bytes")
 	}
 	p0, err := g.f.fromBytes(in[:2*fpByteSize])
 	if err != nil {
@@ -291,7 +291,7 @@ func (g *G2) Equal(p1, p2 *PointG2) bool {
 // InCorrectSubgroup checks whether given point is in correct subgroup.
 func (g *G2) InCorrectSubgroup(p *PointG2) bool {
 	tmp := &PointG2{}
-	g.MulScalarBig(tmp, p, qBig)
+	g.wnafMulFr(tmp, p, q)
 	return g.IsZero(tmp)
 }
 
@@ -507,31 +507,14 @@ func (g *G2) Sub(c, a, b *PointG2) *PointG2 {
 	return c
 }
 
-// MulScalarBig multiplies a point by given scalar value in big.Int and assigns the result to point at first argument.
-func (g *G2) MulScalarBig(c, p *PointG2, e *big.Int) *PointG2 {
-	q, n := &PointG2{}, &PointG2{}
-	n.Set(p)
-	l := e.BitLen()
-	for i := 0; i < l; i++ {
-		if e.Bit(i) == 1 {
-			g.Add(q, q, n)
-		}
-		g.Double(n, n)
-	}
-	return c.Set(q)
+// MulScalar multiplies a point by given scalar value and assigns the result to point at first argument.
+func (g *G2) MulScalar(r, p *PointG2, e *Fr) *PointG2 {
+	return g.glvMulFr(r, p, e)
 }
 
-// MulScalar multiplies a point by given scalar value and assigns the result to point at first argument.
-func (g *G2) MulScalar(c, p *PointG2, e *Fr) *PointG2 {
-	q, n := &PointG2{}, &PointG2{}
-	n.Set(p)
-	for i := 0; i < frBitSize; i++ {
-		if e.Bit(i) {
-			g.Add(q, q, n)
-		}
-		g.Double(n, n)
-	}
-	return c.Set(q)
+// MulScalarBig multiplies a point by given scalar value in big.Int and assigns the result to point at first argument.
+func (g *G2) MulScalarBig(r, p *PointG2, e *big.Int) *PointG2 {
+	return g.glvMulBig(r, p, e)
 }
 
 func (g *G2) mulScalar(c, p *PointG2, e *Fr) *PointG2 {
@@ -539,6 +522,19 @@ func (g *G2) mulScalar(c, p *PointG2, e *Fr) *PointG2 {
 	n.Set(p)
 	for i := 0; i < frBitSize; i++ {
 		if e.Bit(i) {
+			g.Add(q, q, n)
+		}
+		g.Double(n, n)
+	}
+	return c.Set(q)
+}
+
+func (g *G2) mulScalarBig(c, p *PointG2, e *big.Int) *PointG2 {
+	q, n := &PointG2{}, &PointG2{}
+	n.Set(p)
+	l := e.BitLen()
+	for i := 0; i < l; i++ {
+		if e.Bit(i) == 1 {
 			g.Add(q, q, n)
 		}
 		g.Double(n, n)
@@ -591,12 +587,12 @@ func (g *G2) wnafMul(c, p *PointG2, wnaf nafNumber) *PointG2 {
 	return c.Set(q)
 }
 
-func (g *G2) glvMulBig(r, p *PointG2, e *big.Int) *PointG2 {
-	return g.glvMul(r, p, new(glvVectorBig).new(e))
-}
-
 func (g *G2) glvMulFr(r, p *PointG2, e *Fr) *PointG2 {
 	return g.glvMul(r, p, new(glvVectorFr).new(e))
+}
+
+func (g *G2) glvMulBig(r, p *PointG2, e *big.Int) *PointG2 {
+	return g.glvMul(r, p, new(glvVectorBig).new(e))
 }
 
 func (g *G2) glvMul(r, p0 *PointG2, v glvVector) *PointG2 {
