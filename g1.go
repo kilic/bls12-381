@@ -754,7 +754,7 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, scalars []*Fr) (*PointG1, e
 
 // ClearCofactor maps given a G1 point to correct subgroup
 func (g *G1) ClearCofactor(p *PointG1) *PointG1 {
-	return g.MulScalarBig(p, p, cofactorEFFG1)
+	return g.wnafMulBig(p, p, cofactorEFFG1)
 }
 
 // MapToCurve given a byte slice returns a valid G1 point.
