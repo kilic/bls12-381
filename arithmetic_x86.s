@@ -2172,10 +2172,10 @@ TEXT ·addFR(SB), NOSPLIT, $0-24
 	MOVQ DX, R11
 	MOVQ R8, R12
 	MOVQ R9, R13
-	SUBQ ·qmodulus+0(SB), R10
-	SBBQ ·qmodulus+8(SB), R11
-	SBBQ ·qmodulus+16(SB), R12
-	SBBQ ·qmodulus+24(SB), R13
+	SUBQ ·q+0(SB), R10
+	SBBQ ·q+8(SB), R11
+	SBBQ ·q+16(SB), R12
+	SBBQ ·q+24(SB), R13
 
 	// |
 	MOVQ    c+0(FP), DI
@@ -2233,10 +2233,10 @@ TEXT ·doubleFR(SB), NOSPLIT, $0-16
 	MOVQ DX, R10
 	MOVQ SI, R11
 	MOVQ R8, R12
-	SUBQ ·qmodulus+0(SB), R9
-	SBBQ ·qmodulus+8(SB), R10
-	SBBQ ·qmodulus+16(SB), R11
-	SBBQ ·qmodulus+24(SB), R12
+	SUBQ ·q+0(SB), R9
+	SBBQ ·q+8(SB), R10
+	SBBQ ·q+16(SB), R11
+	SBBQ ·q+24(SB), R12
 
 	// |
 	MOVQ    c+0(FP), DI
@@ -2269,10 +2269,10 @@ TEXT ·subFR(SB), NOSPLIT, $0-24
 	SBBQ 24(SI), R9
 
 	// |
-	MOVQ    ·qmodulus+0(SB), SI
-	MOVQ    ·qmodulus+8(SB), R10
-	MOVQ    ·qmodulus+16(SB), R11
-	MOVQ    ·qmodulus+24(SB), R12
+	MOVQ    ·q+0(SB), SI
+	MOVQ    ·q+8(SB), R10
+	MOVQ    ·q+16(SB), R11
+	MOVQ    ·q+24(SB), R12
 	CMOVQCC AX, SI
 	CMOVQCC AX, R10
 	CMOVQCC AX, R11
@@ -2321,13 +2321,13 @@ TEXT ·_negFR(SB), NOSPLIT, $0-16
 	MOVQ a+8(FP), DI
 
 	// |
-	MOVQ ·qmodulus+0(SB), CX
+	MOVQ ·q+0(SB), CX
 	SUBQ (DI), CX
-	MOVQ ·qmodulus+8(SB), DX
+	MOVQ ·q+8(SB), DX
 	SBBQ 8(DI), DX
-	MOVQ ·qmodulus+16(SB), SI
+	MOVQ ·q+16(SB), SI
 	SBBQ 16(DI), SI
-	MOVQ ·qmodulus+24(SB), R8
+	MOVQ ·q+24(SB), R8
 	SBBQ 24(DI), R8
 
 	// |
@@ -2536,7 +2536,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j0
 
 	// | w0 @ R8
-	MOVQ ·qmodulus+0(SB), AX
+	MOVQ ·q+0(SB), AX
 	MULQ DI
 	ADDQ AX, R8
 	ADCQ DX, CX
@@ -2544,7 +2544,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j1
 
 	// | w1 @ R9
-	MOVQ ·qmodulus+8(SB), AX
+	MOVQ ·q+8(SB), AX
 	MULQ DI
 	ADDQ AX, R9
 	ADCQ $0x00, DX
@@ -2555,7 +2555,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j2
 
 	// | w2 @ R10
-	MOVQ ·qmodulus+16(SB), AX
+	MOVQ ·q+16(SB), AX
 	MULQ DI
 	ADDQ AX, R10
 	ADCQ $0x00, DX
@@ -2566,7 +2566,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j3
 
 	// | w3 @ R11
-	MOVQ ·qmodulus+24(SB), AX
+	MOVQ ·q+24(SB), AX
 	MULQ DI
 	ADDQ AX, R11
 	ADCQ $0x00, DX
@@ -2599,7 +2599,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j0
 
 	// | w1 @ R9
-	MOVQ ·qmodulus+0(SB), AX
+	MOVQ ·q+0(SB), AX
 	MULQ DI
 	ADDQ AX, R9
 	ADCQ DX, CX
@@ -2607,7 +2607,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j1
 
 	// | w2 @ R10
-	MOVQ ·qmodulus+8(SB), AX
+	MOVQ ·q+8(SB), AX
 	MULQ DI
 	ADDQ AX, R10
 	ADCQ $0x00, DX
@@ -2618,7 +2618,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j2
 
 	// | w3 @ R11
-	MOVQ ·qmodulus+16(SB), AX
+	MOVQ ·q+16(SB), AX
 	MULQ DI
 	ADDQ AX, R11
 	ADCQ $0x00, DX
@@ -2629,7 +2629,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j3
 
 	// | w4 @ R12
-	MOVQ ·qmodulus+24(SB), AX
+	MOVQ ·q+24(SB), AX
 	MULQ DI
 	ADDQ AX, R12
 	ADCQ DX, R8
@@ -2663,7 +2663,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j0
 
 	// | w2 @ R10
-	MOVQ ·qmodulus+0(SB), AX
+	MOVQ ·q+0(SB), AX
 	MULQ DI
 	ADDQ AX, R10
 	ADCQ DX, CX
@@ -2671,7 +2671,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j1
 
 	// | w3 @ R11
-	MOVQ ·qmodulus+8(SB), AX
+	MOVQ ·q+8(SB), AX
 	MULQ DI
 	ADDQ AX, R11
 	ADCQ $0x00, DX
@@ -2682,7 +2682,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j2
 
 	// | w4 @ R12
-	MOVQ ·qmodulus+16(SB), AX
+	MOVQ ·q+16(SB), AX
 	MULQ DI
 	ADDQ AX, R12
 	ADCQ $0x00, DX
@@ -2693,7 +2693,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j3
 
 	// | w5 @ R13
-	MOVQ ·qmodulus+24(SB), AX
+	MOVQ ·q+24(SB), AX
 	MULQ DI
 	ADDQ AX, R13
 	ADCQ DX, R8
@@ -2727,7 +2727,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j0
 
 	// | w3 @ R11
-	MOVQ ·qmodulus+0(SB), AX
+	MOVQ ·q+0(SB), AX
 	MULQ DI
 	ADDQ AX, R11
 	ADCQ DX, CX
@@ -2735,7 +2735,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j1
 
 	// | w4 @ R12
-	MOVQ ·qmodulus+8(SB), AX
+	MOVQ ·q+8(SB), AX
 	MULQ DI
 	ADDQ AX, R12
 	ADCQ $0x00, DX
@@ -2746,7 +2746,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j2
 
 	// | w5 @ R13
-	MOVQ ·qmodulus+16(SB), AX
+	MOVQ ·q+16(SB), AX
 	MULQ DI
 	ADDQ AX, R13
 	ADCQ $0x00, DX
@@ -2757,7 +2757,7 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 	// | j3
 
 	// | w6 @ R14
-	MOVQ ·qmodulus+24(SB), AX
+	MOVQ ·q+24(SB), AX
 	MULQ DI
 	ADDQ AX, R14
 	ADCQ DX, R8
@@ -2779,13 +2779,13 @@ TEXT ·mulNoADXFR(SB), NOSPLIT, $0-24
 /* modular reduction                       */
 
 	MOVQ R12, SI
-	SUBQ ·qmodulus+0(SB), SI
+	SUBQ ·q+0(SB), SI
 	MOVQ R13, R9
-	SBBQ ·qmodulus+8(SB), R9
+	SBBQ ·q+8(SB), R9
 	MOVQ R14, R10
-	SBBQ ·qmodulus+16(SB), R10
+	SBBQ ·q+16(SB), R10
 	MOVQ BX, R11
-	SBBQ ·qmodulus+24(SB), R11
+	SBBQ ·q+24(SB), R11
 	SBBQ $0x00, R8
 
 	// | 
@@ -2969,28 +2969,28 @@ TEXT ·mulADXFR(SB), NOSPLIT, $0-24
 	// | j0
 
 	// | w0 @ CX
-	MULXQ ·qmodulus+0(SB), AX, BX
+	MULXQ ·q+0(SB), AX, BX
 	ADOXQ AX, CX
 	ADCXQ BX, R8
 
 	// | j1
 
 	// | w1 @ R8
-	MULXQ ·qmodulus+8(SB), AX, BX
+	MULXQ ·q+8(SB), AX, BX
 	ADOXQ AX, R8
 	ADCXQ BX, R9
 
 	// | j2
 
 	// | w2 @ R9
-	MULXQ ·qmodulus+16(SB), AX, BX
+	MULXQ ·q+16(SB), AX, BX
 	ADOXQ AX, R9
 	ADCXQ BX, R10
 
 	// | j3
 
 	// | w3 @ R10
-	MULXQ ·qmodulus+24(SB), AX, BX
+	MULXQ ·q+24(SB), AX, BX
 	ADOXQ AX, R10
 	ADCXQ BX, R11
 	ADOXQ CX, R11
@@ -3022,28 +3022,28 @@ TEXT ·mulADXFR(SB), NOSPLIT, $0-24
 	// | j0
 
 	// | w1 @ R8
-	MULXQ ·qmodulus+0(SB), AX, BX
+	MULXQ ·q+0(SB), AX, BX
 	ADOXQ AX, R8
 	ADCXQ BX, R9
 
 	// | j1
 
 	// | w2 @ R9
-	MULXQ ·qmodulus+8(SB), AX, BX
+	MULXQ ·q+8(SB), AX, BX
 	ADOXQ AX, R9
 	ADCXQ BX, R10
 
 	// | j2
 
 	// | w3 @ R10
-	MULXQ ·qmodulus+16(SB), AX, BX
+	MULXQ ·q+16(SB), AX, BX
 	ADOXQ AX, R10
 	ADCXQ BX, R11
 
 	// | j3
 
 	// | w4 @ R11
-	MULXQ ·qmodulus+24(SB), AX, BX
+	MULXQ ·q+24(SB), AX, BX
 	ADOXQ AX, R11
 	ADCXQ BX, R12
 	ADOXQ CX, R12
@@ -3075,28 +3075,28 @@ TEXT ·mulADXFR(SB), NOSPLIT, $0-24
 	// | j0
 
 	// | w2 @ R9
-	MULXQ ·qmodulus+0(SB), AX, BX
+	MULXQ ·q+0(SB), AX, BX
 	ADOXQ AX, R9
 	ADCXQ BX, R10
 
 	// | j1
 
 	// | w3 @ R10
-	MULXQ ·qmodulus+8(SB), AX, BX
+	MULXQ ·q+8(SB), AX, BX
 	ADOXQ AX, R10
 	ADCXQ BX, R11
 
 	// | j2
 
 	// | w4 @ R11
-	MULXQ ·qmodulus+16(SB), AX, BX
+	MULXQ ·q+16(SB), AX, BX
 	ADOXQ AX, R11
 	ADCXQ BX, R12
 
 	// | j3
 
 	// | w5 @ R12
-	MULXQ ·qmodulus+24(SB), AX, BX
+	MULXQ ·q+24(SB), AX, BX
 	ADOXQ AX, R12
 	ADCXQ BX, R13
 	ADOXQ R8, R13
@@ -3128,28 +3128,28 @@ TEXT ·mulADXFR(SB), NOSPLIT, $0-24
 	// | j0
 
 	// | w3 @ R10
-	MULXQ ·qmodulus+0(SB), AX, BX
+	MULXQ ·q+0(SB), AX, BX
 	ADOXQ AX, R10
 	ADCXQ BX, R11
 
 	// | j1
 
 	// | w4 @ R11
-	MULXQ ·qmodulus+8(SB), AX, BX
+	MULXQ ·q+8(SB), AX, BX
 	ADOXQ AX, R11
 	ADCXQ BX, R12
 
 	// | j2
 
 	// | w5 @ R12
-	MULXQ ·qmodulus+16(SB), AX, BX
+	MULXQ ·q+16(SB), AX, BX
 	ADOXQ AX, R12
 	ADCXQ BX, R13
 
 	// | j3
 
 	// | w6 @ R13
-	MULXQ ·qmodulus+24(SB), AX, BX
+	MULXQ ·q+24(SB), AX, BX
 	ADOXQ AX, R13
 	ADCXQ BX, DI
 	ADOXQ R9, DI
@@ -3168,13 +3168,13 @@ TEXT ·mulADXFR(SB), NOSPLIT, $0-24
 /* modular reduction                       */
 
 	MOVQ R11, CX
-	SUBQ ·qmodulus+0(SB), CX
+	SUBQ ·q+0(SB), CX
 	MOVQ R12, AX
-	SBBQ ·qmodulus+8(SB), AX
+	SBBQ ·q+8(SB), AX
 	MOVQ R13, BX
-	SBBQ ·qmodulus+16(SB), BX
+	SBBQ ·q+16(SB), BX
 	MOVQ DI, SI
-	SBBQ ·qmodulus+24(SB), SI
+	SBBQ ·q+24(SB), SI
 	SBBQ $0x00, R10
 
 	// | 

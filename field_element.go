@@ -23,7 +23,7 @@ type fe6 /**			***/ [3]fe2
 // Representation follows c[0] + c[1] * w encoding order.
 type fe12 /**			***/ [2]fe6
 
-func (fe *fe) fromBytes(in []byte) *fe {
+func (fe *fe) setBytes(in []byte) *fe {
 	l := len(in)
 	if l >= fpByteSize {
 		l = fpByteSize
@@ -41,11 +41,11 @@ func (fe *fe) fromBytes(in []byte) *fe {
 	return fe
 }
 
-func (fe *fe) fromBig(a *big.Int) *fe {
-	return fe.fromBytes(a.Bytes())
+func (fe *fe) setBig(a *big.Int) *fe {
+	return fe.setBytes(a.Bytes())
 }
 
-func (fe *fe) fromString(s string) (*fe, error) {
+func (fe *fe) setString(s string) (*fe, error) {
 	if s[:2] == "0x" {
 		s = s[2:]
 	}
@@ -53,7 +53,7 @@ func (fe *fe) fromString(s string) (*fe, error) {
 	if err != nil {
 		return nil, err
 	}
-	return fe.fromBytes(bytes), nil
+	return fe.setBytes(bytes), nil
 }
 
 func (fe *fe) set(fe2 *fe) *fe {
@@ -113,7 +113,7 @@ func (fe *fe) rand(r io.Reader) (*fe, error) {
 	if err != nil {
 		return nil, err
 	}
-	return fe.fromBig(bi), nil
+	return fe.setBig(bi), nil
 }
 
 func (fe *fe) isValid() bool {
@@ -166,24 +166,24 @@ func (e *fe) sign() bool {
 	return r[0]&1 == 0
 }
 
-func (fe *fe) div2(e uint64) {
-	fe[0] = fe[0]>>1 | fe[1]<<63
-	fe[1] = fe[1]>>1 | fe[2]<<63
-	fe[2] = fe[2]>>1 | fe[3]<<63
-	fe[3] = fe[3]>>1 | fe[4]<<63
-	fe[4] = fe[4]>>1 | fe[5]<<63
-	fe[5] = fe[5]>>1 | e<<63
+func (e *fe) div2(u uint64) {
+	e[0] = e[0]>>1 | e[1]<<63
+	e[1] = e[1]>>1 | e[2]<<63
+	e[2] = e[2]>>1 | e[3]<<63
+	e[3] = e[3]>>1 | e[4]<<63
+	e[4] = e[4]>>1 | e[5]<<63
+	e[5] = e[5]>>1 | u<<63
 }
 
-func (fe *fe) mul2() uint64 {
-	e := fe[5] >> 63
-	fe[5] = fe[5]<<1 | fe[4]>>63
-	fe[4] = fe[4]<<1 | fe[3]>>63
-	fe[3] = fe[3]<<1 | fe[2]>>63
-	fe[2] = fe[2]<<1 | fe[1]>>63
-	fe[1] = fe[1]<<1 | fe[0]>>63
-	fe[0] = fe[0] << 1
-	return e
+func (e *fe) mul2() uint64 {
+	u := e[5] >> 63
+	e[5] = e[5]<<1 | e[4]>>63
+	e[4] = e[4]<<1 | e[3]>>63
+	e[3] = e[3]<<1 | e[2]>>63
+	e[2] = e[2]<<1 | e[1]>>63
+	e[1] = e[1]<<1 | e[0]>>63
+	e[0] = e[0] << 1
+	return u
 }
 
 func (e *fe2) zero() *fe2 {

@@ -291,7 +291,7 @@ func (g *G2) Equal(p1, p2 *PointG2) bool {
 // InCorrectSubgroup checks whether given point is in correct subgroup.
 func (g *G2) InCorrectSubgroup(p *PointG2) bool {
 	tmp := &PointG2{}
-	g.wnafMulFr(tmp, p, q)
+	g.wnafMulFr(tmp, p, &q)
 	return g.IsZero(tmp)
 }
 
@@ -659,11 +659,6 @@ func (g *G2) glvMul(r, p0 *PointG2, v glvVector) *PointG2 {
 	return r.Set(acc)
 }
 
-// ClearCofactor maps given a G2 point to correct subgroup
-func (g *G2) ClearCofactor(p *PointG2) *PointG2 {
-	return g.wnafMulBig(p, p, cofactorEFFG2)
-}
-
 // MultiExpBig calculates multi exponentiation. Scalar values are received as big.Int type.
 // Given pairs of G2 point and scalar values `(P_0, e_0), (P_1, e_1), ... (P_n, e_n)`,
 // calculates `r = e_0 * P_0 + e_1 * P_1 + ... + e_n * P_n`.
@@ -764,6 +759,11 @@ func (g *G2) MultiExp(r *PointG2, points []*PointG2, scalars []*Fr) (*PointG2, e
 		g.AddMixed(acc, acc, windows[i])
 	}
 	return r.Set(acc), nil
+}
+
+// ClearCofactor maps given a G2 point to correct subgroup
+func (g *G2) ClearCofactor(p *PointG2) *PointG2 {
+	return g.wnafMulBig(p, p, cofactorEFFG2)
 }
 
 // MapToCurve given a byte slice returns a valid G2 point.

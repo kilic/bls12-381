@@ -5,11 +5,8 @@ const fpByteSize = 48
 const fpBitSize = 381
 const sixWordBitSize = 384
 
-// Field Constants
-
-// Base field modulus
+// Base Field
 // p = 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab
-// Size of six words
 // r = 2 ^ 384
 
 // modulus = p
@@ -64,9 +61,29 @@ var nonResidue2 = &fe2{
 	fe{0x760900000002fffd, 0xebf4000bc40c0002, 0x5f48985753c758ba, 0x77ce585370525745, 0x5c071a97a256ec6d, 0x15f65ec3fa80e493},
 }
 
-/*
-	Curve Constants
-*/
+// Scalar Field
+// q = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+// Size of six words
+// qr = 2 ^ 256
+
+var qBig = bigFromHex("0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001")
+var q = Fr{0xffffffff00000001, 0x53bda402fffe5bfe, 0x3339d80809a1d805, 0x73eda753299d7d48}
+
+// var qmodulus = Fr{0xffffffff00000001, 0x53bda402fffe5bfe, 0x3339d80809a1d805, 0x73eda753299d7d48}
+
+// -q^(-1) mod 2^64
+var qinp uint64 = 0xfffffffeffffffff
+
+// supress warning: qinp is used in assembly code
+var _ = qinp
+
+// qr1 = qr mod q
+var qr1 = &Fr{0x00000001fffffffe, 0x5884b7fa00034802, 0x998c4fefecbc4ff5, 0x1824b159acc5056f}
+
+// qr2 = qr^2 mod q
+var qr2 = &Fr{0xc999e990f3f29c6d, 0x2b6cedcb87925c23, 0x05d314967254398f, 0x0748d9d99f59ff11}
+
+// Curve Constants
 
 // b coefficient for G1
 var b = &fe{0xaa270000000cfff3, 0x53cc0032fc34000a, 0x478fe97a6b0a807f, 0xb1d37ebee6ba24d7, 0x8ec9733bbf78ab2f, 0x09d645513d83de7e}
@@ -76,10 +93,6 @@ var b2 = &fe2{
 	fe{0xaa270000000cfff3, 0x53cc0032fc34000a, 0x478fe97a6b0a807f, 0xb1d37ebee6ba24d7, 0x8ec9733bbf78ab2f, 0x09d645513d83de7e},
 	fe{0xaa270000000cfff3, 0x53cc0032fc34000a, 0x478fe97a6b0a807f, 0xb1d37ebee6ba24d7, 0x8ec9733bbf78ab2f, 0x09d645513d83de7e},
 }
-
-// Group order
-var qBig = bigFromHex("0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001")
-var q = &Fr{0xffffffff00000001, 0x53bda402fffe5bfe, 0x3339d80809a1d805, 0x73eda753299d7d48}
 
 // G1 cofactor
 var cofactorG1 = bigFromHex("0x396c8c005555e1568c00aaab0000aaab")
@@ -126,22 +139,6 @@ var g2One = PointG2{
 }
 
 var G2One = g2One
-
-//	Scalar Field
-// 	Size of four words
-// 	sr = 2 ^ 256
-
-// -q^(-1) mod 2^64
-var qinp uint64 = 0xfffffffeffffffff
-
-// modulus = p
-var qmodulus = Fr{0xffffffff00000001, 0x53bda402fffe5bfe, 0x3339d80809a1d805, 0x73eda753299d7d48}
-
-// sr1 = sr mod p
-var sr1 = &Fr{0x00000001fffffffe, 0x5884b7fa00034802, 0x998c4fefecbc4ff5, 0x1824b159acc5056f}
-
-// sr2 = sr^2 mod p
-var sr2 = &Fr{0xc999e990f3f29c6d, 0x2b6cedcb87925c23, 0x05d314967254398f, 0x0748d9d99f59ff11}
 
 // Frobenius Coeffs
 

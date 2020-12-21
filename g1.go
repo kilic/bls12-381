@@ -282,7 +282,7 @@ func (g *G1) Equal(p1, p2 *PointG1) bool {
 // InCorrectSubgroup checks whether given point is in correct subgroup.
 func (g *G1) InCorrectSubgroup(p *PointG1) bool {
 	tmp := &PointG1{}
-	g.wnafMulFr(tmp, p, q)
+	g.wnafMulFr(tmp, p, &q)
 	return g.IsZero(tmp)
 }
 

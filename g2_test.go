@@ -10,16 +10,7 @@ import (
 )
 
 func (g *G2) one() *PointG2 {
-	one, err := g.fromBytesUnchecked(fromHex(fpByteSize,
-		"0x13e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e",
-		"0x024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb8",
-		"0x0606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be",
-		"0x0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b82801",
-	))
-	if err != nil {
-		panic(err)
-	}
-	return one
+	return g.New().Set(&g2One)
 }
 
 func (g *G2) rand() *PointG2 {
@@ -396,32 +387,6 @@ func TestG2MultiExpBigExpected(t *testing.T) {
 	}
 }
 
-func TestG2MultiExpBig(t *testing.T) {
-	g := NewG2()
-	for n := 1; n < 1024+1; n = n * 2 {
-		bases := make([]*PointG2, n)
-		scalars := make([]*big.Int, n)
-		var err error
-		for i := 0; i < n; i++ {
-			scalars[i], err = rand.Int(rand.Reader, qBig)
-			if err != nil {
-				t.Fatal(err)
-			}
-			bases[i] = g.rand()
-		}
-		expected, tmp := g.New(), g.New()
-		for i := 0; i < n; i++ {
-			g.mulScalarBig(tmp, bases[i], scalars[i])
-			g.Add(expected, expected, tmp)
-		}
-		result := g.New()
-		_, _ = g.MultiExpBig(result, bases, scalars)
-		if !g.Equal(expected, result) {
-			t.Fatal("multi-exponentiation failed")
-		}
-	}
-}
-
 func TestG2MultiExp(t *testing.T) {
 	g := NewG2()
 	for n := 1; n < 1024+1; n = n * 2 {
@@ -442,6 +407,32 @@ func TestG2MultiExp(t *testing.T) {
 		}
 		result := g.New()
 		_, _ = g.MultiExp(result, bases, scalars)
+		if !g.Equal(expected, result) {
+			t.Fatal("multi-exponentiation failed")
+		}
+	}
+}
+
+func TestG2MultiExpBig(t *testing.T) {
+	g := NewG2()
+	for n := 1; n < 1024+1; n = n * 2 {
+		bases := make([]*PointG2, n)
+		scalars := make([]*big.Int, n)
+		var err error
+		for i := 0; i < n; i++ {
+			scalars[i], err = rand.Int(rand.Reader, qBig)
+			if err != nil {
+				t.Fatal(err)
+			}
+			bases[i] = g.rand()
+		}
+		expected, tmp := g.New(), g.New()
+		for i := 0; i < n; i++ {
+			g.mulScalarBig(tmp, bases[i], scalars[i])
+			g.Add(expected, expected, tmp)
+		}
+		result := g.New()
+		_, _ = g.MultiExpBig(result, bases, scalars)
 		if !g.Equal(expected, result) {
 			t.Fatal("multi-exponentiation failed")
 		}
@@ -710,33 +701,6 @@ func BenchmarkG2MulGLV(t *testing.B) {
 	}
 }
 
-func BenchmarkG2MultiExpBig(t *testing.B) {
-	g := NewG2()
-	v := func(n int) ([]*PointG2, []*big.Int) {
-		bases := make([]*PointG2, n)
-		scalars := make([]*big.Int, n)
-		var err error
-		for i := 0; i < n; i++ {
-			scalars[i], err = rand.Int(rand.Reader, qBig)
-			if err != nil {
-				t.Fatal(err)
-			}
-			bases[i] = g.rand()
-		}
-		return bases, scalars
-	}
-	for _, i := range []int{2, 10, 100, 1000} {
-		t.Run(fmt.Sprint(i), func(t *testing.B) {
-			bases, scalars := v(i)
-			result := g.New()
-			t.ResetTimer()
-			for i := 0; i < t.N; i++ {
-				_, _ = g.MultiExpBig(result, bases, scalars)
-			}
-		})
-	}
-}
-
 func BenchmarkG2MultiExp(t *testing.B) {
 	g := NewG2()
 	v := func(n int) ([]*PointG2, []*Fr) {
@@ -748,34 +712,7 @@ func BenchmarkG2MultiExp(t *testing.B) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			bases[i] = g.rand()
-		}
-		return bases, scalars
-	}
-	for _, i := range []int{2, 10, 100, 1000} {
-		t.Run(fmt.Sprint(i), func(t *testing.B) {
-			bases, scalars := v(i)
-			result := g.New()
-			t.ResetTimer()
-			for i := 0; i < t.N; i++ {
-				_, _ = g.MultiExp(result, bases, scalars)
-			}
-		})
-	}
-}
-
-func BenchmarkG2MultiExpAffine(t *testing.B) {
-	g := NewG2()
-	v := func(n int) ([]*PointG2, []*Fr) {
-		bases := make([]*PointG2, n)
-		scalars := make([]*Fr, n)
-		var err error
-		for i := 0; i < n; i++ {
-			scalars[i], err = new(Fr).Rand(rand.Reader)
-			if err != nil {
-				t.Fatal(err)
-			}
-			bases[i] = g.Affine(g.rand())
+			bases[i] = g.randAffine()
 		}
 		return bases, scalars
 	}

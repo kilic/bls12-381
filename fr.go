@@ -49,7 +49,7 @@ func (e *Fr) One() *Fr {
 }
 
 func (e *Fr) RedOne() *Fr {
-	e.Set(sr1)
+	e.Set(qr1)
 	return e
 }
 
@@ -136,7 +136,7 @@ func (e *Fr) IsOne() bool {
 }
 
 func (e *Fr) IsRedOne() bool {
-	return e.Equal(sr1)
+	return e.Equal(qr1)
 }
 
 func (e *Fr) Equal(e2 *Fr) bool {
@@ -200,7 +200,7 @@ func (e *Fr) Bit(at int) bool {
 }
 
 func (e *Fr) toMont() {
-	e.RedMul(e, sr2)
+	e.RedMul(e, qr2)
 }
 
 func (e *Fr) fromMont() {
@@ -221,7 +221,7 @@ func (e *Fr) Sub(a, b *Fr) {
 
 func (e *Fr) Mul(a, b *Fr) {
 	mulFR(e, a, b)
-	mulFR(e, e, sr2)
+	mulFR(e, e, qr2)
 }
 
 func (e *Fr) RedMul(a, b *Fr) {
@@ -230,7 +230,7 @@ func (e *Fr) RedMul(a, b *Fr) {
 
 func (e *Fr) Square(a *Fr) {
 	squareFR(e, a)
-	mulFR(e, e, sr2)
+	mulFR(e, e, qr2)
 }
 
 func (e *Fr) RedSquare(a *Fr) {
@@ -257,7 +257,7 @@ func (e *Fr) Inverse(ei *Fr) {
 		e.Zero()
 		return
 	}
-	u := new(Fr).Set(q)
+	u := new(Fr).Set(&q)
 	v := new(Fr).Set(ei)
 	s := &Fr{1}
 	r := &Fr{0}
@@ -300,10 +300,10 @@ func (e *Fr) Inverse(ei *Fr) {
 		return
 	}
 
-	if r.Cmp(q) != -1 || z > 0 {
-		lsubAssignFR(r, q)
+	if r.Cmp(&q) != -1 || z > 0 {
+		lsubAssignFR(r, &q)
 	}
-	u.Set(q)
+	u.Set(&q)
 	lsubAssignFR(u, r)
 
 	// Phase 2

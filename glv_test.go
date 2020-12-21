@@ -12,7 +12,7 @@ func TestGLVConstruction(t *testing.T) {
 		one := new(Fr).setUint64(1)
 		t0.Square(glvLambda)
 		t0.Add(t0, glvLambda)
-		t1.Sub(q, one)
+		t1.Sub(&q, one)
 		if !t0.Equal(t1) {
 			t.Fatal("lambda1^2 + lambda1 + 1 = 0")
 		}

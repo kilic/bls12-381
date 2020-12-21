@@ -37,7 +37,7 @@ var r128 = &Fr{0xffffffffffffffff, 0xffffffffffffffff, 0, 0}
 // glvPhi1 ^ 3 = 1
 var glvPhi1 = &fe{0xcd03c9e48671f071, 0x5dab22461fcda5d2, 0x587042afd3851b95, 0x8eb60ebe01bacb9e, 0x03f97d6e83d050d2, 0x18f0206554638741}
 
-// glvPhi1 ^ 3 = 1
+// glvPhi2 ^ 3 = 1
 var glvPhi2 = &fe{0x30f1361b798a64e8, 0xf3b8ddab7ece5a2a, 0x16a8ca3ac61577f7, 0xc26a2ff874fd029b, 0x3636b76660701c6e, 0x051ba4ab241b6160}
 
 var glvMulWindowG1 uint = 4

@@ -10,11 +10,7 @@ import (
 )
 
 func (g *G1) one() *PointG1 {
-	one, _ := g.fromBytesUnchecked(fromHex(fpByteSize,
-		"0x17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb",
-		"0x08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1",
-	))
-	return one
+	return g.New().Set(&g1One)
 }
 
 func (g *G1) rand() *PointG1 {
@@ -401,7 +397,7 @@ func TestG1MultiExpBig(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			bases[i] = g.rand()
+			bases[i] = g.randAffine()
 		}
 		expected, tmp := g.New(), g.New()
 		for i := 0; i < n; i++ {
@@ -427,7 +423,7 @@ func TestG1MultiExp(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			bases[i] = g.rand()
+			bases[i] = g.randAffine()
 		}
 		expected, tmp := g.New(), g.New()
 		for i := 0; i < n; i++ {
@@ -668,33 +664,6 @@ func BenchmarkG1MulGLV(t *testing.B) {
 	}
 }
 
-func BenchmarkG1MultiExpBig(t *testing.B) {
-	g := NewG1()
-	v := func(n int) ([]*PointG1, []*big.Int) {
-		bases := make([]*PointG1, n)
-		scalars := make([]*big.Int, n)
-		var err error
-		for i := 0; i < n; i++ {
-			scalars[i], err = rand.Int(rand.Reader, qBig)
-			if err != nil {
-				t.Fatal(err)
-			}
-			bases[i] = g.rand()
-		}
-		return bases, scalars
-	}
-	for _, i := range []int{2, 10, 100, 1000} {
-		t.Run(fmt.Sprint(i), func(t *testing.B) {
-			bases, scalars := v(i)
-			result := g.New()
-			t.ResetTimer()
-			for i := 0; i < t.N; i++ {
-				_, _ = g.MultiExpBig(result, bases, scalars)
-			}
-		})
-	}
-}
-
 func BenchmarkG1MultiExp(t *testing.B) {
 	g := NewG1()
 	v := func(n int) ([]*PointG1, []*Fr) {
@@ -706,34 +675,7 @@ func BenchmarkG1MultiExp(t *testing.B) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			bases[i] = g.rand()
-		}
-		return bases, scalars
-	}
-	for _, i := range []int{2, 10, 100, 1000} {
-		t.Run(fmt.Sprint(i), func(t *testing.B) {
-			bases, scalars := v(i)
-			result := g.New()
-			t.ResetTimer()
-			for i := 0; i < t.N; i++ {
-				_, _ = g.MultiExp(result, bases, scalars)
-			}
-		})
-	}
-}
-
-func BenchmarkG1MultiExpAffine(t *testing.B) {
-	g := NewG1()
-	v := func(n int) ([]*PointG1, []*Fr) {
-		bases := make([]*PointG1, n)
-		scalars := make([]*Fr, n)
-		var err error
-		for i := 0; i < n; i++ {
-			scalars[i], err = new(Fr).Rand(rand.Reader)
-			if err != nil {
-				t.Fatal(err)
-			}
-			bases[i] = g.Affine(g.rand())
+			bases[i] = g.randAffine()
 		}
 		return bases, scalars
 	}

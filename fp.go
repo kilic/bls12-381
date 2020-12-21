@@ -8,9 +8,9 @@ import (
 func fromBytes(in []byte) (*fe, error) {
 	fe := &fe{}
 	if len(in) != fpByteSize {
-		return nil, errors.New("input string should be equal 48 bytes")
+		return nil, errors.New("input string must be equal 48 bytes")
 	}
-	fe.fromBytes(in)
+	fe.setBytes(in)
 	if !fe.isValid() {
 		return nil, errors.New("must be less than modulus")
 	}
@@ -20,7 +20,7 @@ func fromBytes(in []byte) (*fe, error) {
 
 func from64Bytes(in []byte) (*fe, error) {
 	if len(in) != 32*2 {
-		return nil, errors.New("input string should be equal 64 bytes")
+		return nil, errors.New("input string must be equal 64 bytes")
 	}
 	a0 := make([]byte, fpByteSize)
 	copy(a0[fpByteSize-32:fpByteSize], in[:32])
@@ -50,7 +50,7 @@ func from64Bytes(in []byte) (*fe, error) {
 }
 
 func fromBig(in *big.Int) (*fe, error) {
-	fe := new(fe).fromBig(in)
+	fe := new(fe).setBig(in)
 	if !fe.isValid() {
 		return nil, errors.New("invalid input string")
 	}
@@ -59,7 +59,7 @@ func fromBig(in *big.Int) (*fe, error) {
 }
 
 func fromString(in string) (*fe, error) {
-	fe, err := new(fe).fromString(in)
+	fe, err := new(fe).setString(in)
 	if err != nil {
 		return nil, err
 	}

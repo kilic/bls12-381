@@ -8,12 +8,12 @@ import (
 )
 
 func TestScalarField(t *testing.T) {
-	r := new(Fr).Set(sr1)
+	r := new(Fr).Set(qr1)
 	r.fromMont()
 	if r[0] != 1 && r[1] != 0 && r[2] != 0 && r[3] != 0 {
 		t.Fatal("bad r value")
 	}
-	r.Set(sr2)
+	r.Set(qr2)
 	r.fromMont()
 	r.fromMont()
 	if r[0] != 1 && r[1] != 0 && r[2] != 0 && r[3] != 0 {
@@ -21,7 +21,7 @@ func TestScalarField(t *testing.T) {
 	}
 	r = &Fr{1}
 	r.toMont()
-	if !r.Equal(sr1) {
+	if !r.Equal(qr1) {
 		t.Fatal("mont transformaition failed")
 	}
 }

@@ -32,7 +32,7 @@ func newFp6(f *fp2) *fp6 {
 
 func (e *fp6) fromBytes(b []byte) (*fe6, error) {
 	if len(b) != 288 {
-		return nil, errors.New("input string should be larger than 288 bytes")
+		return nil, errors.New("input string length must be equal to 288 bytes")
 	}
 	fp2 := e.fp2
 	u2, err := fp2.fromBytes(b[:2*fpByteSize])
@@ -343,8 +343,8 @@ func (e *fp6) frobeniusMap1(a *fe6) {
 	fp2.frobeniusMap1(&a[0])
 	fp2.frobeniusMap1(&a[1])
 	fp2.frobeniusMap1(&a[2])
-	e.fp2.mulAssign(&a[1], &frobeniusCoeffs61[1])
-	e.fp2.mulAssign(&a[2], &frobeniusCoeffs62[1])
+	fp2.mulAssign(&a[1], &frobeniusCoeffs61[1])
+	fp2.mulAssign(&a[2], &frobeniusCoeffs62[1])
 }
 
 func (e *fp6) frobeniusMap2(a *fe6) {
