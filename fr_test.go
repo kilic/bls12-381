@@ -337,7 +337,7 @@ func TestFrExponentiation(t *testing.T) {
 		a, _ := new(Fr).Rand(rand.Reader)
 		u := new(Fr)
 		u.Exp(a, big.NewInt(0))
-		if !u.IsRedOne() {
+		if !u.IsOne() {
 			t.Fatal("a^0 == 1")
 		}
 		u.Exp(a, big.NewInt(1))
@@ -345,9 +345,9 @@ func TestFrExponentiation(t *testing.T) {
 			t.Fatal("a^1 == a")
 		}
 		v := new(Fr)
-		u.RedMul(a, a)
-		u.RedMul(u, u)
-		u.RedMul(u, u)
+		u.Mul(a, a)
+		u.Mul(u, u)
+		u.Mul(u, u)
 		v.Exp(a, big.NewInt(8))
 		if !u.Equal(v) {
 			t.Fatal("((a^2)^2)^2 == a^8")
@@ -358,7 +358,7 @@ func TestFrExponentiation(t *testing.T) {
 		}
 		qMinus1 := new(big.Int).Sub(qBig, big.NewInt(1))
 		u.Exp(a, qMinus1)
-		if !u.IsRedOne() {
+		if !u.IsOne() {
 			t.Fatal("a^(p-1) == 1")
 		}
 	}
@@ -367,20 +367,20 @@ func TestFrExponentiation(t *testing.T) {
 func TestFrInversion(t *testing.T) {
 	for i := 0; i < fuz; i++ {
 		u := new(Fr)
-		zero, one := new(Fr).Zero(), new(Fr).RedOne()
+		zero, one := new(Fr).Zero(), new(Fr).One()
 		u.Inverse(zero)
 		if !u.Equal(zero) {
 			t.Fatal("(0^-1) == 0)")
 		}
 		u.Inverse(one)
-		if !u.IsRedOne() {
+		if !u.IsOne() {
 			t.Fatal("(1^-1) == 1)")
 		}
 		a, _ := new(Fr).Rand(rand.Reader)
 		u.Inverse(a)
-		mulFR(u, u, a)
-		if !u.Equal(one) {
-			t.Fatal("(r*a) * r*(a^-1) == r)")
+		u.Mul(u, a)
+		if !u.IsOne() {
+			t.Fatal("a * a^-1 == 1")
 		}
 		v := new(Fr)
 		z := new(big.Int)
