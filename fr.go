@@ -219,9 +219,13 @@ func (e *Fr) Sub(a, b *Fr) {
 	subFR(e, a, b)
 }
 
+func (e *Fr) Neg(a *Fr) {
+	negFR(e, a)
+}
+
 func (e *Fr) Mul(a, b *Fr) {
-	mulFR(e, a, b)
-	mulFR(e, e, qr2)
+	e.RedMul(a, b)
+	e.toMont()
 }
 
 func (e *Fr) RedMul(a, b *Fr) {
@@ -229,19 +233,15 @@ func (e *Fr) RedMul(a, b *Fr) {
 }
 
 func (e *Fr) Square(a *Fr) {
-	squareFR(e, a)
-	mulFR(e, e, qr2)
+	e.RedSquare(a)
+	e.toMont()
 }
 
 func (e *Fr) RedSquare(a *Fr) {
 	squareFR(e, a)
 }
 
-func (e *Fr) Neg(a *Fr) {
-	negFR(e, a)
-}
-
-func (e *Fr) Exp(a *Fr, ee *big.Int) {
+func (e *Fr) RedExp(a *Fr, ee *big.Int) {
 	z := new(Fr).RedOne()
 	for i := ee.BitLen(); i >= 0; i-- {
 		z.RedSquare(z)
@@ -252,7 +252,20 @@ func (e *Fr) Exp(a *Fr, ee *big.Int) {
 	e.Set(z)
 }
 
-func (e *Fr) Inverse(ei *Fr) {
+func (e *Fr) Exp(a *Fr, ee *big.Int) {
+	e.Set(a).toMont()
+	e.RedExp(e, ee)
+	e.fromMont()
+
+}
+
+func (e *Fr) Inverse(a *Fr) {
+	e.Set(a).toMont()
+	e.RedInverse(e)
+	e.fromMont()
+}
+
+func (e *Fr) RedInverse(ei *Fr) {
 	if ei.IsZero() {
 		e.Zero()
 		return
