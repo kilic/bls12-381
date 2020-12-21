@@ -286,3 +286,17 @@ var frobeniusCoeffs12 = [12]fe2{
 
 // var x = bigFromHex("0xd201000000010000")
 var x uint64 = 0xd201000000010000
+
+// square root
+
+var sqrtMinus1 = &fe2{*new(fe).zero(), *new(fe).one()}
+
+var sqrtSqrtMinus1 = &fe2{
+	fe{0x3e2f585da55c9ad1, 0x4294213d86c18183, 0x382844c88b623732, 0x92ad2afd19103e18, 0x1d794e4fac7cf0b9, 0x0bd592fc7d825ec8},
+	fe{0x7bcfa7a25aa30fda, 0xdc17dec12a927e7c, 0x2f088dd86b4ebef1, 0xd1ca2087da74d4a7, 0x2da2596696cebc1d, 0x0e2b7eedbbfd87d2},
+}
+
+var sqrtMinusSqrtMinus1 = &fe2{
+	fe{0x7bcfa7a25aa30fda, 0xdc17dec12a927e7c, 0x2f088dd86b4ebef1, 0xd1ca2087da74d4a7, 0x2da2596696cebc1d, 0x0e2b7eedbbfd87d2},
+	fe{0x7bcfa7a25aa30fda, 0xdc17dec12a927e7c, 0x2f088dd86b4ebef1, 0xd1ca2087da74d4a7, 0x2da2596696cebc1d, 0x0e2b7eedbbfd87d2},
+}

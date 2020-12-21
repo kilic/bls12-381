@@ -446,20 +446,23 @@ func TestFpBatchInversion(t *testing.T) {
 }
 
 func TestFpSquareRoot(t *testing.T) {
-	r := new(fe)
-	if sqrt(r, nonResidue1) {
+	if sqrt(new(fe), nonResidue1) {
 		t.Fatal("non residue cannot have a sqrt")
 	}
 	for i := 0; i < fuz; i++ {
 		a, _ := new(fe).rand(rand.Reader)
-		aa, rr, r := &fe{}, &fe{}, &fe{}
-		square(aa, a)
-		if !sqrt(r, aa) {
-			t.Fatal("sqrt failed")
+		r0, r1 := new(fe), new(fe)
+		d0 := sqrt(r0, a)
+		d1 := _sqrt(r1, a)
+		if d0 != d1 {
+			t.Fatal("sqrt decision failed")
 		}
-		square(rr, r)
-		if !rr.equal(aa) {
-			t.Fatal("sqrt failed")
+		if d0 {
+			square(r0, r0)
+			square(r1, r1)
+			if !r0.equal(r1) {
+				t.Fatal("sqrt failed")
+			}
 		}
 	}
 }
@@ -833,41 +836,24 @@ func TestFp2BatchInversion(t *testing.T) {
 }
 
 func TestFp2SquareRoot(t *testing.T) {
-	field := newFp2()
-	for z := 0; z < fuz; z++ {
-		zi := new(fe)
-		sub(zi, &modulus, &fe{uint64(z * z)})
-		// r = (-z*z, 0)
-		r := &fe2{*zi, fe{0}}
-		toMont(&r[0], &r[0])
-		toMont(&r[1], &r[1])
-		c := field.new()
-		// sqrt((-z*z, 0)) = (0, z)
-		if !field.sqrt(c, r) {
-			t.Fatal("z*z does have a square root")
-		}
-		e := &fe2{fe{uint64(0)}, fe{uint64(z)}}
-		toMont(&e[0], &e[0])
-		toMont(&e[1], &e[1])
-		field.square(e, e)
-		field.square(c, c)
-		if !e.equal(c) {
-			t.Fatal("square root failed")
-		}
-	}
-	if field.sqrt(field.new(), nonResidue2) {
+	e := newFp2()
+	if e.sqrtBLST(e.new(), nonResidue2) {
 		t.Fatal("non residue cannot have a sqrt")
 	}
 	for i := 0; i < fuz; i++ {
 		a, _ := new(fe2).rand(rand.Reader)
-		aa, rr, r := field.new(), field.new(), field.new()
-		field.square(aa, a)
-		if !field.sqrt(r, aa) {
-			t.Fatal("sqrt failed")
+		r0, r1 := new(fe2), new(fe2)
+		d0 := e.sqrt(r0, a)
+		d1 := e.sqrtBLST(r1, a)
+		if d0 != d1 {
+			t.Fatal("sqrt decision failed")
 		}
-		field.square(rr, r)
-		if !rr.equal(aa) {
-			t.Fatal("sqrt failed")
+		if d0 {
+			e.square(r0, r0)
+			e.square(r1, r1)
+			if !r0.equal(r1) {
+				t.Fatal("sqrt failed")
+			}
 		}
 	}
 }

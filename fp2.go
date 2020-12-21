@@ -326,3 +326,68 @@ func (e *fp2) isQuadraticNonResidue(a *fe2) bool {
 	add(c1, c1, c0)
 	return isQuadraticNonResidue(c1)
 }
+
+// faster square root algorith is adapted from blst library
+// https://github.com/supranational/blst/blob/master/src/sqrt.c
+
+func (e *fp2) sqrtBLST(out, inp *fe2) bool {
+	aa, bb := new(fe), new(fe)
+	ret := new(fe2)
+	square(aa, &inp[0])
+	square(bb, &inp[1])
+	add(aa, aa, bb)
+	sqrt(aa, aa)
+	sub(bb, &inp[0], aa)
+	add(aa, &inp[0], aa)
+	if aa.isZero() {
+		aa.set(bb)
+	}
+	mul(aa, aa, twoInv)
+	rsqrt(&ret[0], aa)
+	ret[1].set(&inp[1])
+	mul(&ret[1], &ret[1], twoInv)
+	mul(&ret[1], &ret[1], &ret[0])
+	mul(&ret[0], &ret[0], aa)
+	return e.sqrtAlignBLST(out, ret, ret, inp)
+}
+
+func (e *fp2) sqrtAlignBLST(out, ret, sqrt, inp *fe2) bool {
+
+	t0, t1 := new(fe2), new(fe2)
+	coeff := e.one()
+	e.square(t0, sqrt)
+
+	//
+	e.sub(t1, t0, inp)
+	isSqrt := t1.isZero()
+
+	//
+	e.add(t1, t0, inp)
+	flag := t1.isZero()
+	if flag {
+		coeff.set(sqrtMinus1)
+	}
+	isSqrt = flag || isSqrt
+
+	//
+	sub(&t1[0], &t0[0], &inp[1])
+	add(&t1[1], &t0[1], &inp[0])
+	flag = t1.isZero()
+	if flag {
+		coeff.set(sqrtSqrtMinus1)
+	}
+	isSqrt = flag || isSqrt
+
+	//
+	add(&t1[0], &t0[0], &inp[1])
+	sub(&t1[1], &t0[1], &inp[0])
+	flag = t1.isZero()
+	if flag {
+
+		coeff.set(sqrtMinusSqrtMinus1)
+	}
+	isSqrt = flag || isSqrt
+
+	e.mul(out, coeff, ret)
+	return isSqrt
+}
