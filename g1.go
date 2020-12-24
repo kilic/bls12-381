@@ -752,9 +752,21 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, scalars []*Fr) (*PointG1, e
 	return r.Set(acc), nil
 }
 
-// ClearCofactor maps given a G1 point to correct subgroup
 func (g *G1) ClearCofactor(p *PointG1) *PointG1 {
-	return g.wnafMulBig(p, p, cofactorEFFG1)
+	chain := func(p0 *PointG1, n int, p1 *PointG1) {
+		for i := 0; i < n; i++ {
+			g.Double(p0, p0)
+		}
+		g.Add(p0, p0, p1)
+	}
+	t := g.New().Set(p)
+	chain(p, 1, t)
+	chain(p, 2, t)
+	chain(p, 3, t)
+	chain(p, 9, t)
+	chain(p, 32, t)
+	chain(p, 16, t)
+	return p
 }
 
 // MapToCurve given a byte slice returns a valid G1 point.

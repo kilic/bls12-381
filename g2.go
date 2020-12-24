@@ -763,7 +763,48 @@ func (g *G2) MultiExp(r *PointG2, points []*PointG2, scalars []*Fr) (*PointG2, e
 
 // ClearCofactor maps given a G2 point to correct subgroup
 func (g *G2) ClearCofactor(p *PointG2) *PointG2 {
-	return g.wnafMulBig(p, p, cofactorEFFG2)
+
+	psi := func(p *PointG2) {
+		g.f.conjugate(&p[0], &p[0])
+		g.f.conjugate(&p[1], &p[1])
+		g.f.conjugate(&p[2], &p[2])
+		g.f.mul(&p[0], &p[0], &psix)
+		g.f.mul(&p[1], &p[1], &psiy)
+	}
+
+	mulX := func(p *PointG2) {
+		chain := func(p0 *PointG2, n int, p1 *PointG2) {
+			g.Add(p0, p0, p1)
+			for i := 0; i < n; i++ {
+				g.Double(p0, p0)
+			}
+		}
+
+		t := g.New().Set(p)
+		g.Double(p, t)
+		chain(p, 2, t)
+		chain(p, 3, t)
+		chain(p, 9, t)
+		chain(p, 32, t)
+		chain(p, 16, t)
+	}
+
+	// [h(ψ)]P = [x^2 − x − 1]P + [x − 1]ψ(P) + ψ^2(2P)
+	t0, t1, t2, t3 := g.New().Set(p), g.New().Set(p), g.New().Set(p), g.New()
+
+	g.Double(t0, t0)
+	psi(t0)
+	psi(t0)  // P2 = ψ^2(2P)
+	psi(t2)  // P1 = ψ(P)
+	mulX(t1) // -xP0
+
+	g.Sub(t3, t1, t2) // -xP0 - P1
+	mulX(t3)          // (x^2)P0 + xP1
+	g.Sub(t1, t1, p)  // (-x-1)P0
+	g.Add(t3, t3, t1) // (x^2-x-1)P0 + xP1
+	g.Sub(t3, t3, t2) // (x^2-x-1)P0 + (x-1)P1
+	g.Add(t3, t3, t0) // (x^2-x-1)P0 + (x-1)P1 + P2
+	return p.Set(t3)
 }
 
 // MapToCurve given a byte slice returns a valid G2 point.
