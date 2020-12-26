@@ -43,7 +43,11 @@ func (g *G1) rand() *PointG1 {
 }
 
 func (g *G1) randCorrect() *PointG1 {
-	return g.ClearCofactor(g.rand())
+	p := g.ClearCofactor(g.rand())
+	if !g.InCorrectSubgroup(p) {
+		panic("must be in correct subgroup")
+	}
+	return p
 }
 
 func (g *G1) randAffine() *PointG1 {
@@ -688,6 +692,24 @@ func BenchmarkG1MultiExp(t *testing.B) {
 				_, _ = g.MultiExp(result, bases, scalars)
 			}
 		})
+	}
+}
+
+func BenchmarkG1ClearCofactor(t *testing.B) {
+	g := NewG1()
+	a := g.rand()
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		g.ClearCofactor(a)
+	}
+}
+
+func BenchmarkG1SubgroupCheck(t *testing.B) {
+	g := NewG1()
+	a := g.rand()
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		g.InCorrectSubgroup(a)
 	}
 }
 

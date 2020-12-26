@@ -281,9 +281,33 @@ func (g *G1) Equal(p1, p2 *PointG1) bool {
 
 // InCorrectSubgroup checks whether given point is in correct subgroup.
 func (g *G1) InCorrectSubgroup(p *PointG1) bool {
-	tmp := &PointG1{}
-	g.wnafMulFr(tmp, p, &q)
-	return g.IsZero(tmp)
+
+	// Faster Subgroup Checks for BLS12-381
+	// S. Bowe
+	// https://eprint.iacr.org/2019/814.pdf
+
+	mulZ := func(p *PointG1) {
+		// z = [(x^2 − 1)/3]
+		z := &Fr{0x0000000055555555, 0x396c8c005555e156}
+		e := z.toWNAF(wnafMulWindowG1)
+		g.wnafMul(p, p, e)
+	}
+
+	sigma := func(p *PointG1) {
+		mul(&p[0], &p[0], glvPhi1)
+	}
+
+	// [(x^2 − 1)/3](2σ(P) − P − σ^2(P)) − σ^2(P) ?= O
+	t0 := g.New().Set(p)
+	sigma(t0)
+	t1 := g.New().Set(t0) // σ(P)
+	sigma(t0)             // σ^2(P)
+	g.Double(t1, t1)      // 2σ(P)
+	g.Sub(t1, t1, p)      // 2σ(P) − P
+	g.Sub(t1, t1, t0)     // 2σ(P) − P − σ^2(P)
+	mulZ(t1)              // [(x^2 − 1)/3](2σ(P) − P − σ^2(P))
+	g.Sub(t1, t1, t0)     // [(x^2 − 1)/3](2σ(P) − P − σ^2(P)) − σ^2(P)
+	return g.IsZero(t1)
 }
 
 // IsOnCurve checks a G1 point is on curve.

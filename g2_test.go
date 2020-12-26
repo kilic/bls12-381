@@ -43,7 +43,11 @@ func (g *G2) rand() *PointG2 {
 }
 
 func (g *G2) randCorrect() *PointG2 {
-	return g.ClearCofactor(g.rand())
+	p := g.ClearCofactor(g.rand())
+	if !g.InCorrectSubgroup(p) {
+		panic("must be in correct subgroup")
+	}
+	return p
 }
 
 func (g *G2) randAffine() *PointG2 {
@@ -642,6 +646,7 @@ func BenchmarkG2Add(t *testing.B) {
 		g2.Add(&c, a, b)
 	}
 }
+
 func BenchmarkG2MulWNAF(t *testing.B) {
 	g := NewG2()
 	p := new(PointG2).Set(&g2One)
@@ -734,6 +739,15 @@ func BenchmarkG2ClearCofactor(t *testing.B) {
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
 		g2.ClearCofactor(a)
+	}
+}
+
+func BenchmarkG2SubgroupCheck(t *testing.B) {
+	g2 := NewG2()
+	a := g2.rand()
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		g2.InCorrectSubgroup(a)
 	}
 }
 
