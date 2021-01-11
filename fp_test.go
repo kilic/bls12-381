@@ -463,6 +463,9 @@ func TestFpSquareRoot(t *testing.T) {
 			if !r0.equal(r1) {
 				t.Fatal("sqrt failed")
 			}
+			if !r0.equal(a) {
+				t.Fatal("sqrt failed")
+			}
 		}
 	}
 }
@@ -852,6 +855,9 @@ func TestFp2SquareRoot(t *testing.T) {
 			e.square(r0, r0)
 			e.square(r1, r1)
 			if !r0.equal(r1) {
+				t.Fatal("sqrt failed")
+			}
+			if !r0.equal(a) {
 				t.Fatal("sqrt failed")
 			}
 		}

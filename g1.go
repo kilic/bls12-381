@@ -293,20 +293,16 @@ func (g *G1) InCorrectSubgroup(p *PointG1) bool {
 		g.wnafMul(p, p, e)
 	}
 
-	sigma := func(p *PointG1) {
-		mul(&p[0], &p[0], glvPhi1)
-	}
-
 	// [(x^2 − 1)/3](2σ(P) − P − σ^2(P)) − σ^2(P) ?= O
 	t0 := g.New().Set(p)
-	sigma(t0)
-	t1 := g.New().Set(t0) // σ(P)
-	sigma(t0)             // σ^2(P)
-	g.Double(t1, t1)      // 2σ(P)
-	g.Sub(t1, t1, p)      // 2σ(P) − P
-	g.Sub(t1, t1, t0)     // 2σ(P) − P − σ^2(P)
-	mulZ(t1)              // [(x^2 − 1)/3](2σ(P) − P − σ^2(P))
-	g.Sub(t1, t1, t0)     // [(x^2 − 1)/3](2σ(P) − P − σ^2(P)) − σ^2(P)
+	g.glvEndomorphism(t0, t0)
+	t1 := g.New().Set(t0)     // σ(P)
+	g.glvEndomorphism(t0, t0) // σ^2(P)
+	g.Double(t1, t1)          // 2σ(P)
+	g.Sub(t1, t1, p)          // 2σ(P) − P
+	g.Sub(t1, t1, t0)         // 2σ(P) − P − σ^2(P)
+	mulZ(t1)                  // [(x^2 − 1)/3](2σ(P) − P − σ^2(P))
+	g.Sub(t1, t1, t0)         // [(x^2 − 1)/3](2σ(P) − P − σ^2(P)) − σ^2(P)
 	return g.IsZero(t1)
 }
 
