@@ -207,6 +207,14 @@ func (e *Fr) fromMont() {
 	e.RedMul(e, &Fr{1})
 }
 
+func (e *Fr) FromRed() {
+	e.fromMont()
+}
+
+func (e *Fr) ToRed() {
+	e.toMont()
+}
+
 func (e *Fr) Add(a, b *Fr) {
 	addFR(e, a, b)
 }
