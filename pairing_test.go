@@ -228,3 +228,25 @@ func BenchmarkPairing(t *testing.B) {
 	}
 	_ = e
 }
+
+func BenchmarkMillerLoop(t *testing.B) {
+	bls := NewEngine()
+	g1, g2, gt := bls.G1, bls.G2, bls.GT()
+	bls.AddPair(g1.One(), g2.One())
+	f := gt.New().one()
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		bls.millerLoop(f)
+	}
+}
+
+func BenchmarkFinalExp(t *testing.B) {
+	bls := NewEngine()
+	g1, g2, gt := bls.G1, bls.G2, bls.GT()
+	bls.AddPair(g1.One(), g2.One())
+	f := gt.New().one()
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		bls.finalExp(f)
+	}
+}
