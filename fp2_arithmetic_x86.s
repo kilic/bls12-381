@@ -1,0 +1,908 @@
+// +build amd64,!generic
+
+#include "textflag.h"
+#include "funcdata.h"
+
+// assigned addition with modular reduction
+// a = (a + b) % p
+TEXT ·fp2AddAssign(SB), NOSPLIT, $0-16
+  MOVQ a+0(FP), DI
+	MOVQ b+8(FP), SI
+
+  // 1
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+
+	// |
+	ADDQ 0(SI), R8
+	ADCQ 8(SI), R9
+	ADCQ 16(SI), R10
+	ADCQ 24(SI), R11
+	ADCQ 32(SI), R12
+	ADCQ 40(SI), R13
+
+	// |
+	MOVQ R8, R14
+	MOVQ R9, R15
+	MOVQ R10, CX
+	MOVQ R11, DX
+	MOVQ R12, AX
+	MOVQ R13, BX
+
+	SUBQ ·modulus+0(SB), R14
+	SBBQ ·modulus+8(SB), R15
+	SBBQ ·modulus+16(SB), CX
+	SBBQ ·modulus+24(SB), DX
+	SBBQ ·modulus+32(SB), AX
+	SBBQ ·modulus+40(SB), BX
+
+	CMOVQCC R14, R8
+	CMOVQCC R15, R9
+	CMOVQCC CX, R10
+	CMOVQCC DX, R11
+	CMOVQCC AX, R12
+	CMOVQCC BX, R13
+
+	// |
+	MOVQ R8, (DI)
+	MOVQ R9, 8(DI)
+	MOVQ R10, 16(DI)
+	MOVQ R11, 24(DI)
+	MOVQ R12, 32(DI)
+	MOVQ R13, 40(DI)
+
+  // 2
+
+  // |
+	MOVQ 48(DI), R8
+	MOVQ 56(DI), R9
+	MOVQ 64(DI), R10
+	MOVQ 72(DI), R11
+	MOVQ 80(DI), R12
+	MOVQ 88(DI), R13
+
+	// |
+	ADDQ 48(SI), R8
+	ADCQ 56(SI), R9
+	ADCQ 64(SI), R10
+	ADCQ 72(SI), R11
+	ADCQ 80(SI), R12
+	ADCQ 88(SI), R13
+
+  	// |
+	MOVQ R8, R14
+	MOVQ R9, R15
+	MOVQ R10, CX
+	MOVQ R11, DX
+	MOVQ R12, AX
+	MOVQ R13, BX
+
+	SUBQ ·modulus+0(SB), R14
+	SBBQ ·modulus+8(SB), R15
+	SBBQ ·modulus+16(SB), CX
+	SBBQ ·modulus+24(SB), DX
+	SBBQ ·modulus+32(SB), AX
+	SBBQ ·modulus+40(SB), BX
+
+	CMOVQCC R14, R8
+	CMOVQCC R15, R9
+	CMOVQCC CX, R10
+	CMOVQCC DX, R11
+	CMOVQCC AX, R12
+	CMOVQCC BX, R13
+
+	// |
+	MOVQ R8, 48(DI)
+	MOVQ R9, 56(DI)
+	MOVQ R10, 64(DI)
+	MOVQ R11, 72(DI)
+	MOVQ R12, 80(DI)
+	MOVQ R13, 88(DI)
+
+  RET
+/*	 | end													*/
+
+
+// addition with modular reduction
+// c = (a + b) % p
+TEXT ·fp2Add(SB), NOSPLIT, $0-24
+  MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+	MOVQ c+0(FP), BP
+
+  // 1
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+
+	// |
+	ADDQ 0(SI), R8
+	ADCQ 8(SI), R9
+	ADCQ 16(SI), R10
+	ADCQ 24(SI), R11
+	ADCQ 32(SI), R12
+	ADCQ 40(SI), R13
+
+	// |
+	MOVQ R8, R14
+	MOVQ R9, R15
+	MOVQ R10, CX
+	MOVQ R11, DX
+	MOVQ R12, AX
+	MOVQ R13, BX
+
+	SUBQ ·modulus+0(SB), R14
+	SBBQ ·modulus+8(SB), R15
+	SBBQ ·modulus+16(SB), CX
+	SBBQ ·modulus+24(SB), DX
+	SBBQ ·modulus+32(SB), AX
+	SBBQ ·modulus+40(SB), BX
+
+	CMOVQCC R14, R8
+	CMOVQCC R15, R9
+	CMOVQCC CX, R10
+	CMOVQCC DX, R11
+	CMOVQCC AX, R12
+	CMOVQCC BX, R13
+
+	// |
+	MOVQ R8, (BP)
+	MOVQ R9, 8(BP)
+	MOVQ R10, 16(BP)
+	MOVQ R11, 24(BP)
+	MOVQ R12, 32(BP)
+	MOVQ R13, 40(BP)
+
+  // 2
+
+  // |
+	MOVQ 48(DI), R8
+	MOVQ 56(DI), R9
+	MOVQ 64(DI), R10
+	MOVQ 72(DI), R11
+	MOVQ 80(DI), R12
+	MOVQ 88(DI), R13
+
+	// |
+	ADDQ 48(SI), R8
+	ADCQ 56(SI), R9
+	ADCQ 64(SI), R10
+	ADCQ 72(SI), R11
+	ADCQ 80(SI), R12
+	ADCQ 88(SI), R13
+
+  	// |
+	MOVQ R8, R14
+	MOVQ R9, R15
+	MOVQ R10, CX
+	MOVQ R11, DX
+	MOVQ R12, AX
+	MOVQ R13, BX
+
+	SUBQ ·modulus+0(SB), R14
+	SBBQ ·modulus+8(SB), R15
+	SBBQ ·modulus+16(SB), CX
+	SBBQ ·modulus+24(SB), DX
+	SBBQ ·modulus+32(SB), AX
+	SBBQ ·modulus+40(SB), BX
+
+	CMOVQCC R14, R8
+	CMOVQCC R15, R9
+	CMOVQCC CX, R10
+	CMOVQCC DX, R11
+	CMOVQCC AX, R12
+	CMOVQCC BX, R13
+
+	// |
+	MOVQ R8, 48(BP)
+	MOVQ R9, 56(BP)
+	MOVQ R10, 64(BP)
+	MOVQ R11, 72(BP)
+	MOVQ R12, 80(BP)
+	MOVQ R13, 88(BP)
+
+  RET
+/*	 | end													*/
+
+
+// addition without reduction check
+// c = (a + b)
+TEXT ·fp2Ladd(SB), NOSPLIT, $0-24
+	// |
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+		MOVQ c+0(FP), AX
+
+	// 1
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+
+	// |
+	ADDQ (SI), R8
+	ADCQ 8(SI), R9
+	ADCQ 16(SI), R10
+	ADCQ 24(SI), R11
+	ADCQ 32(SI), R12
+	ADCQ 40(SI), R13
+
+	// |
+	MOVQ R8, (AX)
+	MOVQ R9, 8(AX)
+	MOVQ R10, 16(AX)
+	MOVQ R11, 24(AX)
+	MOVQ R12, 32(AX)
+	MOVQ R13, 40(AX)
+
+	// 2
+
+  // |
+	MOVQ 48(DI), R8
+	MOVQ 56(DI), R9
+	MOVQ 64(DI), R10
+	MOVQ 72(DI), R11
+	MOVQ 80(DI), R12
+	MOVQ 88(DI), R13
+
+	// |
+	ADDQ 48(SI), R8
+	ADCQ 56(SI), R9
+	ADCQ 64(SI), R10
+	ADCQ 72(SI), R11
+	ADCQ 80(SI), R12
+	ADCQ 88(SI), R13
+
+		// |
+	MOVQ R8, 48(AX)
+	MOVQ R9, 56(AX)
+	MOVQ R10, 64(AX)
+	MOVQ R11, 72(AX)
+	MOVQ R12, 80(AX)
+	MOVQ R13, 88(AX)
+
+	RET
+/*	 | end													*/
+
+
+// subtraction with modular reduction
+// c = (a - b) % p
+TEXT ·fp2Sub(SB), NOSPLIT, $0-24
+	// |
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+	XORQ AX, AX
+
+	// 1
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+
+	SUBQ (SI), R8
+	SBBQ 8(SI), R9
+	SBBQ 16(SI), R10
+	SBBQ 24(SI), R11
+	SBBQ 32(SI), R12
+	SBBQ 40(SI), R13
+
+	// |
+	MOVQ $0xb9feffffffffaaab, R14
+	MOVQ $0x1eabfffeb153ffff, R15
+	MOVQ $0x6730d2a0f6b0f624, CX
+	MOVQ $0x64774b84f38512bf, DX
+	MOVQ $0x4b1ba7b6434bacd7, BP
+	MOVQ $0x1a0111ea397fe69a, BX
+
+	CMOVQCC AX, R14
+	CMOVQCC AX, R15
+	CMOVQCC AX, CX
+	CMOVQCC AX, DX
+	CMOVQCC AX, BP
+	CMOVQCC AX, BX
+
+	ADDQ R14, R8
+	ADCQ R15, R9
+	ADCQ CX, R10
+	ADCQ DX, R11
+	ADCQ BP, R12
+	ADCQ BX, R13
+
+	// |
+	MOVQ c+0(FP), BP
+	MOVQ R8, (BP)
+	MOVQ R9, 8(BP)
+	MOVQ R10, 16(BP)
+	MOVQ R11, 24(BP)
+	MOVQ R12, 32(BP)
+	MOVQ R13, 40(BP)
+
+	// 2
+
+	// |
+	MOVQ 48(DI), R8
+	MOVQ 56(DI), R9
+	MOVQ 64(DI), R10
+	MOVQ 72(DI), R11
+	MOVQ 80(DI), R12
+	MOVQ 88(DI), R13
+
+	SUBQ 48(SI), R8
+	SBBQ 56(SI), R9
+	SBBQ 64(SI), R10
+	SBBQ 72(SI), R11
+	SBBQ 80(SI), R12
+	SBBQ 88(SI), R13
+
+	// |
+	MOVQ $0xb9feffffffffaaab, R14
+	MOVQ $0x1eabfffeb153ffff, R15
+	MOVQ $0x6730d2a0f6b0f624, CX
+	MOVQ $0x64774b84f38512bf, DX
+	MOVQ $0x4b1ba7b6434bacd7, BP
+	MOVQ $0x1a0111ea397fe69a, BX
+
+	CMOVQCC AX, R14
+	CMOVQCC AX, R15
+	CMOVQCC AX, CX
+	CMOVQCC AX, DX
+	CMOVQCC AX, BP
+	CMOVQCC AX, BX
+
+	ADDQ R14, R8
+	ADCQ R15, R9
+	ADCQ CX, R10
+	ADCQ DX, R11
+	ADCQ BP, R12
+	ADCQ BX, R13
+
+	// |
+	MOVQ c+0(FP), BP
+	MOVQ R8, 48(BP)
+	MOVQ R9, 56(BP)
+	MOVQ R10, 64(BP)
+	MOVQ R11, 72(BP)
+	MOVQ R12, 80(BP)
+	MOVQ R13, 88(BP)
+
+	RET
+/*	 | end													*/
+
+
+// assigned subtraction with modular reduction
+// c = (a - b) % p
+TEXT ·fp2SubAssign(SB), NOSPLIT, $0-16
+	// |
+	MOVQ a+0(FP), DI
+	MOVQ b+8(FP), SI
+	XORQ AX, AX
+
+	// 1
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+
+	SUBQ (SI), R8
+	SBBQ 8(SI), R9
+	SBBQ 16(SI), R10
+	SBBQ 24(SI), R11
+	SBBQ 32(SI), R12
+	SBBQ 40(SI), R13
+
+	// |
+	MOVQ $0xb9feffffffffaaab, R14
+	MOVQ $0x1eabfffeb153ffff, R15
+	MOVQ $0x6730d2a0f6b0f624, CX
+	MOVQ $0x64774b84f38512bf, DX
+	MOVQ $0x4b1ba7b6434bacd7, BP
+	MOVQ $0x1a0111ea397fe69a, BX
+
+	CMOVQCC AX, R14
+	CMOVQCC AX, R15
+	CMOVQCC AX, CX
+	CMOVQCC AX, DX
+	CMOVQCC AX, BP
+	CMOVQCC AX, BX
+
+	ADDQ R14, R8
+	ADCQ R15, R9
+	ADCQ CX, R10
+	ADCQ DX, R11
+	ADCQ BP, R12
+	ADCQ BX, R13
+
+	// |
+	MOVQ R8, (DI)
+	MOVQ R9, 8(DI)
+	MOVQ R10, 16(DI)
+	MOVQ R11, 24(DI)
+	MOVQ R12, 32(DI)
+	MOVQ R13, 40(DI)
+
+	// 2
+
+	// |
+	MOVQ 48(DI), R8
+	MOVQ 56(DI), R9
+	MOVQ 64(DI), R10
+	MOVQ 72(DI), R11
+	MOVQ 80(DI), R12
+	MOVQ 88(DI), R13
+
+	SUBQ 48(SI), R8
+	SBBQ 56(SI), R9
+	SBBQ 64(SI), R10
+	SBBQ 72(SI), R11
+	SBBQ 80(SI), R12
+	SBBQ 88(SI), R13
+
+	// |
+	MOVQ $0xb9feffffffffaaab, R14
+	MOVQ $0x1eabfffeb153ffff, R15
+	MOVQ $0x6730d2a0f6b0f624, CX
+	MOVQ $0x64774b84f38512bf, DX
+	MOVQ $0x4b1ba7b6434bacd7, BP
+	MOVQ $0x1a0111ea397fe69a, BX
+
+	CMOVQCC AX, R14
+	CMOVQCC AX, R15
+	CMOVQCC AX, CX
+	CMOVQCC AX, DX
+	CMOVQCC AX, BP
+	CMOVQCC AX, BX
+
+	ADDQ R14, R8
+	ADCQ R15, R9
+	ADCQ CX, R10
+	ADCQ DX, R11
+	ADCQ BP, R12
+	ADCQ BX, R13
+
+	// |
+	MOVQ R8, 48(DI)
+	MOVQ R9, 56(DI)
+	MOVQ R10, 64(DI)
+	MOVQ R11, 72(DI)
+	MOVQ R12, 80(DI)
+	MOVQ R13, 88(DI)
+
+	RET
+/*	 | end													*/
+
+
+// assigned doubling with modular reduction
+// a = (a + a) % p
+TEXT ·fp2DoubleAssign(SB), NOSPLIT, $0-8
+  MOVQ a+0(FP), DI
+
+  // 1
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+
+	// |
+	ADDQ R8, R8
+	ADCQ R9, R9
+	ADCQ R10, R10
+	ADCQ R11, R11
+	ADCQ R12, R12
+	ADCQ R13, R13
+
+	// |
+	MOVQ R8, R14
+	MOVQ R9, R15
+	MOVQ R10, CX
+	MOVQ R11, DX
+	MOVQ R12, AX
+	MOVQ R13, BX
+
+	SUBQ ·modulus+0(SB), R14
+	SBBQ ·modulus+8(SB), R15
+	SBBQ ·modulus+16(SB), CX
+	SBBQ ·modulus+24(SB), DX
+	SBBQ ·modulus+32(SB), AX
+	SBBQ ·modulus+40(SB), BX
+
+	CMOVQCC R14, R8
+	CMOVQCC R15, R9
+	CMOVQCC CX, R10
+	CMOVQCC DX, R11
+	CMOVQCC AX, R12
+	CMOVQCC BX, R13
+
+	// |
+	MOVQ R8, (DI)
+	MOVQ R9, 8(DI)
+	MOVQ R10, 16(DI)
+	MOVQ R11, 24(DI)
+	MOVQ R12, 32(DI)
+	MOVQ R13, 40(DI)
+
+  // 2
+
+  // |
+	MOVQ 48(DI), R8
+	MOVQ 56(DI), R9
+	MOVQ 64(DI), R10
+	MOVQ 72(DI), R11
+	MOVQ 80(DI), R12
+	MOVQ 88(DI), R13
+
+	// |
+	ADDQ R8, R8
+	ADCQ R9, R9
+	ADCQ R10, R10
+	ADCQ R11, R11
+	ADCQ R12, R12
+	ADCQ R13, R13
+
+  	// |
+	MOVQ R8, R14
+	MOVQ R9, R15
+	MOVQ R10, CX
+	MOVQ R11, DX
+	MOVQ R12, AX
+	MOVQ R13, BX
+
+	SUBQ ·modulus+0(SB), R14
+	SBBQ ·modulus+8(SB), R15
+	SBBQ ·modulus+16(SB), CX
+	SBBQ ·modulus+24(SB), DX
+	SBBQ ·modulus+32(SB), AX
+	SBBQ ·modulus+40(SB), BX
+
+	CMOVQCC R14, R8
+	CMOVQCC R15, R9
+	CMOVQCC CX, R10
+	CMOVQCC DX, R11
+	CMOVQCC AX, R12
+	CMOVQCC BX, R13
+
+	// |
+	MOVQ R8, 48(DI)
+	MOVQ R9, 56(DI)
+	MOVQ R10, 64(DI)
+	MOVQ R11, 72(DI)
+	MOVQ R12, 80(DI)
+	MOVQ R13, 88(DI)
+
+  RET
+/*	 | end													*/
+
+
+// doubling with modular reduction
+// c = (a + a) % p
+TEXT ·fp2Double(SB), NOSPLIT, $0-16
+  MOVQ a+8(FP), DI
+  MOVQ c+0(FP), SI
+
+  // 1
+
+	// |
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+
+	// |
+	ADDQ R8, R8
+	ADCQ R9, R9
+	ADCQ R10, R10
+	ADCQ R11, R11
+	ADCQ R12, R12
+	ADCQ R13, R13
+
+	// |
+	MOVQ R8, R14
+	MOVQ R9, R15
+	MOVQ R10, CX
+	MOVQ R11, DX
+	MOVQ R12, AX
+	MOVQ R13, BX
+
+	SUBQ ·modulus+0(SB), R14
+	SBBQ ·modulus+8(SB), R15
+	SBBQ ·modulus+16(SB), CX
+	SBBQ ·modulus+24(SB), DX
+	SBBQ ·modulus+32(SB), AX
+	SBBQ ·modulus+40(SB), BX
+
+	CMOVQCC R14, R8
+	CMOVQCC R15, R9
+	CMOVQCC CX, R10
+	CMOVQCC DX, R11
+	CMOVQCC AX, R12
+	CMOVQCC BX, R13
+
+	// |
+	MOVQ R8, (SI)
+	MOVQ R9, 8(SI)
+	MOVQ R10, 16(SI)
+	MOVQ R11, 24(SI)
+	MOVQ R12, 32(SI)
+	MOVQ R13, 40(SI)
+
+  // 2
+
+  // |
+	MOVQ 48(DI), R8
+	MOVQ 56(DI), R9
+	MOVQ 64(DI), R10
+	MOVQ 72(DI), R11
+	MOVQ 80(DI), R12
+	MOVQ 88(DI), R13
+
+	// |
+	ADDQ R8, R8
+	ADCQ R9, R9
+	ADCQ R10, R10
+	ADCQ R11, R11
+	ADCQ R12, R12
+	ADCQ R13, R13
+
+  	// |
+	MOVQ R8, R14
+	MOVQ R9, R15
+	MOVQ R10, CX
+	MOVQ R11, DX
+	MOVQ R12, AX
+	MOVQ R13, BX
+
+	SUBQ ·modulus+0(SB), R14
+	SBBQ ·modulus+8(SB), R15
+	SBBQ ·modulus+16(SB), CX
+	SBBQ ·modulus+24(SB), DX
+	SBBQ ·modulus+32(SB), AX
+	SBBQ ·modulus+40(SB), BX
+
+	CMOVQCC R14, R8
+	CMOVQCC R15, R9
+	CMOVQCC CX, R10
+	CMOVQCC DX, R11
+	CMOVQCC AX, R12
+	CMOVQCC BX, R13
+
+	// |
+	MOVQ R8, 48(SI)
+	MOVQ R9, 56(SI)
+	MOVQ R10, 64(SI)
+	MOVQ R11, 72(SI)
+	MOVQ R12, 80(SI)
+	MOVQ R13, 88(SI)
+
+  RET
+/*	 | end													*/
+
+
+// a0 = a0 - a1
+// a1 = a0 + a1
+TEXT ·mulByNonResidueAssign(SB), NOSPLIT, $0-8
+  MOVQ a+0(FP), DI
+	XORQ AX, AX
+
+
+	// a0
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+
+	// a0 - a1
+	SUBQ 48(DI), R8
+	SBBQ 56(DI), R9
+	SBBQ 64(DI), R10
+	SBBQ 72(DI), R11
+	SBBQ 80(DI), R12
+	SBBQ 88(DI), R13
+
+	MOVQ $0xb9feffffffffaaab, R14
+	MOVQ $0x1eabfffeb153ffff, R15
+	MOVQ $0x6730d2a0f6b0f624, CX
+	MOVQ $0x64774b84f38512bf, DX
+	MOVQ $0x4b1ba7b6434bacd7, BP
+	MOVQ $0x1a0111ea397fe69a, BX
+
+	CMOVQCC AX, R14
+	CMOVQCC AX, R15
+	CMOVQCC AX, CX
+	CMOVQCC AX, DX
+	CMOVQCC AX, BP
+	CMOVQCC AX, BX
+
+	ADDQ R14, R8
+	ADCQ R15, R9
+	ADCQ CX, R10
+	ADCQ DX, R11
+	ADCQ BP, R12
+	ADCQ BX, R13
+
+	// a0
+	MOVQ (DI), R14
+	MOVQ 8(DI), R15
+	MOVQ 16(DI), CX
+	MOVQ 24(DI), DX
+	MOVQ 32(DI), BP
+	MOVQ 40(DI), BX
+
+	// a0 = a0 - a1 
+	MOVQ R8, (DI)
+	MOVQ R9, 8(DI)
+	MOVQ R10, 16(DI)
+	MOVQ R11, 24(DI)
+	MOVQ R12, 32(DI)
+	MOVQ R13, 40(DI)
+
+	// a0 + a1
+	ADDQ 48(DI), R14
+	ADCQ 56(DI), R15
+	ADCQ 64(DI), CX
+	ADCQ 72(DI), DX
+	ADCQ 80(DI), BP
+	ADCQ 88(DI), BX
+
+	MOVQ R14, R8
+	MOVQ R15, R9
+	MOVQ CX, R10
+	MOVQ DX, R11
+	MOVQ BP, R12
+	MOVQ BX, R13
+
+	SUBQ ·modulus+0(SB), R8
+	SBBQ ·modulus+8(SB), R9
+	SBBQ ·modulus+16(SB), R10
+	SBBQ ·modulus+24(SB), R11
+	SBBQ ·modulus+32(SB), R12
+	SBBQ ·modulus+40(SB), R13
+
+	CMOVQCC R8, R14
+	CMOVQCC R9, R15
+	CMOVQCC R10, CX
+	CMOVQCC R11, DX
+	CMOVQCC R12, BP
+	CMOVQCC R13, BX
+
+	// |
+	MOVQ R14, 48(DI)
+	MOVQ R15, 56(DI)
+	MOVQ CX, 64(DI)
+	MOVQ DX, 72(DI)
+	MOVQ BP, 80(DI)
+	MOVQ BX, 88(DI)
+
+  RET
+/*	 | end													*/
+
+
+// c0 = a0 - a1
+// c1 = a0 + a1
+TEXT ·mulByNonResidue(SB), NOSPLIT, $0-16
+  MOVQ c+0(FP), SI
+  MOVQ a+8(FP), DI
+	XORQ AX, AX
+
+
+	// a0
+	MOVQ (DI), R8
+	MOVQ 8(DI), R9
+	MOVQ 16(DI), R10
+	MOVQ 24(DI), R11
+	MOVQ 32(DI), R12
+	MOVQ 40(DI), R13
+
+	// a0 - a1
+	SUBQ 48(DI), R8
+	SBBQ 56(DI), R9
+	SBBQ 64(DI), R10
+	SBBQ 72(DI), R11
+	SBBQ 80(DI), R12
+	SBBQ 88(DI), R13
+
+	MOVQ $0xb9feffffffffaaab, R14
+	MOVQ $0x1eabfffeb153ffff, R15
+	MOVQ $0x6730d2a0f6b0f624, CX
+	MOVQ $0x64774b84f38512bf, DX
+	MOVQ $0x4b1ba7b6434bacd7, BP
+	MOVQ $0x1a0111ea397fe69a, BX
+
+	CMOVQCC AX, R14
+	CMOVQCC AX, R15
+	CMOVQCC AX, CX
+	CMOVQCC AX, DX
+	CMOVQCC AX, BP
+	CMOVQCC AX, BX
+
+	ADDQ R14, R8
+	ADCQ R15, R9
+	ADCQ CX, R10
+	ADCQ DX, R11
+	ADCQ BP, R12
+	ADCQ BX, R13
+
+	// a0 = a0 - a1 
+	MOVQ R8, (SI)
+	MOVQ R9, 8(SI)
+	MOVQ R10, 16(SI)
+	MOVQ R11, 24(SI)
+	MOVQ R12, 32(SI)
+	MOVQ R13, 40(SI)
+
+	// a0
+	MOVQ (DI), R14
+	MOVQ 8(DI), R15
+	MOVQ 16(DI), CX
+	MOVQ 24(DI), DX
+	MOVQ 32(DI), BP
+	MOVQ 40(DI), BX
+
+	// a0 + a1
+	ADDQ 48(DI), R14
+	ADCQ 56(DI), R15
+	ADCQ 64(DI), CX
+	ADCQ 72(DI), DX
+	ADCQ 80(DI), BP
+	ADCQ 88(DI), BX
+
+	MOVQ R14, R8
+	MOVQ R15, R9
+	MOVQ CX, R10
+	MOVQ DX, R11
+	MOVQ BP, R12
+	MOVQ BX, R13
+
+	SUBQ ·modulus+0(SB), R8
+	SBBQ ·modulus+8(SB), R9
+	SBBQ ·modulus+16(SB), R10
+	SBBQ ·modulus+24(SB), R11
+	SBBQ ·modulus+32(SB), R12
+	SBBQ ·modulus+40(SB), R13
+
+	CMOVQCC R8, R14
+	CMOVQCC R9, R15
+	CMOVQCC R10, CX
+	CMOVQCC R11, DX
+	CMOVQCC R12, BP
+	CMOVQCC R13, BX
+
+	// |
+	MOVQ R14, 48(SI)
+	MOVQ R15, 56(SI)
+	MOVQ CX, 64(SI)
+	MOVQ DX, 72(SI)
+	MOVQ BP, 80(SI)
+	MOVQ BX, 88(SI)
+
+  RET
+/*	 | end													*/

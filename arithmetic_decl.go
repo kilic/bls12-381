@@ -67,6 +67,33 @@ func mulNoADX(c, a, b *fe)
 //go:noescape
 func mulADX(c, a, b *fe)
 
+//go:noescape
+func fp2AddAssign(a, b *fe2)
+
+//go:noescape
+func fp2Add(c, a, b *fe2)
+
+//go:noescape
+func fp2Ladd(c, a, b *fe2)
+
+//go:noescape
+func fp2DoubleAssign(a *fe2)
+
+//go:noescape
+func fp2Double(c, a *fe2)
+
+//go:noescape
+func fp2Sub(c, a, b *fe2)
+
+//go:noescape
+func fp2SubAssign(a, b *fe2)
+
+//go:noescape
+func mulByNonResidue(c, a *fe2)
+
+//go:noescape
+func mulByNonResidueAssign(a *fe2)
+
 var mulFR func(c, a, b *Fr) = mulADXFR
 var lmulFR func(c *wideFr, a, b *Fr) = lmulADXFR
 

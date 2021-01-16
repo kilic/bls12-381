@@ -136,32 +136,32 @@ func (e *fp12) square(c, a *fe12) {
 }
 
 func (e *fp12) cyclotomicSquare(c, a *fe12) {
-	t, fp2 := e.t2, e.fp2()
+	t := e.t2
 	// Guide to Pairing Based Cryptography
 	// 5.5.4 Airthmetic in Cyclotomic Groups
 
 	e.fp4Square(t[3], t[4], &a[0][0], &a[1][1])
-	fp2.sub(t[2], t[3], &a[0][0])
-	fp2.doubleAssign(t[2])
-	fp2.add(&c[0][0], t[2], t[3])
-	fp2.add(t[2], t[4], &a[1][1])
-	fp2.doubleAssign(t[2])
-	fp2.add(&c[1][1], t[2], t[4])
+	fp2Sub(t[2], t[3], &a[0][0])
+	fp2DoubleAssign(t[2])
+	fp2Add(&c[0][0], t[2], t[3])
+	fp2Add(t[2], t[4], &a[1][1])
+	fp2DoubleAssign(t[2])
+	fp2Add(&c[1][1], t[2], t[4])
 	e.fp4Square(t[3], t[4], &a[1][0], &a[0][2])
 	e.fp4Square(t[5], t[6], &a[0][1], &a[1][2])
-	fp2.sub(t[2], t[3], &a[0][1])
-	fp2.doubleAssign(t[2])
-	fp2.add(&c[0][1], t[2], t[3])
-	fp2.add(t[2], t[4], &a[1][2])
-	fp2.doubleAssign(t[2])
-	fp2.add(&c[1][2], t[2], t[4])
-	fp2.mulByNonResidue(t[3], t[6])
-	fp2.add(t[2], t[3], &a[1][0])
-	fp2.doubleAssign(t[2])
-	fp2.add(&c[1][0], t[2], t[3])
-	fp2.sub(t[2], t[5], &a[0][2])
-	fp2.doubleAssign(t[2])
-	fp2.add(&c[0][2], t[2], t[5])
+	fp2Sub(t[2], t[3], &a[0][1])
+	fp2DoubleAssign(t[2])
+	fp2Add(&c[0][1], t[2], t[3])
+	fp2Add(t[2], t[4], &a[1][2])
+	fp2DoubleAssign(t[2])
+	fp2Add(&c[1][2], t[2], t[4])
+	mulByNonResidue(t[3], t[6])
+	fp2Add(t[2], t[3], &a[1][0])
+	fp2DoubleAssign(t[2])
+	fp2Add(&c[1][0], t[2], t[3])
+	fp2Sub(t[2], t[5], &a[0][2])
+	fp2DoubleAssign(t[2])
+	fp2Add(&c[0][2], t[2], t[5])
 }
 
 func (e *fp12) mul(c, a, b *fe12) {
@@ -199,14 +199,14 @@ func (e *fp12) fp4Square(c0, c1, a0, a1 *fe2) {
 	// Karatsuba squaring algorithm
 	// https://eprint.iacr.org/2006/471
 
-	fp2.square(t[0], a0)            // a0^2
-	fp2.square(t[1], a1)            // a1^2
-	fp2.mulByNonResidue(t[2], t[1]) // βa1^2
-	fp2.add(c0, t[2], t[0])         // c0 = βa1^2 + a0^2
-	fp2.add(t[2], a0, a1)           // a0 + a1
-	fp2.squareAssign(t[2])          // (a0 + a1)^2
-	fp2.subAssign(t[2], t[0])       // (a0 + a1)^2 - a0^2
-	fp2.sub(c1, t[2], t[1])         // (a0 + a1)^2 - a0^2 - a1^2
+	fp2.square(t[0], a0)        // a0^2
+	fp2.square(t[1], a1)        // a1^2
+	mulByNonResidue(t[2], t[1]) // βa1^2
+	fp2Add(c0, t[2], t[0])      // c0 = βa1^2 + a0^2
+	fp2Add(t[2], a0, a1)        // a0 + a1
+	fp2.squareAssign(t[2])      // (a0 + a1)^2
+	fp2SubAssign(t[2], t[0])    // (a0 + a1)^2 - a0^2
+	fp2Sub(c1, t[2], t[1])      // (a0 + a1)^2 - a0^2 - a1^2
 }
 
 func (e *fp12) inverse(c, a *fe12) {
@@ -225,10 +225,10 @@ func (e *fp12) inverse(c, a *fe12) {
 }
 
 func (e *fp12) mul014(a *fe12, b0, b1, b4 *fe2) {
-	fp2, fp6, t, u := e.fp2(), e.fp6, e.t6, e.t2[0]
+	fp6, t, u := e.fp6, e.t6, e.t2[0]
 	fp6.mul01(t[0], &a[0], b0, b1)  // t0 = a0b0
 	fp6.mul1(t[1], &a[1], b4)       // t1 = a1b1
-	fp2.add(u, b1, b4)              // u = b01 + b10
+	fp2Add(u, b1, b4)               // u = b01 + b10
 	fp6.add(t[2], &a[1], &a[0])     // a0 + a1
 	fp6.mul01(t[2], t[2], b0, u)    // v1 = u(a0 + a1s)
 	fp6.subAssign(t[2], t[0])       // v1 - t0
