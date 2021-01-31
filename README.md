@@ -25,6 +25,6 @@ Hashing to curve implementations for both G1 and G2 follows `_XMD:SHA-256_SSWU_R
 on _2.3 GHz i7_
 
 ```
-BenchmarkPairing  882553 ns/op
+BenchmarkPairing  715551 ns/op
 ```
 
