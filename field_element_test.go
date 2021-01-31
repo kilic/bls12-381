@@ -60,7 +60,6 @@ func TestFieldElementEquality(t *testing.T) {
 		t.Fatal("a == a")
 	}
 	b2 := new(fe2)
-	fp2 := newFp2()
 	fp2Add(b2, a2, one2)
 	if a2.equal(b2) {
 		t.Fatal("a != a + 1")
@@ -79,8 +78,7 @@ func TestFieldElementEquality(t *testing.T) {
 		t.Fatal("a == a")
 	}
 	b6 := new(fe6)
-	fp6 := newFp6(fp2)
-	fp6.add(b6, a6, one6)
+	fp6Add(b6, a6, one6)
 	if a6.equal(b6) {
 		t.Fatal("a != a + 1")
 	}
@@ -98,8 +96,7 @@ func TestFieldElementEquality(t *testing.T) {
 		t.Fatal("a == a")
 	}
 	b12 := new(fe12)
-	fp12 := newFp12(fp6)
-	fp12.add(b12, a12, one12)
+	fp12Add(b12, a12, one12)
 	if a12.equal(b12) {
 		t.Fatal("a != a + 1")
 	}

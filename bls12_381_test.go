@@ -56,3 +56,12 @@ func fromHex(size int, hexStrs ...string) []byte {
 	}
 	return out
 }
+
+func padBytes(in []byte, size int) []byte {
+	out := make([]byte, size)
+	if len(in) > size {
+		panic("bad input for padding")
+	}
+	copy(out[size-len(in):], in)
+	return out
+}

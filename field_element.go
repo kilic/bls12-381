@@ -23,6 +23,10 @@ type fe6 /**			***/ [3]fe2
 // Representation follows c[0] + c[1] * w encoding order.
 type fe12 /**			***/ [2]fe6
 
+type wfe /***			***/ [fpNumberOfLimbs * 2]uint64
+type wfe2 /**			***/ [2]wfe
+type wfe6 /**			***/ [3]wfe2
+
 func (fe *fe) setBytes(in []byte) *fe {
 	l := len(in)
 	if l >= fpByteSize {
@@ -204,16 +208,28 @@ func (e *fe2) set(e2 *fe2) *fe2 {
 	return e
 }
 
+func (e *fe2) fromMont(a *fe2) {
+	fromMont(&e[0], &a[0])
+	fromMont(&e[1], &a[1])
+}
+
+func (e *fe2) fromWide(w *wfe2) {
+	fromWide(&e[0], &w[0])
+	fromWide(&e[1], &w[1])
+}
+
 func (e *fe2) rand(r io.Reader) (*fe2, error) {
 	a0, err := new(fe).rand(r)
 	if err != nil {
 		return nil, err
 	}
+	e[0].set(a0)
 	a1, err := new(fe).rand(r)
 	if err != nil {
 		return nil, err
 	}
-	return &fe2{*a0, *a1}, nil
+	e[1].set(a1)
+	return e, nil
 }
 
 func (e *fe2) isOne() bool {
@@ -266,20 +282,35 @@ func (e *fe6) set(e2 *fe6) *fe6 {
 	return e
 }
 
+func (e *fe6) fromMont(a *fe6) {
+	e[0].fromMont(&a[0])
+	e[1].fromMont(&a[1])
+	e[2].fromMont(&a[2])
+}
+
+func (e *fe6) fromWide(w *wfe6) {
+	e[0].fromWide(&w[0])
+	e[1].fromWide(&w[1])
+	e[2].fromWide(&w[2])
+}
+
 func (e *fe6) rand(r io.Reader) (*fe6, error) {
 	a0, err := new(fe2).rand(r)
 	if err != nil {
 		return nil, err
 	}
+	e[0].set(a0)
 	a1, err := new(fe2).rand(r)
 	if err != nil {
 		return nil, err
 	}
+	e[1].set(a1)
 	a2, err := new(fe2).rand(r)
 	if err != nil {
 		return nil, err
 	}
-	return &fe6{*a0, *a1, *a2}, nil
+	e[2].set(a2)
+	return e, nil
 }
 
 func (e *fe6) isOne() bool {
@@ -312,16 +343,23 @@ func (e *fe12) set(e2 *fe12) *fe12 {
 	return e
 }
 
+func (e *fe12) fromMont(a *fe12) {
+	e[0].fromMont(&a[0])
+	e[1].fromMont(&a[1])
+}
+
 func (e *fe12) rand(r io.Reader) (*fe12, error) {
 	a0, err := new(fe6).rand(r)
 	if err != nil {
 		return nil, err
 	}
+	e[0].set(a0)
 	a1, err := new(fe6).rand(r)
 	if err != nil {
 		return nil, err
 	}
-	return &fe12{*a0, *a1}, nil
+	e[1].set(a1)
+	return e, nil
 }
 
 func (e *fe12) isOne() bool {
@@ -334,4 +372,33 @@ func (e *fe12) isZero() bool {
 
 func (e *fe12) equal(e2 *fe12) bool {
 	return e[0].equal(&e2[0]) && e[1].equal(&e2[1])
+}
+
+func (fe *wfe) set(fe2 *wfe) *wfe {
+	fe[0] = fe2[0]
+	fe[1] = fe2[1]
+	fe[2] = fe2[2]
+	fe[3] = fe2[3]
+	fe[4] = fe2[4]
+	fe[5] = fe2[5]
+	fe[6] = fe2[6]
+	fe[7] = fe2[7]
+	fe[8] = fe2[8]
+	fe[9] = fe2[9]
+	fe[10] = fe2[10]
+	fe[11] = fe2[11]
+	return fe
+}
+
+func (fe *wfe2) set(fe2 *wfe2) *wfe2 {
+	fe[0].set(&fe2[0])
+	fe[1].set(&fe2[1])
+	return fe
+}
+
+func (fe *wfe6) set(fe2 *wfe6) *wfe6 {
+	fe[0].set(&fe2[0])
+	fe[1].set(&fe2[1])
+	fe[2].set(&fe2[2])
+	return fe
 }

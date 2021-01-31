@@ -244,7 +244,7 @@ func squareFR(z, x *Fr) {
 	}
 }
 
-func addwFR(z, y *wideFr) {
+func waddFR(z, y *wideFr) {
 	var carry uint64
 	z[0], carry = bits.Add64(z[0], y[0], 0)
 	z[1], carry = bits.Add64(z[1], y[1], carry)

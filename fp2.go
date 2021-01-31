@@ -6,7 +6,8 @@ import (
 )
 
 type fp2Temp struct {
-	t [4]*fe
+	t [3]*fe
+	w *wfe2
 }
 
 type fp2 struct {
@@ -14,11 +15,11 @@ type fp2 struct {
 }
 
 func newFp2Temp() fp2Temp {
-	t := [4]*fe{}
+	t := [3]*fe{}
 	for i := 0; i < len(t); i++ {
 		t[i] = &fe{}
 	}
-	return fp2Temp{t}
+	return fp2Temp{t, &wfe2{}}
 }
 
 func newFp2() *fp2 {
@@ -60,52 +61,24 @@ func (e *fp2) one() *fe2 {
 	return new(fe2).one()
 }
 
-func (e *fp2) fromMont(c, a *fe2) {
-	// c0 = a0 / r
-	// c1 = a1 / r
-	fromMont(&c[0], &a[0])
-	fromMont(&c[1], &a[1])
-}
-
-func (e *fp2) neg(c, a *fe2) {
-	// c0 = -a0
-	// c1 = -a1
+func fp2Neg(c, a *fe2) {
 	neg(&c[0], &a[0])
 	neg(&c[1], &a[1])
 }
 
-func (e *fp2) conjugate(c, a *fe2) {
-	// c0 = a0
-	// c1 = -a1
+func fp2Conjugate(c, a *fe2) {
 	c[0].set(&a[0])
 	neg(&c[1], &a[1])
 }
 
 func (e *fp2) mul(c, a, b *fe2) {
-	t := e.t
-	// Guide to Pairing Based Cryptography
-	// Algorithm 5.16
-
-	mul(t[1], &a[0], &b[0])  // a0b0
-	mul(t[2], &a[1], &b[1])  // a1b1
-	ladd(t[0], &a[0], &a[1]) // a0 + a1
-	ladd(t[3], &b[0], &b[1]) // b0 + b1
-	sub(&c[0], t[1], t[2])   // c0 = a0b0 - a1b1
-	addAssign(t[1], t[2])    // a0b0 + a1b1
-	mul(t[0], t[0], t[3])    // (a0 + a1)(b0 + b1)
-	sub(&c[1], t[0], t[1])   // c1 = (a0 + a1)(b0 + b1) - (a0b0 + a1b1)
+	wfp2Mul(e.w, b, a)
+	c.fromWide(e.w)
 }
 
 func (e *fp2) mulAssign(a, b *fe2) {
-	t := e.t
-	mul(t[1], &a[0], &b[0])
-	mul(t[2], &a[1], &b[1])
-	ladd(t[0], &a[0], &a[1])
-	ladd(t[3], &b[0], &b[1])
-	sub(&a[0], t[1], t[2])
-	addAssign(t[1], t[2])
-	mul(t[0], t[0], t[3])
-	sub(&a[1], t[0], t[1])
+	wfp2Mul(e.w, b, a)
+	a.fromWide(e.w)
 }
 
 func (e *fp2) square(c, a *fe2) {
@@ -226,12 +199,12 @@ func (e *fp2) exp(c, a *fe2, s *big.Int) {
 }
 
 func (e *fp2) frobeniusMap1(a *fe2) {
-	e.conjugate(a, a)
+	fp2Conjugate(a, a)
 }
 
 func (e *fp2) frobeniusMap(a *fe2, power int) {
 	if power&1 == 1 {
-		e.conjugate(a, a)
+		fp2Conjugate(a, a)
 	}
 }
 

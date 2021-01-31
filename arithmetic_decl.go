@@ -10,11 +10,13 @@ func init() {
 	if !cpu.X86.HasADX || !cpu.X86.HasBMI2 {
 		mul = mulNoADX
 		mulFR = mulNoADXFR
-		lmulFR = lmulNoADXFR
+		lmulFR = wmulNoADXFR
 	}
 }
 
 var mul func(c, a, b *fe) = mulADX
+var wmul func(c *wfe, a, b *fe) = wmulADX
+var fromWide func(c *fe, w *wfe) = montRedADX
 
 func square(c, a *fe) {
 	mul(c, a, a)
@@ -27,6 +29,12 @@ func neg(c, a *fe) {
 		_neg(c, a)
 	}
 }
+
+//go:noescape
+func wfp2Square(c *wfe2, a *fe2)
+
+//go:noescape
+func wfp2Mul(c *wfe2, a, b *fe2)
 
 //go:noescape
 func add(c, a, b *fe)
@@ -50,6 +58,9 @@ func doubleAssign(a *fe)
 func ldouble(c, a *fe)
 
 //go:noescape
+func ldoubleAssign(a *fe)
+
+//go:noescape
 func sub(c, a, b *fe)
 
 //go:noescape
@@ -68,13 +79,46 @@ func mulNoADX(c, a, b *fe)
 func mulADX(c, a, b *fe)
 
 //go:noescape
-func fp2AddAssign(a, b *fe2)
+func wmulADX(c *wfe, a, b *fe)
+
+//go:noescape
+func montRedADX(a *fe, w *wfe)
+
+//go:noescape
+func lwadd(c, a, b *wfe)
+
+//go:noescape
+func lwaddAssign(a, b *wfe)
+
+//go:noescape
+func wadd(c, a, b *wfe)
+
+//go:noescape
+func lwdouble(c, a *wfe)
+
+//go:noescape
+func wdouble(c, a *wfe)
+
+//go:noescape
+func lwsub(c, a, b *wfe)
+
+//go:noescape
+func lwsubAssign(a, b *wfe)
+
+//go:noescape
+func wsub(c, a, b *wfe)
 
 //go:noescape
 func fp2Add(c, a, b *fe2)
 
 //go:noescape
+func fp2AddAssign(a, b *fe2)
+
+//go:noescape
 func fp2Ladd(c, a, b *fe2)
+
+//go:noescape
+func fp2LaddAssign(a, b *fe2)
 
 //go:noescape
 func fp2DoubleAssign(a *fe2)
@@ -94,8 +138,50 @@ func mulByNonResidue(c, a *fe2)
 //go:noescape
 func mulByNonResidueAssign(a *fe2)
 
+//go:noescape
+func wfp2Add(c, a, b *wfe2)
+
+//go:noescape
+func wfp2AddAssign(a, b *wfe2)
+
+//go:noescape
+func wfp2Ladd(c, a, b *wfe2)
+
+//go:noescape
+func wfp2LaddAssign(a, b *wfe2)
+
+//go:noescape
+func wfp2AddMixed(c, a, b *wfe2)
+
+//go:noescape
+func wfp2AddMixedAssign(a, b *wfe2)
+
+//go:noescape
+func wfp2Sub(c, a, b *wfe2)
+
+//go:noescape
+func wfp2SubAssign(a, b *wfe2)
+
+//go:noescape
+func wfp2SubMixed(c, a, b *wfe2)
+
+//go:noescape
+func wfp2SubMixedAssign(a, b *wfe2)
+
+//go:noescape
+func wfp2Double(c, a *wfe2)
+
+//go:noescape
+func wfp2DoubleAssign(a *wfe2)
+
+//go:noescape
+func wfp2MulByNonResidue(c, a *wfe2)
+
+//go:noescape
+func wfp2MulByNonResidueAssign(a *wfe2)
+
 var mulFR func(c, a, b *Fr) = mulADXFR
-var lmulFR func(c *wideFr, a, b *Fr) = lmulADXFR
+var lmulFR func(c *wideFr, a, b *Fr) = wmulADXFR
 
 func squareFR(c, a *Fr) {
 	mulFR(c, a, a)
@@ -134,10 +220,10 @@ func mulNoADXFR(c, a, b *Fr)
 func mulADXFR(c, a, b *Fr)
 
 //go:noescape
-func lmulADXFR(c *wideFr, a, b *Fr)
+func wmulADXFR(c *wideFr, a, b *Fr)
 
 //go:noescape
-func lmulNoADXFR(c *wideFr, a, b *Fr)
+func wmulNoADXFR(c *wideFr, a, b *Fr)
 
 //go:noescape
-func addwFR(a, b *wideFr)
+func waddFR(a, b *wideFr)

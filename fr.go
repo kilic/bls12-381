@@ -339,7 +339,7 @@ func (ew *wideFr) mul(a, b *Fr) {
 }
 
 func (ew *wideFr) add(a *wideFr) {
-	addwFR(ew, a)
+	waddFR(ew, a)
 }
 
 func (ew *wideFr) round() *Fr {
