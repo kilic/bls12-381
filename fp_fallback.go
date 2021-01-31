@@ -1367,24 +1367,5 @@ func wfp2MulByNonResidueAssign(a *wfe2) {
 	a[1].set(wt0)
 }
 
-func wfp2Mul(c *wfe2, a, b *fe2) {
-	wt0, wt1 := new(wfe), new(wfe)
-	t0, t1 := new(fe), new(fe)
-	wmul(wt0, &a[0], &b[0])
-	wmul(wt1, &a[1], &b[1])
-	wsub(&c[0], wt0, wt1)
-	lwaddAssign(wt0, wt1)
-	ladd(t0, &a[0], &a[1])
-	ladd(t1, &b[0], &b[1])
-	wmul(wt1, t0, t1)
-	lwsub(&c[1], wt1, wt0)
-}
-
-func wfp2Square(c *wfe2, a *fe2) {
-	t0, t1, t2 := new(fe), new(fe), new(fe)
-	ladd(t0, &a[0], &a[1])
-	sub(t1, &a[0], &a[1])
-	ldouble(t2, &a[0])
-	wmul(&c[0], t1, t0)
-	wmul(&c[1], t2, &a[1])
-}
+var wfp2Mul func(c *wfe2, a, b *fe2) = wfp2MulGeneric
+var wfp2Square func(c *wfe2, a *fe2) = wfp2SquareGeneric

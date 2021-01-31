@@ -2628,7 +2628,7 @@ TEXT ·wfp2MulByNonResidueAssign(SB), NOSPLIT, $64-8
  	RET
 
 
-TEXT ·wfp2Square(SB), NOSPLIT, $96-16
+TEXT ·wfp2SquareADX(SB), NOSPLIT, $96-16
 	MOVQ a+8(FP), DI
 
 	// a0
@@ -3169,7 +3169,7 @@ TEXT ·wfp2Square(SB), NOSPLIT, $96-16
 	RET
 
 
-TEXT ·wfp2Mul(SB), NOSPLIT, $192-24
+TEXT ·wfp2MulADX(SB), NOSPLIT, $192-24
 	MOVQ a+8(FP), DI
 	MOVQ b+16(FP), SI
 

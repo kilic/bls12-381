@@ -13,12 +13,16 @@ func init() {
 		fromWide = montRedNoADX
 		mulFR = mulNoADXFR
 		wmulFR = wmulNoADXFR
+		wfp2Mul = wfp2MulGeneric
+		wfp2Square = wfp2SquareGeneric
 	}
 }
 
 var mul func(c, a, b *fe) = mulADX
 var wmul func(c *wfe, a, b *fe) = wmulADX
 var fromWide func(c *fe, w *wfe) = montRedADX
+var wfp2Mul func(c *wfe2, a, b *fe2) = wfp2MulADX
+var wfp2Square func(c *wfe2, b *fe2) = wfp2SquareADX
 
 func square(c, a *fe) {
 	mul(c, a, a)
@@ -183,10 +187,10 @@ func wfp2MulByNonResidue(c, a *wfe2)
 func wfp2MulByNonResidueAssign(a *wfe2)
 
 //go:noescape
-func wfp2Square(c *wfe2, a *fe2)
+func wfp2SquareADX(c *wfe2, a *fe2)
 
 //go:noescape
-func wfp2Mul(c *wfe2, a, b *fe2)
+func wfp2MulADX(c *wfe2, a, b *fe2)
 
 var mulFR func(c, a, b *Fr) = mulADXFR
 var wmulFR func(c *wideFr, a, b *Fr) = wmulADXFR
