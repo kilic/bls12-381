@@ -9,6 +9,8 @@ import (
 func init() {
 	if !cpu.X86.HasADX || !cpu.X86.HasBMI2 {
 		mul = mulNoADX
+		wmul = wmulNoADX
+		fromWide = montRedNoADX
 		mulFR = mulNoADXFR
 		lmulFR = wmulNoADXFR
 	}
@@ -29,12 +31,6 @@ func neg(c, a *fe) {
 		_neg(c, a)
 	}
 }
-
-//go:noescape
-func wfp2Square(c *wfe2, a *fe2)
-
-//go:noescape
-func wfp2Mul(c *wfe2, a, b *fe2)
 
 //go:noescape
 func add(c, a, b *fe)
@@ -79,7 +75,13 @@ func mulNoADX(c, a, b *fe)
 func mulADX(c, a, b *fe)
 
 //go:noescape
+func wmulNoADX(c *wfe, a, b *fe)
+
+//go:noescape
 func wmulADX(c *wfe, a, b *fe)
+
+//go:noescape
+func montRedNoADX(a *fe, w *wfe)
 
 //go:noescape
 func montRedADX(a *fe, w *wfe)
@@ -179,6 +181,12 @@ func wfp2MulByNonResidue(c, a *wfe2)
 
 //go:noescape
 func wfp2MulByNonResidueAssign(a *wfe2)
+
+//go:noescape
+func wfp2Square(c *wfe2, a *fe2)
+
+//go:noescape
+func wfp2Mul(c *wfe2, a, b *fe2)
 
 var mulFR func(c, a, b *Fr) = mulADXFR
 var lmulFR func(c *wideFr, a, b *Fr) = wmulADXFR
