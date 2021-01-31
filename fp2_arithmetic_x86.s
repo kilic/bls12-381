@@ -16,7 +16,7 @@ TEXT ·fp2AddAssign(SB), NOSPLIT, $0-16
 	MOVQ 32(DI), R12
 	MOVQ 40(DI), R13
 
-	ADDQ 0(SI), R8
+	ADDQ (SI), R8
 	ADCQ 8(SI), R9
 	ADCQ 16(SI), R10
 	ADCQ 24(SI), R11
@@ -123,7 +123,7 @@ TEXT ·fp2Add(SB), NOSPLIT, $0-24
 	MOVQ 32(DI), R12
 	MOVQ 40(DI), R13
 
-	ADDQ 0(SI), R8
+	ADDQ (SI), R8
 	ADCQ 8(SI), R9
 	ADCQ 16(SI), R10
 	ADCQ 24(SI), R11
@@ -2611,14 +2611,14 @@ TEXT ·wfp2MulByNonResidueAssign(SB), NOSPLIT, $64-8
  	MOVQ R12, 176(DI)
  	MOVQ R13, 184(DI)
 
-	MOVQ 0(SP), R8
+	MOVQ (SP), R8
  	MOVQ 8(SP), R9
  	MOVQ 16(SP), R10
  	MOVQ 24(SP), R11
  	MOVQ 32(SP), R12
  	MOVQ 40(SP), R13
 
-	MOVQ R8, 0(DI)		
+	MOVQ R8, (DI)		
  	MOVQ R9, 8(DI)		
  	MOVQ R10, 16(DI)		
  	MOVQ R11, 24(DI)		
@@ -2632,7 +2632,7 @@ TEXT ·wfp2Square(SB), NOSPLIT, $96-16
 	MOVQ a+8(FP), DI
 
 	// a0
- 	MOVQ 0(DI), R8		
+ 	MOVQ (DI), R8		
  	MOVQ 8(DI), R9		
  	MOVQ 16(DI), R10		
  	MOVQ 24(DI), R11		
@@ -2658,7 +2658,7 @@ TEXT ·wfp2Square(SB), NOSPLIT, $96-16
 	XORQ AX, AX
 
 	// store a0 + a1
-	MOVQ R15, 0(SP)
+	MOVQ R15, (SP)
  	MOVQ BX, 8(SP)
  	MOVQ CX, 16(SP)
  	MOVQ DX, 24(SP)
@@ -2710,8 +2710,8 @@ TEXT ·wfp2Square(SB), NOSPLIT, $96-16
 	MOVQ 48(SP), DX
 
 	// | a0 * b0
-	MULXQ 0(SP), AX, CX
-	MOVQ  AX, 0(SI)
+	MULXQ (SP), AX, CX
+	MOVQ  AX, (SI)
 
 	// | a0 * b1
 	MULXQ 8(SP), AX, BP
@@ -2925,7 +2925,7 @@ TEXT ·wfp2Square(SB), NOSPLIT, $96-16
 
 
 	// a0
-	MOVQ 0(DI), R8
+	MOVQ (DI), R8
  	MOVQ 8(DI), R9
  	MOVQ 16(DI), R10
  	MOVQ 24(DI), R11
@@ -2940,7 +2940,7 @@ TEXT ·wfp2Square(SB), NOSPLIT, $96-16
 	ADCQ R12, R12
 	ADCQ R13, R13
 
-	MOVQ R8, 0(SP)
+	MOVQ R8, (SP)
  	MOVQ R9, 8(SP)
  	MOVQ R10, 16(SP)
  	MOVQ R11, 24(SP)
@@ -3177,11 +3177,11 @@ TEXT ·wfp2Mul(SB), NOSPLIT, $192-24
 // a0b0
 /* i0                                   */
 	XORQ BX, BX
-	MOVQ 0(SI), DX
+	MOVQ (SI), DX
 
 	// | a0 * b0
-	MULXQ 0(DI), AX, CX
-	MOVQ  AX, 0(SP)
+	MULXQ (DI), AX, CX
+	MOVQ  AX, (SP)
 
 	// | a0 * b1
 	MULXQ 8(DI), AX, BP
@@ -3676,7 +3676,7 @@ TEXT ·wfp2Mul(SB), NOSPLIT, $192-24
  	MOVQ DX, 88(DI)
 
 // a0b0 + a1b1
-	MOVQ 0(SP), R8		
+	MOVQ (SP), R8		
  	MOVQ 8(SP), R9		
  	MOVQ 16(SP), R10		
  	MOVQ 24(SP), R11		
@@ -3766,11 +3766,11 @@ TEXT ·wfp2Mul(SB), NOSPLIT, $192-24
 
 /* i0                                   */
 	XORQ BX, BX
-	MOVQ 0(SP), DX
+	MOVQ (SP), DX
 
 	// | a0 * b0
 	MULXQ 48(SP), AX, CX
-	MOVQ  AX, 0(SP)
+	MOVQ  AX, (SP)
 
 	// | a0 * b1
 	MULXQ 56(SP), AX, BP
@@ -3982,7 +3982,7 @@ TEXT ·wfp2Mul(SB), NOSPLIT, $192-24
 
 
 // (a0 + a1)(b0 + b1) - (a0b0 + a1b1)
-	MOVQ 0(SP), R8
+	MOVQ (SP), R8
  	MOVQ 8(SP), R9
  	MOVQ 16(SP), R10
  	MOVQ 24(SP), R11
