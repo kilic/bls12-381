@@ -77,12 +77,12 @@ func (g *GT) New() *E {
 
 // Add adds two field element `a` and `b` and assigns the result to the element in first argument.
 func (g *GT) Add(c, a, b *E) {
-	g.fp12.add(c, a, b)
+	fp12Add(c, a, b)
 }
 
 // Sub subtracts two field element `a` and `b`, and assigns the result to the element in first argument.
 func (g *GT) Sub(c, a, b *E) {
-	g.fp12.sub(c, a, b)
+	fp12Sub(c, a, b)
 }
 
 // Mul multiplies two field element `a` and `b` and assigns the result to the element in first argument.
@@ -92,7 +92,8 @@ func (g *GT) Mul(c, a, b *E) {
 
 // Square squares an element `a` and assigns the result to the element in first argument.
 func (g *GT) Square(c, a *E) {
-	g.fp12.cyclotomicSquare(c, a)
+	c.set(a)
+	g.fp12.cyclotomicSquare(c)
 }
 
 // Exp exponents an element `a` by a scalar `s` and assigns the result to the element in first argument.

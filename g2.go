@@ -165,7 +165,7 @@ func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 		return nil, errors.New("point is not on curve")
 	}
 	if y.signBE() == a {
-		g.f.neg(y, y)
+		fp2Neg(y, y)
 	}
 	z := new(fe2).one()
 	p := &PointG2{*x, *y, *z}
@@ -487,7 +487,7 @@ func (g *G2) Double(r, p *PointG2) *PointG2 {
 // Neg negates a G2 point p and assigns the result to the point at first argument.
 func (g *G2) Neg(r, p *PointG2) *PointG2 {
 	r[0].set(&p[0])
-	g.f.neg(&r[1], &p[1])
+	fp2Neg(&r[1], &p[1])
 	r[2].set(&p[2])
 	return r
 }
@@ -803,9 +803,9 @@ func (g *G2) ClearCofactor(p *PointG2) *PointG2 {
 }
 
 func (g *G2) psi(p *PointG2) {
-	g.f.conjugate(&p[0], &p[0])
-	g.f.conjugate(&p[1], &p[1])
-	g.f.conjugate(&p[2], &p[2])
+	fp2Conjugate(&p[0], &p[0])
+	fp2Conjugate(&p[1], &p[1])
+	fp2Conjugate(&p[2], &p[2])
 	g.f.mul(&p[0], &p[0], &psix)
 	g.f.mul(&p[1], &p[1], &psiy)
 }

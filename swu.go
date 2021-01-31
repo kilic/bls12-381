@@ -93,7 +93,7 @@ func swuMapG2(e *fp2, u *fe2) (*fe2, *fe2) {
 	y := e.new()
 	e.sqrtBLST(y, y2)
 	if y.sign() != u.sign() {
-		e.neg(y, y)
+		fp2Neg(y, y)
 	}
 	return x, y
 }

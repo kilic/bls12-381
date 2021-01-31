@@ -335,11 +335,11 @@ func (e *Fr) RedInverse(ei *Fr) {
 }
 
 func (ew *wideFr) mul(a, b *Fr) {
-	lmulFR(ew, a, b)
+	wmulFR(ew, a, b)
 }
 
 func (ew *wideFr) add(a *wideFr) {
-	addwFR(ew, a)
+	waddFR(ew, a)
 }
 
 func (ew *wideFr) round() *Fr {
