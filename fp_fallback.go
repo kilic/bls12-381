@@ -452,3 +452,77 @@ func square(z, x *fe) {
 		z[5], _ = bits.Sub64(z[5], 1873798617647539866, b)
 	}
 }
+
+func fp2Add(c, a, b *fe2) {
+	// c0 = a0 + b0
+	// c1 = a1 + b1
+	add(&c[0], &a[0], &b[0])
+	add(&c[1], &a[1], &b[1])
+}
+
+func fp2AddAssign(a, b *fe2) {
+	// a0 = a0 + b0
+	// a1 = a1 + b1
+	addAssign(&a[0], &b[0])
+	addAssign(&a[1], &b[1])
+}
+
+func fp2Ladd(c, a, b *fe2) {
+	// c0 = a0 + b0
+	// c1 = a1 + b1
+	ladd(&c[0], &a[0], &b[0])
+	ladd(&c[1], &a[1], &b[1])
+}
+
+func fp2Double(c, a *fe2) {
+	// c0 = 2a0
+	// c1 = 2a1
+	double(&c[0], &a[0])
+	double(&c[1], &a[1])
+}
+
+func fp2DoubleAssign(a *fe2) {
+	// a0 = 2a0
+	// a1 = 2a1
+	doubleAssign(&a[0])
+	doubleAssign(&a[1])
+}
+
+func fp2Ldouble(c, a *fe2) {
+	// c0 = 2a0
+	// c1 = 2a1
+	ldouble(&c[0], &a[0])
+	ldouble(&c[1], &a[1])
+}
+
+func fp2Sub(c, a, b *fe2) {
+	// c0 = a0 - b0
+	// c1 = a1 - b1
+	sub(&c[0], &a[0], &b[0])
+	sub(&c[1], &a[1], &b[1])
+}
+
+func fp2SubAssign(c, a *fe2) {
+	// a0 = a0 - b0
+	// a1 = a1 - b1
+	subAssign(&c[0], &a[0])
+	subAssign(&c[1], &a[1])
+}
+
+func mulByNonResidue(c, a *fe2) {
+	t := new(fe)
+	// c0 = (a0 - a1)
+	// c1 = (a0 + a1)
+	sub(t, &a[0], &a[1])
+	add(&c[1], &a[0], &a[1])
+	c[0].set(t)
+}
+
+func mulByNonResidueAssign(a *fe2) {
+	t := new(fe)
+	// c0 = (a0 - a1)
+	// c1 = (a0 + a1)
+	sub(t, &a[0], &a[1])
+	add(&a[1], &a[0], &a[1])
+	a[0].set(t)
+}

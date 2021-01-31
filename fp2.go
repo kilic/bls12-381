@@ -67,62 +67,6 @@ func (e *fp2) fromMont(c, a *fe2) {
 	fromMont(&c[1], &a[1])
 }
 
-func (e *fp2) add(c, a, b *fe2) {
-	// c0 = a0 + b0
-	// c1 = a1 + b1
-	add(&c[0], &a[0], &b[0])
-	add(&c[1], &a[1], &b[1])
-}
-
-func (e *fp2) addAssign(a, b *fe2) {
-	// a0 = a0 + b0
-	// a1 = a1 + b1
-	addAssign(&a[0], &b[0])
-	addAssign(&a[1], &b[1])
-}
-
-func (e *fp2) ladd(c, a, b *fe2) {
-	// c0 = a0 + b0
-	// c1 = a1 + b1
-	ladd(&c[0], &a[0], &b[0])
-	ladd(&c[1], &a[1], &b[1])
-}
-
-func (e *fp2) double(c, a *fe2) {
-	// c0 = 2a0
-	// c1 = 2a1
-	double(&c[0], &a[0])
-	double(&c[1], &a[1])
-}
-
-func (e *fp2) doubleAssign(a *fe2) {
-	// a0 = 2a0
-	// a1 = 2a1
-	doubleAssign(&a[0])
-	doubleAssign(&a[1])
-}
-
-func (e *fp2) ldouble(c, a *fe2) {
-	// c0 = 2a0
-	// c1 = 2a1
-	ldouble(&c[0], &a[0])
-	ldouble(&c[1], &a[1])
-}
-
-func (e *fp2) sub(c, a, b *fe2) {
-	// c0 = a0 - b0
-	// c1 = a1 - b1
-	sub(&c[0], &a[0], &b[0])
-	sub(&c[1], &a[1], &b[1])
-}
-
-func (e *fp2) subAssign(c, a *fe2) {
-	// a0 = a0 - b0
-	// a1 = a1 - b1
-	subAssign(&c[0], &a[0])
-	subAssign(&c[1], &a[1])
-}
-
 func (e *fp2) neg(c, a *fe2) {
 	// c0 = -a0
 	// c1 = -a1
@@ -188,15 +132,6 @@ func (e *fp2) squareAssign(a *fe2) {
 func (e *fp2) mul0(c, a *fe2, b *fe) {
 	mul(&c[0], &a[0], b)
 	mul(&c[1], &a[1], b)
-}
-
-func (e *fp2) mulByNonResidue(c, a *fe2) {
-	t := e.t
-	// c0 = (a0 - a1)
-	// c1 = (a0 + a1)
-	sub(t[0], &a[0], &a[1])
-	add(&c[1], &a[0], &a[1])
-	c[0].set(t[0])
 }
 
 func (e *fp2) mulByB(c, a *fe2) {
@@ -312,7 +247,7 @@ func (e *fp2) sqrt(c, a *fe2) bool {
 		c[1].set(&x0[0])
 		return true
 	}
-	e.add(alpha, alpha, e.one())
+	fp2Add(alpha, alpha, e.one())
 	e.exp(alpha, alpha, pMinus1Over2)
 	e.mul(c, alpha, x0)
 	e.square(alpha, c)
@@ -358,11 +293,11 @@ func (e *fp2) sqrtAlignBLST(out, ret, sqrt, inp *fe2) bool {
 	e.square(t0, sqrt)
 
 	//
-	e.sub(t1, t0, inp)
+	fp2Sub(t1, t0, inp)
 	isSqrt := t1.isZero()
 
 	//
-	e.add(t1, t0, inp)
+	fp2Add(t1, t0, inp)
 	flag := t1.isZero()
 	if flag {
 		coeff.set(sqrtMinus1)

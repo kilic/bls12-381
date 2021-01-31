@@ -61,7 +61,7 @@ func TestFieldElementEquality(t *testing.T) {
 	}
 	b2 := new(fe2)
 	fp2 := newFp2()
-	fp2.add(b2, a2, one2)
+	fp2Add(b2, a2, one2)
 	if a2.equal(b2) {
 		t.Fatal("a != a + 1")
 	}

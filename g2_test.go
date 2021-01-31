@@ -27,7 +27,7 @@ func (g *G2) rand() *PointG2 {
 		y := new(fe2)
 		g.f.square(y, x)
 		g.f.mul(y, y, x)
-		g.f.add(y, y, bz6)
+		fp2Add(y, y, bz6)
 		if g.f.sqrt(y, y) {
 			p.Set(&PointG2{*x, *y, *z})
 			break

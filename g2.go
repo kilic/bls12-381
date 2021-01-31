@@ -160,7 +160,7 @@ func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
 	y := &fe2{}
 	g.f.square(y, x)
 	g.f.mul(y, y, x)
-	g.f.add(y, y, b2)
+	fp2Add(y, y, b2)
 	if ok := g.f.sqrt(y, y); !ok {
 		return nil, errors.New("point is not on curve")
 	}
@@ -298,14 +298,14 @@ func (g *G2) IsOnCurve(p *PointG2) bool {
 	g.f.square(t[1], &p[0])    // x^2
 	g.f.mul(t[1], t[1], &p[0]) // x^3
 	if p.IsAffine() {
-		g.f.add(t[1], t[1], b2) // x^2 + b
+		fp2Add(t[1], t[1], b2)  // x^2 + b
 		return t[0].equal(t[1]) // y^2 ?= x^3 + b
 	}
 	g.f.square(t[2], &p[2])   // z^2
 	g.f.square(t[3], t[2])    // z^4
 	g.f.mulAssign(t[2], t[3]) // z^6
 	g.f.mulAssign(t[2], b2)   // b*z^6
-	g.f.addAssign(t[1], t[2]) // x^3 + b * z^6
+	fp2AddAssign(t[1], t[2])  // x^3 + b * z^6
 	return t[0].equal(t[1])   // y^2 ?= x^3 + b * z^6
 }
 
@@ -384,27 +384,27 @@ func (g *G2) Add(r, p1, p2 *PointG2) *PointG2 {
 			return r.Zero()
 		}
 	}
-	g.f.subAssign(t[1], t[3])     // h = u2 - u1
-	g.f.double(t[4], t[1])        // 2h
-	g.f.squareAssign(t[4])        // i = 2h^2
-	g.f.mul(t[5], t[1], t[4])     // j = h*i
-	g.f.subAssign(t[0], t[2])     // s2 - s1
-	g.f.doubleAssign(t[0])        // r = 2*(s2 - s1)
-	g.f.square(t[6], t[0])        // r^2
-	g.f.subAssign(t[6], t[5])     // r^2 - j
-	g.f.mulAssign(t[3], t[4])     // v = u1 * i
-	g.f.double(t[4], t[3])        // 2*v
-	g.f.sub(&r[0], t[6], t[4])    // x3 = r^2 - j - 2*v
-	g.f.sub(t[4], t[3], &r[0])    // v - x3
-	g.f.mul(t[6], t[2], t[5])     // s1 * j
-	g.f.doubleAssign(t[6])        // 2 * s1 * j
-	g.f.mulAssign(t[0], t[4])     // r * (v - x3)
-	g.f.sub(&r[1], t[0], t[6])    // y3 = r * (v - x3) - (2 * s1 * j)
-	g.f.add(t[0], &p1[2], &p2[2]) // z1 + z2
-	g.f.squareAssign(t[0])        // (z1 + z2)^2
-	g.f.subAssign(t[0], t[7])     // (z1 + z2)^2 - z1z1
-	g.f.subAssign(t[0], t[8])     // (z1 + z2)^2 - z1z1 - z2z2
-	g.f.mul(&r[2], t[0], t[1])    // z3 = ((z1 + z2)^2 - z1z1 - z2z2) * h
+	fp2SubAssign(t[1], t[3])     // h = u2 - u1
+	fp2Double(t[4], t[1])        // 2h
+	g.f.squareAssign(t[4])       // i = 2h^2
+	g.f.mul(t[5], t[1], t[4])    // j = h*i
+	fp2SubAssign(t[0], t[2])     // s2 - s1
+	fp2DoubleAssign(t[0])        // r = 2*(s2 - s1)
+	g.f.square(t[6], t[0])       // r^2
+	fp2SubAssign(t[6], t[5])     // r^2 - j
+	g.f.mulAssign(t[3], t[4])    // v = u1 * i
+	fp2Double(t[4], t[3])        // 2*v
+	fp2Sub(&r[0], t[6], t[4])    // x3 = r^2 - j - 2*v
+	fp2Sub(t[4], t[3], &r[0])    // v - x3
+	g.f.mul(t[6], t[2], t[5])    // s1 * j
+	fp2DoubleAssign(t[6])        // 2 * s1 * j
+	g.f.mulAssign(t[0], t[4])    // r * (v - x3)
+	fp2Sub(&r[1], t[0], t[6])    // y3 = r * (v - x3) - (2 * s1 * j)
+	fp2Add(t[0], &p1[2], &p2[2]) // z1 + z2
+	g.f.squareAssign(t[0])       // (z1 + z2)^2
+	fp2SubAssign(t[0], t[7])     // (z1 + z2)^2 - z1z1
+	fp2SubAssign(t[0], t[8])     // (z1 + z2)^2 - z1z1 - z2z2
+	g.f.mul(&r[2], t[0], t[1])   // z3 = ((z1 + z2)^2 - z1z1 - z2z2) * h
 	return r
 }
 
@@ -428,27 +428,27 @@ func (g *G2) AddMixed(r, p1, p2 *PointG2) *PointG2 {
 		return g.Double(r, p1)
 	}
 
-	g.f.sub(t[1], t[1], &p1[0]) // h = u2 - x1
-	g.f.square(t[2], t[1])      // hh
-	g.f.double(t[4], t[2])
-	g.f.doubleAssign(t[4])      // 4hh
+	fp2SubAssign(t[1], &p1[0]) // h = u2 - x1
+	g.f.square(t[2], t[1])     // hh
+	fp2Double(t[4], t[2])
+	fp2DoubleAssign(t[4])       // 4hh
 	g.f.mul(t[5], t[1], t[4])   // j = h*i
-	g.f.subAssign(t[0], &p1[1]) // s2 - y1
-	g.f.doubleAssign(t[0])      // r = 2*(s2 - y1)
+	fp2SubAssign(t[0], &p1[1])  // s2 - y1
+	fp2DoubleAssign(t[0])       // r = 2*(s2 - y1)
 	g.f.square(t[6], t[0])      // r^2
-	g.f.subAssign(t[6], t[5])   // r^2 - j
+	fp2SubAssign(t[6], t[5])    // r^2 - j
 	g.f.mul(t[3], &p1[0], t[4]) // v = x1 * i
-	g.f.double(t[4], t[3])      // 2*v
-	g.f.sub(&r[0], t[6], t[4])  // x3 = r^2 - j - 2*v
-	g.f.sub(t[4], t[3], &r[0])  // v - x3
+	fp2Double(t[4], t[3])       // 2*v
+	fp2Sub(&r[0], t[6], t[4])   // x3 = r^2 - j - 2*v
+	fp2Sub(t[4], t[3], &r[0])   // v - x3
 	g.f.mul(t[6], &p1[1], t[5]) // y1 * j
-	g.f.doubleAssign(t[6])      // 2 * y1 * j
+	fp2DoubleAssign(t[6])       // 2 * y1 * j
 	g.f.mulAssign(t[0], t[4])   // r * (v - x3)
-	g.f.sub(&r[1], t[0], t[6])  // y3 = r * (v - x3) - (2 * y1 * j)
-	g.f.add(t[0], &p1[2], t[1]) // z1 + h
+	fp2Sub(&r[1], t[0], t[6])   // y3 = r * (v - x3) - (2 * y1 * j)
+	fp2Add(t[0], &p1[2], t[1])  // z1 + h
 	g.f.squareAssign(t[0])      // (z1 + h)^2
-	g.f.subAssign(t[0], t[7])   // (z1 + h)^2 - z1z1
-	g.f.sub(&r[2], t[0], t[2])  // z3 = (z1 + z2)^2 - z1z1 - hh
+	fp2SubAssign(t[0], t[7])    // (z1 + h)^2 - z1z1
+	fp2Sub(&r[2], t[0], t[2])   // z3 = (z1 + z2)^2 - z1z1 - hh
 	return r
 }
 
@@ -462,25 +462,25 @@ func (g *G2) Double(r, p *PointG2) *PointG2 {
 	g.f.square(t[0], &p[0])     // a = x^2
 	g.f.square(t[1], &p[1])     // b = y^2
 	g.f.square(t[2], t[1])      // c = b^2
-	g.f.addAssign(t[1], &p[0])  // b + x1
+	fp2AddAssign(t[1], &p[0])   // b + x1
 	g.f.squareAssign(t[1])      // (b + x1)^2
-	g.f.subAssign(t[1], t[0])   // (b + x1)^2 - a
-	g.f.subAssign(t[1], t[2])   // (b + x1)^2 - a - c
-	g.f.doubleAssign(t[1])      // d = 2((b+x1)^2 - a - c)
-	g.f.double(t[3], t[0])      // 2a
-	g.f.addAssign(t[0], t[3])   // e = 3a
+	fp2SubAssign(t[1], t[0])    // (b + x1)^2 - a
+	fp2SubAssign(t[1], t[2])    // (b + x1)^2 - a - c
+	fp2DoubleAssign(t[1])       // d = 2((b+x1)^2 - a - c)
+	fp2Double(t[3], t[0])       // 2a
+	fp2AddAssign(t[0], t[3])    // e = 3a
 	g.f.square(t[4], t[0])      // f = e^2
-	g.f.double(t[3], t[1])      // 2d
-	g.f.sub(&r[0], t[4], t[3])  // x3 = f - 2d
-	g.f.sub(t[1], t[1], &r[0])  // d-x3
-	g.f.doubleAssign(t[2])      //
-	g.f.doubleAssign(t[2])      //
-	g.f.doubleAssign(t[2])      // 8c
+	fp2Double(t[3], t[1])       // 2d
+	fp2Sub(&r[0], t[4], t[3])   // x3 = f - 2d
+	fp2SubAssign(t[1], &r[0])   // d-x3
+	fp2DoubleAssign(t[2])       //
+	fp2DoubleAssign(t[2])       //
+	fp2DoubleAssign(t[2])       // 8c
 	g.f.mulAssign(t[0], t[1])   // e * (d - x3)
-	g.f.sub(t[1], t[0], t[2])   // x3 = e * (d - x3) - 8c
+	fp2Sub(t[1], t[0], t[2])    // x3 = e * (d - x3) - 8c
 	g.f.mul(t[0], &p[1], &p[2]) // y1 * z1
 	r[1].set(t[1])              //
-	g.f.double(&r[2], t[0])     // z3 = 2(y1 * z1)
+	fp2Double(&r[2], t[0])      // z3 = 2(y1 * z1)
 	return r
 }
 

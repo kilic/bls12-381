@@ -1,9 +1,10 @@
 // +build amd64,!generic
 
 #include "textflag.h"
+#include "funcdata.h"
 
-// single-precision addition w/ modular reduction
-// a' = (a + b) % p
+// assigned addition with modular reduction
+// a = (a + b) % p
 TEXT ·addAssign(SB), NOSPLIT, $0-16
 	// |
 	MOVQ a+0(FP), DI
@@ -60,10 +61,10 @@ TEXT ·addAssign(SB), NOSPLIT, $0-16
 	MOVQ R13, 40(DI)
 	RET
 
-/*	 | end											*/
+/*	 | end											   */
 
 
-// single-precision addition w/ modular reduction
+// addition wth modular reduction
 // c = (a + b) % p
 TEXT ·add(SB), NOSPLIT, $0-24
 	// |
@@ -124,8 +125,8 @@ TEXT ·add(SB), NOSPLIT, $0-24
 /*	 | end													*/
 
 
-// single-precision addition w/o reduction check
-// c = (a + b)
+// addition w/o modular reduction
+// c = a + b
 TEXT ·ladd(SB), NOSPLIT, $0-24
 	// |
 	MOVQ a+8(FP), DI
@@ -159,8 +160,8 @@ TEXT ·ladd(SB), NOSPLIT, $0-24
 /*	 | end													*/
 
 
-// single-precision addition w/o check
-// a' = a + b
+// assigned addition w/o modular reduction
+// a = a + b
 TEXT ·laddAssign(SB), NOSPLIT, $0-16
 	// |
 	MOVQ a+0(FP), DI
@@ -194,7 +195,7 @@ TEXT ·laddAssign(SB), NOSPLIT, $0-16
 /*	 | end													*/
 
 
-// single-precision subtraction with modular reduction
+// subtraction with modular reduction
 // c = (a - b) % p
 TEXT ·sub(SB), NOSPLIT, $0-24
 	// |
@@ -248,7 +249,7 @@ TEXT ·sub(SB), NOSPLIT, $0-24
 /*	 | end													*/
 
 
-// single-precision subtraction with modular reduction
+// assigned subtraction with modular reduction
 // a' = (a - b) % p
 TEXT ·subAssign(SB), NOSPLIT, $0-16
 	// |
@@ -302,8 +303,8 @@ TEXT ·subAssign(SB), NOSPLIT, $0-16
 /*	 | end													*/
 
 
-// single-precision subtraction no modular red check
-// a' = (a - b)
+// assigned subtraction without modular reduction 
+// a = a - b
 TEXT ·lsubAssign(SB), NOSPLIT, $0-16
 	// |
 	MOVQ a+0(FP), DI
@@ -334,7 +335,8 @@ TEXT ·lsubAssign(SB), NOSPLIT, $0-16
 	RET
 /*	 | end													*/
 
-// single-precision doubling
+
+// doubling with modular reduction
 // c = (2 * a) % p
 TEXT ·double(SB), NOSPLIT, $0-16
 	// |
@@ -391,8 +393,8 @@ TEXT ·double(SB), NOSPLIT, $0-16
 /*	 | end													*/
 
 
-// single-precision doubling
-// a' = (2 * a) % p
+// assigned doubling with modular reduction
+// a = (2 * a) % p
 TEXT ·doubleAssign(SB), NOSPLIT, $0-8
 	// |
 	MOVQ a+0(FP), DI
@@ -446,7 +448,7 @@ TEXT ·doubleAssign(SB), NOSPLIT, $0-8
 /*	 | end													*/
 
 
-// single-precision doubling w/o carry check
+// doubling without modular reduction
 // c = 2 * a
 TEXT ·ldouble(SB), NOSPLIT, $0-16
 	// |
@@ -508,7 +510,6 @@ TEXT ·_neg(SB), NOSPLIT, $0-16
 	MOVQ R13, 40(DI)
 	RET
 /*	 | end													*/
-
 
 
 // multiplication without using MULX/ADX

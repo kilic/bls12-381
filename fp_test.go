@@ -522,15 +522,15 @@ func TestFp2AdditionProperties(t *testing.T) {
 		b, _ := new(fe2).rand(rand.Reader)
 		c_1 := field.new()
 		c_2 := field.new()
-		field.add(c_1, a, zero)
+		fp2Add(c_1, a, zero)
 		if !c_1.equal(a) {
 			t.Fatal("a + 0 == a")
 		}
-		field.sub(c_1, a, zero)
+		fp2Sub(c_1, a, zero)
 		if !c_1.equal(a) {
 			t.Fatal("a - 0 == a")
 		}
-		field.double(c_1, zero)
+		fp2Double(c_1, zero)
 		if !c_1.equal(zero) {
 			t.Fatal("2 * 0 == 0")
 		}
@@ -538,39 +538,39 @@ func TestFp2AdditionProperties(t *testing.T) {
 		if !c_1.equal(zero) {
 			t.Fatal("-0 == 0")
 		}
-		field.sub(c_1, zero, a)
+		fp2Sub(c_1, zero, a)
 		field.neg(c_2, a)
 		if !c_1.equal(c_2) {
 			t.Fatal("0-a == -a")
 		}
-		field.double(c_1, a)
-		field.add(c_2, a, a)
+		fp2Double(c_1, a)
+		fp2Add(c_2, a, a)
 		if !c_1.equal(c_2) {
 			t.Fatal("2 * a == a + a")
 		}
-		field.add(c_1, a, b)
-		field.add(c_2, b, a)
+		fp2Add(c_1, a, b)
+		fp2Add(c_2, b, a)
 		if !c_1.equal(c_2) {
 			t.Fatal("a + b = b + a")
 		}
-		field.sub(c_1, a, b)
-		field.sub(c_2, b, a)
+		fp2Sub(c_1, a, b)
+		fp2Sub(c_2, b, a)
 		field.neg(c_2, c_2)
 		if !c_1.equal(c_2) {
 			t.Fatal("a - b = - ( b - a )")
 		}
 		c_x, _ := new(fe2).rand(rand.Reader)
-		field.add(c_1, a, b)
-		field.add(c_1, c_1, c_x)
-		field.add(c_2, a, c_x)
-		field.add(c_2, c_2, b)
+		fp2Add(c_1, a, b)
+		fp2Add(c_1, c_1, c_x)
+		fp2Add(c_2, a, c_x)
+		fp2Add(c_2, c_2, b)
 		if !c_1.equal(c_2) {
 			t.Fatal("(a + b) + c == (a + c ) + b")
 		}
-		field.sub(c_1, a, b)
-		field.sub(c_1, c_1, c_x)
-		field.sub(c_2, a, c_x)
-		field.sub(c_2, c_2, b)
+		fp2Sub(c_1, a, b)
+		fp2Sub(c_1, c_1, c_x)
+		fp2Sub(c_2, a, c_x)
+		fp2Sub(c_2, c_2, b)
 		if !c_1.equal(c_2) {
 			t.Fatal("(a - b) - c == (a - c ) -b")
 		}
@@ -584,37 +584,37 @@ func TestFp2AdditionPropertiesAssigned(t *testing.T) {
 		a, b := new(fe2), new(fe2)
 		_, _ = a.rand(rand.Reader)
 		b.set(a)
-		field.addAssign(a, zero)
+		fp2AddAssign(a, zero)
 		if !a.equal(b) {
 			t.Fatal("a + 0 == a")
 		}
-		field.subAssign(a, zero)
+		fp2SubAssign(a, zero)
 		if !a.equal(b) {
 			t.Fatal("a - 0 == a")
 		}
 		a.set(zero)
-		field.doubleAssign(a)
+		fp2DoubleAssign(a)
 		if !a.equal(zero) {
 			t.Fatal("2 * 0 == 0")
 		}
 		a.set(zero)
-		field.subAssign(a, b)
+		fp2SubAssign(a, b)
 		field.neg(b, b)
 		if !a.equal(b) {
 			t.Fatal("0-a == -a")
 		}
 		_, _ = a.rand(rand.Reader)
 		b.set(a)
-		field.doubleAssign(a)
-		field.addAssign(b, b)
+		fp2DoubleAssign(a)
+		fp2AddAssign(b, b)
 		if !a.equal(b) {
 			t.Fatal("2 * a == a + a")
 		}
 		_, _ = a.rand(rand.Reader)
 		_, _ = b.rand(rand.Reader)
 		c_1, c_2 := new(fe2).set(a), new(fe2).set(b)
-		field.addAssign(c_1, b)
-		field.addAssign(c_2, a)
+		fp2AddAssign(c_1, b)
+		fp2AddAssign(c_2, a)
 		if !c_1.equal(c_2) {
 			t.Fatal("a + b = b + a")
 		}
@@ -622,8 +622,8 @@ func TestFp2AdditionPropertiesAssigned(t *testing.T) {
 		_, _ = b.rand(rand.Reader)
 		c_1.set(a)
 		c_2.set(b)
-		field.subAssign(c_1, b)
-		field.subAssign(c_2, a)
+		fp2SubAssign(c_1, b)
+		fp2SubAssign(c_2, a)
 		field.neg(c_2, c_2)
 		if !c_1.equal(c_2) {
 			t.Fatal("a - b = - ( b - a )")
@@ -632,10 +632,10 @@ func TestFp2AdditionPropertiesAssigned(t *testing.T) {
 		_, _ = b.rand(rand.Reader)
 		c, _ := new(fe2).rand(rand.Reader)
 		a0 := new(fe2).set(a)
-		field.addAssign(a, b)
-		field.addAssign(a, c)
-		field.addAssign(b, c)
-		field.addAssign(b, a0)
+		fp2AddAssign(a, b)
+		fp2AddAssign(a, c)
+		fp2AddAssign(b, c)
+		fp2AddAssign(b, a0)
 		if !a.equal(b) {
 			t.Fatal("(a + b) + c == (b + c) + a")
 		}
@@ -643,10 +643,10 @@ func TestFp2AdditionPropertiesAssigned(t *testing.T) {
 		_, _ = b.rand(rand.Reader)
 		_, _ = c.rand(rand.Reader)
 		a0.set(a)
-		field.subAssign(a, b)
-		field.subAssign(a, c)
-		field.subAssign(a0, c)
-		field.subAssign(a0, b)
+		fp2SubAssign(a, b)
+		fp2SubAssign(a, c)
+		fp2SubAssign(a0, c)
+		fp2SubAssign(a0, b)
 		if !a.equal(a0) {
 			t.Fatal("(a - b) - c == (a - c) -b")
 		}
@@ -661,20 +661,13 @@ func TestFp2LazyOperations(t *testing.T) {
 		c, _ := new(fe2).rand(rand.Reader)
 		c0 := new(fe2)
 		c1 := new(fe2)
-		field.ladd(c0, a, b)
-		field.add(c1, a, b)
+		fp2Ladd(c0, a, b)
+		fp2Add(c1, a, b)
 		field.mulAssign(c0, c)
 		field.mulAssign(c1, c)
 		if !c0.equal(c1) {
 			// l+ operator stands for lazy addition
 			t.Fatal("(a + b) * c == (a l+ b) * c")
-		}
-		_, _ = a.rand(rand.Reader)
-		b.set(a)
-		field.ldouble(a, a)
-		field.ladd(b, b, b)
-		if !a.equal(b) {
-			t.Fatal("2 l* a = a l+ a")
 		}
 	}
 }
