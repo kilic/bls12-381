@@ -257,7 +257,7 @@ func waddFR(z, y *wideFr) {
 }
 
 // We applied custom multiplication since goff does generate multiplication code nested with reduction
-func lmulFR(w *wideFr, a, b *Fr) {
+func wmulFR(w *wideFr, a, b *Fr) {
 	// Handbook of Applied Cryptography
 	// Hankerson, Menezes, Vanstone
 	// 14.12 Algorithm Multiple-precision multiplication
@@ -291,7 +291,6 @@ func lmulFR(w *wideFr, a, b *Fr) {
 	w3 = v + c
 	w4 = u + (v&c|(v|c)&^w3)>>63
 
-	//
 	// i = 1, j = 0
 	c, v = bits.Mul64(a0, b1)
 	t = v + w1
@@ -319,7 +318,6 @@ func lmulFR(w *wideFr, a, b *Fr) {
 	w4 = t + c
 	w5 = u + (t&c|(t|c)&^w4)>>63
 
-	//
 	// i = 2, j = 0
 	c, v = bits.Mul64(a0, b2)
 	t = v + w2
@@ -347,7 +345,6 @@ func lmulFR(w *wideFr, a, b *Fr) {
 	w5 = t + c
 	w6 = u + (t&c|(t|c)&^w5)>>63
 
-	//
 	// i = 3, j = 0
 	c, v = bits.Mul64(a0, b3)
 	t = v + w3

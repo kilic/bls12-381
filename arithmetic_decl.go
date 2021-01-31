@@ -12,7 +12,7 @@ func init() {
 		wmul = wmulNoADX
 		fromWide = montRedNoADX
 		mulFR = mulNoADXFR
-		lmulFR = wmulNoADXFR
+		wmulFR = wmulNoADXFR
 	}
 }
 
@@ -189,7 +189,7 @@ func wfp2Square(c *wfe2, a *fe2)
 func wfp2Mul(c *wfe2, a, b *fe2)
 
 var mulFR func(c, a, b *Fr) = mulADXFR
-var lmulFR func(c *wideFr, a, b *Fr) = wmulADXFR
+var wmulFR func(c *wideFr, a, b *Fr) = wmulADXFR
 
 func squareFR(c, a *Fr) {
 	mulFR(c, a, a)

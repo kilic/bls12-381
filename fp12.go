@@ -146,7 +146,7 @@ func (e *fp12) mul014(a *fe12, b0, b1, b4 *fe2) {
 	wt, t := e.wt6, e.t6
 	e.fp6.wmul01(wt[0], &a[0], b0, b1)
 	e.fp6.wmul1(wt[1], &a[1], b4)
-	fp2Ladd(b1, b1, b4)
+	fp2LaddAssign(b1, b4)
 	fp6Ladd(t[2], &a[1], &a[0])
 	e.fp6.wmul01(wt[2], t[2], b0, b1)
 	wfp6SubAssign(wt[2], wt[0])
