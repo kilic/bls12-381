@@ -174,6 +174,23 @@ func (e *fp12) square(c, a *fe12) {
 	fp6Double(&c[1], t[2])
 }
 
+func (e *fp12) squareAssign(a *fe12) {
+	t := e.t6
+	// Multiplication and Squaring on Pairing-Friendly Fields
+	// Complex squaring algorithm
+	// https://eprint.iacr.org/2006/471
+
+	fp6Add(t[0], &a[0], &a[1])
+	e.fp6.mul(t[2], &a[0], &a[1])
+	e.fp6.mulByNonResidue(t[1], &a[1])
+	fp6AddAssign(t[1], &a[0])
+	e.fp6.mulByNonResidue(t[3], t[2])
+	e.fp6.mul(t[0], t[0], t[1])
+	fp6SubAssign(t[0], t[2])
+	fp6Sub(&a[0], t[0], t[3])
+	fp6Double(&a[1], t[2])
+}
+
 func (e *fp12) inverse(c, a *fe12) {
 	// Guide to Pairing Based Cryptography
 	// Algorithm 5.16

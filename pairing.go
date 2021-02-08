@@ -36,12 +36,12 @@ func NewEngine() *Engine {
 }
 
 type pairingEngineTemp struct {
-	t2  [8]*fe2
+	t2  [9]*fe2
 	t12 [3]fe12
 }
 
 func newEngineTemp() pairingEngineTemp {
-	t2 := [8]*fe2{}
+	t2 := [9]*fe2{}
 	for i := 0; i < len(t2); i++ {
 		t2[i] = &fe2{}
 	}
@@ -74,9 +74,9 @@ func (e *Engine) Reset() *Engine {
 	return e
 }
 
-func (e *Engine) doublingStep(coeff *fe6, r *PointG2) {
-	fp2 := e.fp2
-	t := e.t2
+func (e *Engine) double(f *fe12, r *PointG2, k int) {
+	fp2, t := e.fp2, e.t2
+
 	fp2.mul(t[0], &r[0], &r[1])
 	fp2.mul0(t[0], t[0], twoInv)
 	fp2.square(t[1], &r[1])
@@ -92,7 +92,9 @@ func (e *Engine) doublingStep(coeff *fe6, r *PointG2) {
 	fp2.squareAssign(t[6])
 	fp2Add(t[7], t[2], t[1])
 	fp2SubAssign(t[6], t[7])
-	fp2Sub(&coeff[0], t[3], t[1])
+
+	fp2Sub(t[8], t[3], t[1])
+
 	fp2.square(t[7], &r[0])
 	fp2Sub(t[4], t[1], t[4])
 	fp2.mul(&r[0], t[4], t[0])
@@ -103,17 +105,24 @@ func (e *Engine) doublingStep(coeff *fe6, r *PointG2) {
 	fp2Sub(&r[1], t[5], t[3])
 	fp2.mul(&r[2], t[1], t[6])
 	fp2Double(t[0], t[7])
-	fp2Add(&coeff[1], t[0], t[7])
-	fp2Neg(&coeff[2], t[6])
+
+	fp2AddAssign(t[0], t[7])
+	fp2Neg(t[6], t[6])
+
+	// line eval
+	e.fp2.mul0Assign(t[6], &e.pairs[k].g1[1])
+	e.fp2.mul0Assign(t[0], &e.pairs[k].g1[0])
+	e.fp12.mul014(f, t[8], t[0], t[6])
+
 }
 
-func (e *Engine) additionStep(coeff *fe6, r, q *PointG2) {
-	fp2 := e.fp2
-	t := e.t2
-	fp2.mul(t[0], &q[1], &r[2])
+func (e *Engine) add(f *fe12, r *PointG2, k int) {
+	fp2, t := e.fp2, e.t2
+
+	fp2.mul(t[0], &e.pairs[k].g2[1], &r[2])
 	fp2Neg(t[0], t[0])
 	fp2AddAssign(t[0], &r[1])
-	fp2.mul(t[1], &q[0], &r[2])
+	fp2.mul(t[1], &e.pairs[k].g2[0], &r[2])
 	fp2Neg(t[1], t[1])
 	fp2AddAssign(t[1], &r[0])
 	fp2.square(t[2], t[0])
@@ -130,55 +139,60 @@ func (e *Engine) additionStep(coeff *fe6, r, q *PointG2) {
 	fp2.mul(t[2], &r[1], t[4])
 	fp2Sub(&r[1], t[3], t[2])
 	fp2.mulAssign(&r[2], t[4])
-	fp2.mul(t[2], t[1], &q[1])
-	fp2.mul(t[3], t[0], &q[0])
-	fp2Sub(&coeff[0], t[3], t[2])
-	fp2Neg(&coeff[1], t[0])
-	coeff[2].set(t[1])
+	fp2.mul(t[2], t[1], &e.pairs[k].g2[1])
+	fp2.mul(t[3], t[0], &e.pairs[k].g2[0])
+
+	fp2SubAssign(t[3], t[2])
+	fp2Neg(t[0], t[0])
+
+	// line eval
+	e.fp2.mul0Assign(t[1], &e.pairs[k].g1[1])
+	e.fp2.mul0Assign(t[0], &e.pairs[k].g1[0])
+	e.fp12.mul014(f, t[3], t[0], t[1])
 }
 
-func (e *Engine) precompute() [][68]fe6 {
-	n := len(e.pairs)
-	coeffs := make([][68]fe6, len(e.pairs))
+func (e *Engine) nDoubleAdd(f *fe12, r []PointG2, n int) {
 	for i := 0; i < n; i++ {
-		r := new(PointG2).Set(e.pairs[i].g2)
-		j := 0
-		for k := 62; k >= 0; k-- {
-			e.doublingStep(&coeffs[i][j], r)
-			if x&(1<<k) != 0 {
-				j++
-				e.additionStep(&coeffs[i][j], r, e.pairs[i].g2)
-			}
-			j++
+		e.fp12.squareAssign(f)
+		for j := 0; j < len(e.pairs); j++ {
+			e.double(f, &r[j], j)
 		}
 	}
-	return coeffs
+	for j := 0; j < len(e.pairs); j++ {
+		e.add(f, &r[j], j)
+	}
 }
 
-func (e *Engine) lineEval(f *fe12, coeffs [][68]fe6, j int) {
-	t := e.t2
-	for i := 0; i < len(e.pairs); i++ {
-		e.fp2.mul0(t[0], &coeffs[i][j][2], &e.pairs[i].g1[1])
-		e.fp2.mul0(t[1], &coeffs[i][j][1], &e.pairs[i].g1[0])
-		e.fp12.mul014(f, &coeffs[i][j][0], t[1], t[0])
+func (e *Engine) nDouble(f *fe12, r []PointG2, n int) {
+	for i := 0; i < n; i++ {
+		e.fp12.squareAssign(f)
+		for j := 0; j < len(e.pairs); j++ {
+			e.double(f, &r[j], j)
+		}
 	}
 }
 
 func (e *Engine) millerLoop(f *fe12) {
-	coeffs := e.precompute()
 	f.one()
-	j := 0
-	for i := 62; i >= 0; i-- {
-		if i != 62 {
-			e.fp12.square(f, f)
-		}
-		e.lineEval(f, coeffs, j)
-		if x&(1<<i) != 0 {
-			j++
-			e.lineEval(f, coeffs, j)
-		}
-		j++
+
+	r := make([]PointG2, len(e.pairs))
+	for i := 0; i < len(e.pairs); i++ {
+		r[i].Set(e.pairs[i].g2)
 	}
+
+	for j := 0; j < len(e.pairs); j++ {
+		e.double(f, &r[j], j)
+	}
+	for j := 0; j < len(e.pairs); j++ {
+		e.add(f, &r[j], j)
+	}
+
+	e.nDoubleAdd(f, r, 2)
+	e.nDoubleAdd(f, r, 3)
+	e.nDoubleAdd(f, r, 9)
+	e.nDoubleAdd(f, r, 32)
+	e.nDouble(f, r, 16)
+
 	fp12Conjugate(f, f)
 }
 

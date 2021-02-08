@@ -107,6 +107,11 @@ func (e *fp2) mul0(c, a *fe2, b *fe) {
 	mul(&c[1], &a[1], b)
 }
 
+func (e *fp2) mul0Assign(a *fe2, b *fe) {
+	mul(&a[0], &a[0], b)
+	mul(&a[1], &a[1], b)
+}
+
 func (e *fp2) mulByB(c, a *fe2) {
 	t := e.t
 	// c0 = 4a0 - 4a1
