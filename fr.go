@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"io"
 	"math/big"
+	"math/bits"
 )
 
 const frByteSize = 32
@@ -79,10 +80,23 @@ func (e *Fr) fromBig(in *big.Int) *Fr {
 	if c0 == -1 || c1 == 1 {
 		_in.Mod(_in, qBig)
 	}
+
 	words := _in.Bits()
-	for i := 0; i < len(words); i++ {
-		e[i] = uint64(words[i])
+	if bits.UintSize == 64 { // in the 64-bit architecture
+		for i := 0; i < len(words); i++ {
+			e[i] = uint64(words[i])
+		}
+	} else { // in the 32-bit architecture
+		for i := 0; i < len(e); i++ {
+			j := i*2
+			if j < len(words) {
+				e[i] = uint64(words[j]<<32 | words[j+1])
+			} else {
+				e[i] = uint64(0)
+			}
+		}
 	}
+
 	return e
 }
 
