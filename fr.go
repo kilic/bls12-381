@@ -81,7 +81,7 @@ func (e *Fr) fromBig(in *big.Int) *Fr {
 		_in.Mod(_in, qBig)
 	}
 
-	words := _in.Bits()
+	words := _in.Bits()  // a little-endian Word slice
 	if bits.UintSize == 64 { // in the 64-bit architecture
 		for i := 0; i < len(words); i++ {
 			e[i] = uint64(words[i])
@@ -89,8 +89,10 @@ func (e *Fr) fromBig(in *big.Int) *Fr {
 	} else { // in the 32-bit architecture
 		for i := 0; i < len(e); i++ {
 			j := i*2
-			if j < len(words) {
-				e[i] = uint64(words[j]<<32 | words[j+1])
+			if j+1 < len(words) {
+				e[i] = uint64(words[j+1])<<32 | uint64(words[j])
+			} else if j < len(words) {
+				e[i] = uint64(words[j])
 			} else {
 				e[i] = uint64(0)
 			}
