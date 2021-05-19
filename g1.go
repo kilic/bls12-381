@@ -356,20 +356,21 @@ func (g *G1) affine(r, p *PointG1) *PointG1 {
 }
 
 // AffineBatch given multiple of points returns affine representations
-func (g *G1) AffineBatch(p []*PointG1) {
-	inverses := make([]fe, len(p))
+func (g *G1) AffineBatch(p []PointG1) {
+	inverses := make([]fe, len(p), len(p))
 	for i := 0; i < len(p); i++ {
 		inverses[i].set(&p[i][2])
 	}
 	inverseBatch(inverses)
 	t := g.t
 	for i := 0; i < len(p); i++ {
-		if !g.IsAffine(p[i]) && !g.IsZero(p[i]) {
+		pi := &p[i]
+		if !g.IsAffine(pi) && !g.IsZero(pi) {
 			square(t[1], &inverses[i])
-			mul(&p[i][0], &p[i][0], t[1])
+			mul(&pi[0], &pi[0], t[1])
 			mul(t[0], &inverses[i], t[1])
-			mul(&p[i][1], &p[i][1], t[0])
-			p[i][2].one()
+			mul(&pi[1], &pi[1], t[0])
+			pi[2].one()
 		}
 	}
 }
@@ -565,7 +566,7 @@ func (g *G1) wnafMulBig(r, p *PointG1, e *big.Int) *PointG1 {
 
 func (g *G1) wnafMul(c, p *PointG1, wnaf nafNumber) *PointG1 {
 
-	l := (1 << (wnafMulWindowG1 - 1))
+	l := int8(1 << (wnafMulWindowG1 - 1))
 
 	twoP, acc := g.New(), new(PointG1).Set(p)
 	g.Double(twoP, p)
@@ -577,7 +578,7 @@ func (g *G1) wnafMul(c, p *PointG1, wnaf nafNumber) *PointG1 {
 	table[0].Set(p)
 	g.Neg(table[l], table[0])
 
-	for i := 1; i < l; i++ {
+	for i := int8(1); i < l; i++ {
 		g.AddMixed(acc, acc, twoP)
 		table[i], table[i+l] = g.New(), g.New()
 		table[i].Set(acc)
@@ -606,6 +607,11 @@ func (g *G1) glvMulBig(r, p *PointG1, e *big.Int) *PointG1 {
 	return g.glvMul(r, p, new(glvVectorBig).new(e))
 }
 
+// TODO: constant size
+//const glvMulWindowG1const uint = 4
+//const glvMulWindowG1constL uint = 1 << (glvMulWindowG1const - 1)
+//type glvMulTable [glvMulWindowG1constL]PointG1
+
 func (g *G1) glvMul(r, p0 *PointG1, v glvVector) *PointG1 {
 
 	w := glvMulWindowG1
@@ -614,20 +620,17 @@ func (g *G1) glvMul(r, p0 *PointG1, v glvVector) *PointG1 {
 	// prepare tables
 	// tableK1 = {P, 3P, 5P, ...}
 	// tableK2 = {λP, 3λP, 5λP, ...}
-	tableK1, tableK2 := make([]*PointG1, l), make([]*PointG1, l)
+	var tableK1, tableK2 = make([]PointG1, l), make([]PointG1, l)
 	double := g.New()
 	g.Double(double, p0)
 	g.affine(double, double)
-	tableK1[0] = new(PointG1)
 	tableK1[0].Set(p0)
 	for i := 1; i < l; i++ {
-		tableK1[i] = new(PointG1)
-		g.AddMixed(tableK1[i], tableK1[i-1], double)
+		g.AddMixed(&tableK1[i], &tableK1[i-1], double)
 	}
-	g.AffineBatch(tableK1)
+	g.AffineBatch(tableK1[:])
 	for i := 0; i < l; i++ {
-		tableK2[i] = new(PointG1)
-		g.glvEndomorphism(tableK2[i], tableK1[i])
+		g.glvEndomorphism(&tableK2[i], &tableK1[i])
 	}
 
 	// recode small scalars
@@ -641,13 +644,13 @@ func (g *G1) glvMul(r, p0 *PointG1, v glvVector) *PointG1 {
 	acc, p1 := g.New(), g.New()
 
 	// function for naf addition
-	add := func(table []*PointG1, naf int) {
+	add := func(table []PointG1, naf int8) {
 		if naf != 0 {
 			nafAbs := naf
 			if nafAbs < 0 {
 				nafAbs = -nafAbs
 			}
-			p1.Set(table[nafAbs>>1])
+			p1.Set(&table[nafAbs>>1])
 			if naf < 0 {
 				g.Neg(p1, p1)
 			}
@@ -723,7 +726,7 @@ func (g *G1) MultiExpBig(r *PointG1, points []*PointG1, scalars []*big.Int) (*Po
 // MultiExp calculates multi exponentiation. Given pairs of G1 point and scalar values `(P_0, e_0), (P_1, e_1), ... (P_n, e_n)`,
 // calculates `r = e_0 * P_0 + e_1 * P_1 + ... + e_n * P_n`. Length of points and scalars are expected to be equal,
 // otherwise an error is returned. Result is assigned to point at first argument.
-func (g *G1) MultiExp(r *PointG1, points []*PointG1, scalars []*Fr) (*PointG1, error) {
+func (g *G1) MultiExp(r *PointG1, points []PointG1, scalars []*Fr) (*PointG1, error) {
 	if len(points) != len(scalars) {
 		return nil, errors.New("point and scalar vectors should be in same length")
 	}
@@ -736,7 +739,7 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, scalars []*Fr) (*PointG1, e
 	}
 
 	bucketSize := (1 << c) - 1
-	windows := make([]*PointG1, 255/c+1)
+	windows := make([]PointG1, 255/c+1)
 	bucket := make([]PointG1, bucketSize)
 
 	for j := 0; j < len(windows); j++ {
@@ -748,7 +751,7 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, scalars []*Fr) (*PointG1, e
 		for i := 0; i < len(scalars); i++ {
 			index := bucketSize & int(scalars[i].sliceUint64(c*j))
 			if index != 0 {
-				g.AddMixed(&bucket[index-1], &bucket[index-1], points[i])
+				g.AddMixed(&bucket[index-1], &bucket[index-1], &points[i])
 			}
 		}
 
@@ -757,7 +760,7 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, scalars []*Fr) (*PointG1, e
 			g.Add(sum, sum, &bucket[i])
 			g.Add(acc, acc, sum)
 		}
-		windows[j] = g.New().Set(acc)
+		windows[j].Set(acc)
 	}
 
 	g.AffineBatch(windows)
@@ -767,7 +770,7 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, scalars []*Fr) (*PointG1, e
 		for j := 0; j < c; j++ {
 			g.Double(acc, acc)
 		}
-		g.AddMixed(acc, acc, windows[i])
+		g.AddMixed(acc, acc, &windows[i])
 	}
 	return r.Set(acc), nil
 }
