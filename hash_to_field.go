@@ -3,10 +3,33 @@ package bls12381
 import (
 	"crypto/sha256"
 	"errors"
+	"hash"
 )
 
-func hashToFpXMDSHA256(msg []byte, domain []byte, count int) ([]*fe, error) {
-	randBytes, err := expandMsgSHA256XMD(msg, domain, count*64)
+// HashToFpXMDOpt is hashToFpXMD option definition.
+type HashToFpXMDOpt func(opts *hashToCurveOpts)
+
+// WithHashToFpXMDHashFunction defines custom hash function to use for hashToFpXMD().
+func WithHashToFpXMDHashFunction(hashFunc func() hash.Hash) HashToFpXMDOpt {
+	return func(opts *hashToCurveOpts) {
+		opts.hashFunc = hashFunc
+	}
+}
+
+type hashToCurveOpts struct {
+	hashFunc func() hash.Hash
+}
+
+func hashToFpXMD(msg []byte, domain []byte, count int, opts ...HashToFpXMDOpt) ([]*fe, error) {
+	opt := &hashToCurveOpts{
+		hashFunc: sha256.New,
+	}
+
+	for _, optFunc := range opts {
+		optFunc(opt)
+	}
+
+	randBytes, err := expandMsgSHA256XMD(opt.hashFunc, msg, domain, count*64)
 	if err != nil {
 		return nil, err
 	}
@@ -20,8 +43,9 @@ func hashToFpXMDSHA256(msg []byte, domain []byte, count int) ([]*fe, error) {
 	return els, nil
 }
 
-func expandMsgSHA256XMD(msg []byte, domain []byte, outLen int) ([]byte, error) {
-	h := sha256.New()
+func expandMsgSHA256XMD(createHashFunc func() hash.Hash, msg []byte, domain []byte, outLen int) ([]byte, error) {
+	h := createHashFunc()
+
 	domainLen := uint8(len(domain))
 	if domainLen > 255 {
 		return nil, errors.New("invalid domain length")

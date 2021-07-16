@@ -810,8 +810,9 @@ func (g *G1) MapToCurve(in []byte) (*PointG1, error) {
 // which is a valid curve point.
 // Implementation follows BLS12381G1_XMD:SHA-256_SSWU_NU_ suite at
 // https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06
-func (g *G1) EncodeToCurve(msg, domain []byte) (*PointG1, error) {
-	hashRes, err := hashToFpXMDSHA256(msg, domain, 1)
+// You can optionally change a hash function, by default it's SHA-256.
+func (g *G1) EncodeToCurve(msg, domain []byte, opts ...HashToFpXMDOpt) (*PointG1, error) {
+	hashRes, err := hashToFpXMD(msg, domain, 1, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -828,8 +829,9 @@ func (g *G1) EncodeToCurve(msg, domain []byte) (*PointG1, error) {
 // which is a valid curve point.
 // Implementation follows BLS12381G1_XMD:SHA-256_SSWU_RO_ suite at
 // https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06
-func (g *G1) HashToCurve(msg, domain []byte) (*PointG1, error) {
-	hashRes, err := hashToFpXMDSHA256(msg, domain, 2)
+// You can optionally change a hash function, by default it's SHA-256.
+func (g *G1) HashToCurve(msg, domain []byte, opts ...HashToFpXMDOpt) (*PointG1, error) {
+	hashRes, err := hashToFpXMD(msg, domain, 2, opts...)
 	if err != nil {
 		return nil, err
 	}
