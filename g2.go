@@ -547,7 +547,7 @@ func (g *G2) wnafMulBig(r, p *PointG2, e *big.Int) *PointG2 {
 
 func (g *G2) wnafMul(c, p *PointG2, wnaf nafNumber) *PointG2 {
 
-	l := (1 << (wnafMulWindowG2 - 1))
+	l := int8(1 << (wnafMulWindowG2 - 1))
 
 	twoP, acc := g.New(), new(PointG2).Set(p)
 	g.Double(twoP, p)
@@ -559,7 +559,7 @@ func (g *G2) wnafMul(c, p *PointG2, wnaf nafNumber) *PointG2 {
 	table[0].Set(p)
 	g.Neg(table[l], table[0])
 
-	for i := 1; i < l; i++ {
+	for i := int8(1); i < l; i++ {
 		g.AddMixed(acc, acc, twoP)
 		table[i], table[i+l] = g.New(), g.New()
 		table[i].Set(acc)
@@ -623,7 +623,7 @@ func (g *G2) glvMul(r, p0 *PointG2, v glvVector) *PointG2 {
 	acc, p1 := g.New(), g.New()
 
 	// function for naf addition
-	add := func(table []*PointG2, naf int) {
+	add := func(table []*PointG2, naf int8) {
 		if naf != 0 {
 			nafAbs := naf
 			if nafAbs < 0 {

@@ -134,18 +134,18 @@ func TestG1IsOnCurve(t *testing.T) {
 func TestG1BatchAffine(t *testing.T) {
 	n := 20
 	g := NewG1()
-	points0 := make([]*PointG1, n)
-	points1 := make([]*PointG1, n)
+	points0 := make([]PointG1, n)
+	points1 := make([]PointG1, n)
 	for i := 0; i < n; i++ {
-		points0[i] = g.rand()
-		points1[i] = g.New().Set(points0[i])
-		if g.IsAffine(points0[i]) {
+		points0[i].Set(g.rand())
+		points1[i].Set(&points0[i])
+		if g.IsAffine(&points0[i]) {
 			t.Fatal("expect non affine point")
 		}
 	}
 	g.AffineBatch(points0)
 	for i := 0; i < n; i++ {
-		if !g.Equal(points0[i], points1[i]) {
+		if !g.Equal(&points0[i], &points1[i]) {
 			t.Fatal("batch affine failed")
 		}
 	}
@@ -362,10 +362,11 @@ func TestG1MultiExpExpected(t *testing.T) {
 	g := NewG1()
 	one := g.one()
 	var scalars [2]*Fr
-	var bases [2]*PointG1
+	var bases [2]PointG1
 	scalars[0] = &Fr{2}
 	scalars[1] = &Fr{3}
-	bases[0], bases[1] = new(PointG1).Set(one), new(PointG1).Set(one)
+	bases[0].Set(one)
+	bases[1].Set(one)
 	expected, result := g.New(), g.New()
 	g.mulScalar(expected, one, &Fr{5})
 	_, _ = g.MultiExp(result, bases[:], scalars[:])
@@ -419,7 +420,7 @@ func TestG1MultiExpBig(t *testing.T) {
 func TestG1MultiExp(t *testing.T) {
 	g := NewG1()
 	for n := 1; n < 1024+1; n = n * 2 {
-		bases := make([]*PointG1, n)
+		bases := make([]PointG1, n)
 		scalars := make([]*Fr, n)
 		var err error
 		for i := 0; i < n; i++ {
@@ -427,11 +428,11 @@ func TestG1MultiExp(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			bases[i] = g.randAffine()
+			bases[i].Set(g.randAffine())
 		}
 		expected, tmp := g.New(), g.New()
 		for i := 0; i < n; i++ {
-			g.mulScalar(tmp, bases[i], scalars[i])
+			g.mulScalar(tmp, &bases[i], scalars[i])
 			g.Add(expected, expected, tmp)
 		}
 		result := g.New()
@@ -621,8 +622,8 @@ func BenchmarkG1MulWNAF(t *testing.B) {
 			g.mulScalar(res, p, s)
 		}
 	})
-	for i := 1; i < 8; i++ {
-		wnafMulWindowG1 = uint(i)
+	for i := uint(1); i < maxWindowSize; i++ {
+		wnafMulWindowG1 = i
 		t.Run(fmt.Sprintf("Fr, window: %d", i), func(t *testing.B) {
 			t.ResetTimer()
 			for i := 0; i < t.N; i++ {
@@ -651,8 +652,8 @@ func BenchmarkG1MulGLV(t *testing.B) {
 			g.mulScalar(res, p, s)
 		}
 	})
-	for i := 1; i < 8; i++ {
-		glvMulWindowG1 = uint(i)
+	for i := uint(1); i < maxWindowSize; i++ {
+		glvMulWindowG1 = i
 		t.Run(fmt.Sprintf("Fr, window: %d", i), func(t *testing.B) {
 			t.ResetTimer()
 			for i := 0; i < t.N; i++ {
@@ -670,8 +671,8 @@ func BenchmarkG1MulGLV(t *testing.B) {
 
 func BenchmarkG1MultiExp(t *testing.B) {
 	g := NewG1()
-	v := func(n int) ([]*PointG1, []*Fr) {
-		bases := make([]*PointG1, n)
+	v := func(n int) ([]PointG1, []*Fr) {
+		bases := make([]PointG1, n)
 		scalars := make([]*Fr, n)
 		var err error
 		for i := 0; i < n; i++ {
@@ -679,7 +680,7 @@ func BenchmarkG1MultiExp(t *testing.B) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			bases[i] = g.randAffine()
+			bases[i].Set(g.randAffine())
 		}
 		return bases, scalars
 	}

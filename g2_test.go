@@ -659,8 +659,8 @@ func BenchmarkG2MulWNAF(t *testing.B) {
 			g.mulScalar(res, p, s)
 		}
 	})
-	for i := 1; i < 8; i++ {
-		wnafMulWindowG2 = uint(i)
+	for i := uint(1); i < maxWindowSize; i++ {
+		wnafMulWindowG2 = i
 		t.Run(fmt.Sprintf("Fr, window: %d", i), func(t *testing.B) {
 			t.ResetTimer()
 			for i := 0; i < t.N; i++ {
@@ -689,8 +689,8 @@ func BenchmarkG2MulGLV(t *testing.B) {
 			g.mulScalar(res, p, s)
 		}
 	})
-	for i := 1; i < 8; i++ {
-		glvMulWindowG2 = uint(i)
+	for i := uint(1); i < maxWindowSize; i++ {
+		glvMulWindowG2 = i
 		t.Run(fmt.Sprintf("Fr, window: %d", i), func(t *testing.B) {
 			t.ResetTimer()
 			for i := 0; i < t.N; i++ {
