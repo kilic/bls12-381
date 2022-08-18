@@ -391,3 +391,27 @@ func TestFrInversion(t *testing.T) {
 		}
 	}
 }
+
+func TestFnBatchInversion(t *testing.T) {
+	for i := 0; i < fuz; i++ {
+		zero, one := new(Fr).Zero(), new(Fr).One()
+
+		a, _ := new(Fr).Rand(rand.Reader)
+		u := new(Fr)
+		z := new(big.Int)
+		u.Exp(a, z.Sub(qBig, big.NewInt(2)))
+
+		var arr []Fr
+		arr = append(arr, *zero, *one, *a)
+		InverseBatchFr(arr)
+		if !arr[0].Equal(zero) {
+			t.Fatal("(0^-1) == 0)")
+		}
+		if !arr[1].IsOne() {
+			t.Fatal("(1^-1) == 1)")
+		}
+		if !arr[2].Equal(u) {
+			t.Fatal("a^(p-2) == a^-1")
+		}
+	}
+}
