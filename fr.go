@@ -81,14 +81,14 @@ func (e *Fr) fromBig(in *big.Int) *Fr {
 		_in.Mod(_in, qBig)
 	}
 
-	words := _in.Bits()  // a little-endian Word slice
+	words := _in.Bits()      // a little-endian Word slice
 	if bits.UintSize == 64 { // in the 64-bit architecture
 		for i := 0; i < len(words); i++ {
 			e[i] = uint64(words[i])
 		}
 	} else { // in the 32-bit architecture
 		for i := 0; i < len(e); i++ {
-			j := i*2
+			j := i * 2
 			if j+1 < len(words) {
 				e[i] = uint64(words[j+1])<<32 | uint64(words[j])
 			} else if j < len(words) {
@@ -281,6 +281,62 @@ func (e *Fr) Exp(a *Fr, ee *big.Int) {
 	e.RedExp(e, ee)
 	e.fromMont()
 
+}
+
+func RedInverseBatchFr(in []Fr) {
+	inverseBatchFr(in, func(a, b *Fr) { a.RedInverse(b) })
+}
+
+func InverseBatchFr(in []Fr) {
+	inverseBatchFr(in, func(a, b *Fr) { a.Inverse(b) })
+}
+
+func inverseBatchFr(in []Fr, invFn func(out *Fr, in *Fr)) {
+	n, N, setFirst := 0, len(in), false
+
+	for i := 0; i < len(in); i++ {
+		if !in[i].IsZero() {
+			n++
+		}
+	}
+	if n == 0 {
+		return
+	}
+
+	tA := make([]Fr, n)
+	tB := make([]Fr, n)
+
+	for i, j := 0, 0; i < N; i++ {
+		if !in[i].IsZero() {
+			if !setFirst {
+				setFirst = true
+				tA[j].Set(&in[i])
+			} else {
+				tA[j].Mul(&in[i], &tA[j-1])
+			}
+			j = j + 1
+		}
+	}
+
+	invFn(&tB[n-1], &tA[n-1])
+	for i, j := N-1, n-1; j != 0; i-- {
+		if !in[i].IsZero() {
+			tB[j-1].Mul(&tB[j], &in[i])
+			j = j - 1
+		}
+	}
+
+	for i, j := 0, 0; i < N; i++ {
+		if !in[i].IsZero() {
+			if setFirst {
+				setFirst = false
+				in[i].Set(&tB[j])
+			} else {
+				in[i].Mul(&tA[j-1], &tB[j])
+			}
+			j = j + 1
+		}
+	}
 }
 
 func (e *Fr) Inverse(a *Fr) {
