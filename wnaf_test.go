@@ -6,8 +6,6 @@ import (
 	"testing"
 )
 
-var maxWindowSize uint = 9
-
 func TestWNAFBig(t *testing.T) {
 	var w uint
 	for w = 1; w <= maxWindowSize; w++ {
@@ -46,7 +44,6 @@ func TestFrWNAF(t *testing.T) {
 }
 
 func TestFrWNAFCrossAgainstBig(t *testing.T) {
-	var maxWindowSize uint = 20
 	var w uint
 	for w = 1; w <= maxWindowSize; w++ {
 		for i := 0; i < fuz; i++ {

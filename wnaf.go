@@ -4,7 +4,10 @@ import (
 	"math/big"
 )
 
-type nafNumber []int
+// in bits
+const maxWindowSize = 6
+
+type nafNumber []int8
 
 func (n nafNumber) neg() {
 	for i := 0; i < len(n); i++ {
@@ -16,20 +19,24 @@ var bigZero = big.NewInt(0)
 var bigOne = big.NewInt(1)
 
 func (e *Fr) toWNAF(w uint) nafNumber {
-	naf := nafNumber{}
+	if w > maxWindowSize {
+		panic("toWNAF: high w")
+	}
+	// fits maximum Fr bit length, avoid re-allocating it
+	naf := make(nafNumber, 0, 128)
 	if w == 0 {
 		return naf
 	}
-	windowSize, halfSize, mask := 1<<(w+1), 1<<w, (1<<(w+1))-1
+	windowSize, halfSize, mask := int8(1)<<(w+1), int8(1)<<w, (uint8(1)<<(w+1))-1
 	ee := new(Fr).Set(e)
 	z := new(Fr)
 	for !ee.IsZero() {
 		if !ee.isEven() {
-			nafSign := int(ee[0]) & mask
+			nafSign := int8(uint8(ee[0]) & mask)
 			if nafSign >= halfSize {
 				nafSign = nafSign - windowSize
 			}
-			naf = append(naf, int(nafSign))
+			naf = append(naf, nafSign)
 			if nafSign < 0 {
 				laddAssignFR(ee, z.setUint64(uint64(-nafSign)))
 			} else {
@@ -72,7 +79,10 @@ func (e *Fr) fromWNAF(naf nafNumber, w uint) *Fr {
 
 // caution: does not cover negative case
 func bigToWNAF(e *big.Int, w uint) nafNumber {
-	naf := nafNumber{}
+	if w > maxWindowSize {
+		panic("bigToWNAF: high w")
+	}
+	naf := make(nafNumber, 0, e.BitLen())
 	if w == 0 {
 		return naf
 	}
@@ -86,7 +96,7 @@ func bigToWNAF(e *big.Int, w uint) nafNumber {
 			if nafSign.Cmp(halfSize) >= 0 {
 				nafSign.Sub(nafSign, windowSize)
 			}
-			naf = append(naf, int(nafSign.Int64()))
+			naf = append(naf, int8(nafSign.Int64()))
 			ee.Sub(ee, nafSign)
 		} else {
 			naf = append(naf, 0)
