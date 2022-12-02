@@ -247,6 +247,19 @@ func BenchmarkFinalExp(t *testing.B) {
 	f := gt.New().one()
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
-		bls.finalExp(f)
+		bls.millerLoop(f)
 	}
+}
+
+func BenchmarkGT_IsValid(b *testing.B) {
+	bls := NewEngine()
+	g1, g2, gt := bls.G1, bls.G2, bls.GT()
+	bls.AddPair(g1.One(), g2.One())
+	e := gt.New()
+	e = bls.calculate()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		gt.IsValid(e)
+	}
+
 }

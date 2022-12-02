@@ -757,22 +757,17 @@ func (g *G2) MultiExp(r *PointG2, points []*PointG2, scalars []*Fr) (*PointG2, e
 // InCorrectSubgroup checks whether given point is in correct subgroup.
 func (g *G2) InCorrectSubgroup(p *PointG2) bool {
 
-	// Faster Subgroup Checks for BLS12-381
-	// S. Bowe
-	// https://eprint.iacr.org/2019/814.pdf
+	// A note on group membership tests for G1, G2
+	// and GT on BLS pairing-friendly curves
+	// M. Scott
+	// https://eprint.iacr.org/2021/1130.pdf
 
-	// [z]ψ^3(P) − ψ^2(P) + P = O
-	t0, t1 := g.New().Set(p), g.New()
+	// ψ^3(P) − [u]P = O
+	t0, t1 := g.New().Set(p), g.New().Set(p)
 
-	g.psi(t0)
-	g.psi(t0)
-	g.Neg(t1, t0) // - ψ^2(P)
-	g.psi(t0)     // ψ^3(P)
-	g.mulX(t0)    // - x ψ^3(P)
-	g.Neg(t0, t0)
-
-	g.Add(t0, t0, t1)
-	g.Add(t0, t0, p)
+	g.psi(t0)         //ψ(P)
+	g.mulX(t1)        //-[u]P
+	g.Add(t0, t0, t1) //ψ(P)-[u]P
 
 	return g.IsZero(t0)
 }
