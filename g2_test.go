@@ -3,13 +3,16 @@ package bls12381
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"math/big"
+	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -379,7 +382,7 @@ func TestZKCryptoVectorsG2Compressed(t *testing.T) {
 	require.NoError(t, err)
 	for _, testPath := range tests {
 		fmt.Println(testPath)
-		/*t.Run(testPath, func(t *testing.T) {
+		t.Run(testPath, func(t *testing.T) {
 			testFile, err := os.Open(testPath)
 			require.NoError(t, err)
 			test := Test{}
@@ -392,15 +395,15 @@ func TestZKCryptoVectorsG2Compressed(t *testing.T) {
 				panic(err)
 			}
 
-			var point G2Affine
-			_, err = point.SetBytes(byts[:])
+			g := NewG2()
+			_, err = g.FromCompressed(byts)
 			if err == nil && !testCaseValid {
 				panic("err should not be nil")
 			}
 			if err != nil && testCaseValid {
 				panic("err should be nil")
 			}
-		})*/
+		})
 	}
 
 }
