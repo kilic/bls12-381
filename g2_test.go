@@ -17,7 +17,6 @@ import (
 
 var (
 	testDir                = "tests/bls"
-	deserializationG1Tests = filepath.Join(testDir, "deserialization_G1/*")
 	deserializationG2Tests = filepath.Join(testDir, "deserialization_G2/*")
 )
 
