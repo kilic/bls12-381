@@ -381,7 +381,6 @@ func TestZKCryptoVectorsG2Compressed(t *testing.T) {
 	tests, err := filepath.Glob(deserializationG2Tests)
 	require.NoError(t, err)
 	for _, testPath := range tests {
-		fmt.Println(testPath)
 		t.Run(testPath, func(t *testing.T) {
 			testFile, err := os.Open(testPath)
 			require.NoError(t, err)
@@ -405,7 +404,6 @@ func TestZKCryptoVectorsG2Compressed(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestG2MultiExpExpected(t *testing.T) {
