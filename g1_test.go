@@ -3,10 +3,20 @@ package bls12381
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"math/big"
+	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
+)
+
+var (
+	deserializationG1Tests = filepath.Join(testDir, "deserialization_G1/*")
 )
 
 func (g *G1) one() *PointG1 {
@@ -355,6 +365,41 @@ func TestZKCryptoVectorsG1CompressedValid(t *testing.T) {
 			t.Fatal("serialization failed")
 		}
 		g.Add(p1, p1, &g1One)
+	}
+}
+
+func TestZKCryptoVectorsG1Compressed(t *testing.T) {
+	type Test struct {
+		Input struct {
+			PubKeyHexStr string `yaml:"pubkey"`
+		}
+		IsValidPredicate *bool `yaml:"output"`
+	}
+	tests, err := filepath.Glob(deserializationG1Tests)
+	require.NoError(t, err)
+	for _, testPath := range tests {
+		t.Run(testPath, func(t *testing.T) {
+			testFile, err := os.Open(testPath)
+			require.NoError(t, err)
+			test := Test{}
+			err = yaml.NewDecoder(testFile).Decode(&test)
+			require.NoError(t, testFile.Close())
+			require.NoError(t, err)
+			testCaseValid := test.IsValidPredicate != nil
+			byts, err := hex.DecodeString(test.Input.PubKeyHexStr)
+			if err != nil && testCaseValid {
+				panic(err)
+			}
+
+			g := NewG1()
+			_, err = g.FromCompressed(byts)
+			if err == nil && !testCaseValid {
+				panic("err should not be nil")
+			}
+			if err != nil && testCaseValid {
+				panic("err should be nil")
+			}
+		})
 	}
 }
 
